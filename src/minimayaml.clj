@@ -29,19 +29,27 @@
 (defn shrink
   "Remove key-value pairs wherein the value is blank, nil, or empty from a
   (possibly nested) map. Also transforms maps to nil if all of their values are
-  nil, blank, or empty. Also returns maps sorted “naturally” (by the default
-  comparator) by their keys.
+  nil, blank, or empty.
   
   Adapted from https://stackoverflow.com/a/29363255/7012"
   [nm]
   (postwalk (fn [el]
               (if (map? el)
-                (let [m (into (sorted-map) (remove (comp blank-nil-or-empty? second) el))]
+                (let [m (into {} (remove (comp blank-nil-or-empty? second) el))]
                   (when (seq m) m))
                 el))
             nm))
 
 (def clean identity)
+
+(defn sort-by-specified-keys
+  "Accepts an ordered map and a seq of keys; returns a new ordered map
+  containing the specified keys and their corresponding values from the input
+  map, in the same order as the specified keys."
+  [m ks]
+  (apply ordered-map
+    (flatten (map #(vector % (get m %))
+                  ks))))
 
 (defn sort-structurizr
  "Accepts a map representing a parsed Structurizr YAML document, as parsed by clj-yaml.
@@ -49,10 +57,9 @@
   nodes sorted alphabetically by the names of the things they describe. e.g. for elements, by their name.
   For relationships, by the source and then destination."
  [d]
+ ;; TODO: NOT CURRENTLY WORKING
  ;; TODO: sort elements and relationships
- (apply ordered-map
-   (flatten (map (fn [k] (vector k (get d k)))
-                 [:type :scope :description :elements :relationships :styles]))))
+ (sort-by-specified-keys d [:type :scope :description :elements :relationships :styles]))
 
 (defn clean-and-shrink [d]
   (-> d
