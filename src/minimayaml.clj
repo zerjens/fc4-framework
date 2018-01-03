@@ -1,5 +1,6 @@
 (ns minimayaml
   (:require [clj-yaml.core :as yaml :refer [parse-string generate-string]]
+            [flatland.ordered.map :refer [ordered-map]]
             [clojure.string :as str :refer [blank? join]]
             [clojure.walk :as walk :refer [postwalk]]))
 
@@ -18,10 +19,6 @@
          split
          ["" (first split)])))
 
-; (defn non-empty-coll? [v]
-;   (and (coll? v)
-;        (not (empty? v))))
-
 (defn blank-nil-or-empty? [v]
   (or (nil? v)
       (and (coll? v)
@@ -29,51 +26,51 @@
       (and (string? v)
            (blank? v))))
 
-(defn shrink2
-  "remove pairs of key-value that has nil value from a (possibly nested) map. also transform map to nil if all of its value are nil" 
+(defn shrink
+  "Remove key-value pairs wherein the value is blank, nil, or empty from a
+  (possibly nested) map. Also transforms maps to nil if all of their values are
+  nil, blank, or empty. Also returns maps sorted “naturally” (by the default
+  comparator) by their keys.
+  
+  Adapted from https://stackoverflow.com/a/29363255/7012"
   [nm]
   (postwalk (fn [el]
               (if (map? el)
                 (let [m (into (sorted-map) (remove (comp blank-nil-or-empty? second) el))]
-                  (when (seq m)
-                    m))
+                  (when (seq m) m))
                 el))
             nm))
-
-(defn shrink
-  "Accepts a map representing a parsed YAML document, as parsed by clj-yaml.
-  Returns the same map with all empty/blank nodes/entries removed."
-  [d]
-  (postwalk #(when-not
-               (and (coll? %)
-                    (= (count %) 2)
-                    (or (empty? (second %))
-                        (and (string? (second %))
-                             (blank? (second %)))))
-               %)               
-            d))
 
 (def clean identity)
 
 (defn sort-structurizr
  "Accepts a map representing a parsed Structurizr YAML document, as parsed by clj-yaml.
-  Returns the same map with its second-level nodes sorted alphabetically."
+  Returns the same map with its top-level kv-pairs sorted with a custom sort, and second-level
+  nodes sorted alphabetically by the names of the things they describe. e.g. for elements, by their name.
+  For relationships, by the source and then destination."
  [d]
- d) ;;TODO
+ ;; TODO: sort elements and relationships
+ (apply ordered-map
+   (flatten (map (fn [k] (vector k (get d k)))
+                 [:type :scope :description :elements :relationships :styles]))))
 
-(defn clean-and-shrink [yaml-doc-str]
-  (-> yaml-doc-str
-      parse-string 
-      shrink2
+(defn clean-and-shrink [d]
+  (-> d
+      shrink
       clean
-      sort-structurizr
+      ; sort-structurizr
       generate-string))
+
+(defn structurizr-doc? [d] (contains? d :scope))
 
 (defn process [s]
   (->> s
-    split-front-matter
-    (map clean-and-shrink)
-    (join doc-separator)))
+       split-front-matter
+       (map parse-string)
+       (map #(if (structurizr-doc? %)
+                 (clean-and-shrink %)
+                 %))
+       (join doc-separator)))
 
 (defn -main []
   (->> (slurp *in*)
