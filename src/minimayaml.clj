@@ -47,9 +47,9 @@
   containing the specified keys and their corresponding values from the input
   map, in the same order as the specified keys."
   [m ks]
-  (apply ordered-map
-    (flatten (map #(vector % (get m %))
-                  ks))))
+  (into (ordered-map)
+        (map #(vector % (get m %))
+             ks)))
 
 (defn sort-structurizr
  "Accepts a map representing a parsed Structurizr YAML document, as parsed by clj-yaml.
