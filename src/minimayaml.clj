@@ -4,8 +4,6 @@
             [clojure.string :as str :refer [blank? join]]
             [clojure.walk :as walk :refer [postwalk]]))
 
-(def doc-separator "\n---\n")
-
 (defn split-front-matter
   "Accepts a string containing either a single YAML document, or a YAML document
   and front matter (which itself is a YAML document). Returns a seq containing 2
@@ -40,8 +38,6 @@
                 el))
             nm))
 
-(def clean identity)
-
 (defn sort-by-specified-keys
   "Accepts an ordered map and a seq of keys; returns a new ordered map
   containing the specified keys and their corresponding values from the input
@@ -59,29 +55,24 @@
  [d]
  ;; TODO: NOT CURRENTLY WORKING
  ;; TODO: sort elements and relationships
- (sort-by-specified-keys d [:type :scope :description :elements :relationships :styles]))
+ (-> d))
+  ;  (sort-by-specified-keys [:type :scope :description :elements :relationships :styles])))
 
-(defn clean-and-shrink [d]
-  (-> d
+(defn process-structurizr-doc-string [s]
+  (-> s
+      parse-string
       shrink
-      clean
-      ; sort-structurizr
-      generate-string))
+      sort-structurizr
+      (generate-string :dumper-options {:flow-style :block})))
 
-(defn structurizr-doc? [d] (contains? d :scope))
-
-(defn process [s]
-  (->> s
-       split-front-matter
-       (map parse-string)
-       (map #(if (structurizr-doc? %)
-                 (clean-and-shrink %)
-                 %))
-       (join doc-separator)))
+(defn process-file [s]
+  (let [[front main] (split-front-matter s)
+        main-processed (process-structurizr-doc-string main)]
+    (str front "\n---\n" main-processed)))
 
 (defn -main []
   (->> (slurp *in*)
-       process
+       process-file
        print)
   (flush)
-  (Thread/sleep 100))
+  (Thread/sleep 10))
