@@ -33,9 +33,9 @@
   [nm]
   (postwalk (fn [el]
               (if (map? el)
-                (let [m (into {} (remove (comp blank-nil-or-empty? second) el))]
-                  (when (seq m) m))
-                el))
+                  (let [m (into {} (remove (comp blank-nil-or-empty? second) el))]
+                    (when (seq m) m))
+                  el))
             nm))
 
 (defn sort-by-specified-keys
@@ -48,15 +48,16 @@
              ks)))
 
 (defn sort-structurizr
- "Accepts a map representing a parsed Structurizr YAML document, as parsed by clj-yaml.
-  Returns the same map with its top-level kv-pairs sorted with a custom sort, and second-level
-  nodes sorted alphabetically by the names of the things they describe. e.g. for elements, by their name.
-  For relationships, by the source and then destination."
- [d]
- ;; TODO: NOT CURRENTLY WORKING
- ;; TODO: sort elements and relationships
- (-> d))
-  ;  (sort-by-specified-keys [:type :scope :description :elements :relationships :styles])))
+  "Accepts a map representing a parsed Structurizr YAML document, as parsed by
+  clj-yaml. Returns the same map with its top-level kv-pairs sorted with a
+  custom sort, and second-level nodes sorted alphabetically by the names of the
+  things they describe. e.g. for elements, by their name. For relationships, by
+  the source and then destination."
+  [d]
+  ;; TODO: NOT CURRENTLY WORKING
+  ;; TODO: sort elements and relationships
+  (-> d))
+    ;  (sort-by-specified-keys [:type :scope :description :elements :relationships :styles])))
 
 (defn process-structurizr-doc-string [s]
   (-> s
