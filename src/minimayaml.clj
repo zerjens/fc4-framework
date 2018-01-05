@@ -1,3 +1,5 @@
+#!/usr/local/bin/clojure
+
 (ns minimayaml
   (:require [clj-yaml.core :as yaml :refer [parse-string generate-string]]
             [flatland.ordered.map :refer [ordered-map]]
