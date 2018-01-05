@@ -61,12 +61,16 @@
   (-> d))
     ;  (sort-by-specified-keys [:type :scope :description :elements :relationships :styles])))
 
+(defn fixup [s]
+  (-> s (str/replace #"(\d+,\d+)" "'$1'")))
+
 (defn process-structurizr-doc-string [s]
   (-> s
       parse-string
       shrink
       sort-structurizr
-      (generate-string :dumper-options {:flow-style :block})))
+      (generate-string :dumper-options {:flow-style :block})
+      fixup))
 
 (defn process-file [s]
   (let [[front main] (split-front-matter s)
