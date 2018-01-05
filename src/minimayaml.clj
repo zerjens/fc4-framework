@@ -49,19 +49,28 @@
         (map #(vector % (get m %))
              ks)))
 
+(defn update-map-val [m k f]
+  (->> (get m k)
+       f
+       (assoc m k)))
+
+(defn join-juxt-fn [& ks]
+  (let [jfn (apply juxt ks)]
+    (fn [item] (join (jfn item)))))
+
 (defn sort-structurizr
   "Accepts a map representing a parsed Structurizr YAML document, as parsed by
   clj-yaml. Returns the same map with its top-level kv-pairs sorted with a
   custom sort, and second-level nodes sorted alphabetically by the names of the
-  things they describe. e.g. for elements, by their name. For relationships, by
-  the source and then destination."
+  things they describe. e.g. for elements, by their type then name; for
+  relationships, by the source and then destination."
   [d]
-  ;; TODO: NOT CURRENTLY WORKING
-  ;; TODO: sort elements and relationships
-  (-> d))
-    ;  (sort-by-specified-keys [:type :scope :description :elements :relationships :styles])))
+  (-> d
+     (sort-by-specified-keys [:type :scope :description :elements :relationships :styles :size])
+     (update-map-val :elements #(sort-by (join-juxt-fn :type :name) %))
+     (update-map-val :relationships #(sort-by (join-juxt-fn :source :destination) %))))
 
-(defn fixup [s]
+(defn fixup-structurizr [s]
   (-> s (str/replace #"(\d+,\d+)" "'$1'")))
 
 (defn process-structurizr-doc-string [s]
@@ -70,7 +79,7 @@
       shrink
       sort-structurizr
       (generate-string :dumper-options {:flow-style :block})
-      fixup))
+      fixup-structurizr))
 
 (defn process-file [s]
   (let [[front main] (split-front-matter s)
