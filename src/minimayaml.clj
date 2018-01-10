@@ -4,7 +4,8 @@
   (:require [clj-yaml.core :as yaml :refer [parse-string generate-string]]
             [flatland.ordered.map :refer [ordered-map]]
             [clojure.string :as str :refer [blank? join]]
-            [clojure.walk :as walk :refer [postwalk]]))
+            [clojure.walk :as walk :refer [postwalk]]
+            [clojure.set :refer [difference]]))
 
 (defn split-front-matter
   "Accepts a string containing either a single YAML document, or a YAML document
@@ -40,11 +41,29 @@
                   el))
             nm))
 
-(defn sort-by-specified-keys
+; (defn reorder
+;   "Accepts a seq of keys and a map; returns a new ordered map containing the
+;   specified keys and their corresponding values from the input map, in the same
+;   order as the specified keys. If any keys present in the input map are omitted
+;   from the seq of keys, the corresponding k/v pairs will be sorted “naturally”
+;   after the specified k/v pairs."
+;   [ks m]
+;   (let [specified-keys (set ks)
+;         present-keys (set (keys m))
+;         unspecified-keys (difference present-keys specified-keys)
+;         all-keys-in-order (concat specified-keys (sort-by identity unspecified-keys))]
+;     (into (ordered-map)
+;           (map #(vector % (get m %))
+;               all-keys-in-order))))
+
+(defn reorder
   "Accepts an ordered map and a seq of keys; returns a new ordered map
   containing the specified keys and their corresponding values from the input
-  map, in the same order as the specified keys."
-  [m ks]
+  map, in the same order as the specified keys.
+  
+  If a specified key is not present in the input map, it will be present in the output map,
+  but its value will be nil. This seems like a bug, let’s fix this."
+  [ks m]
   (into (ordered-map)
         (map #(vector % (get m %))
              ks)))
@@ -64,11 +83,15 @@
   custom sort, and second-level nodes sorted alphabetically by the names of the
   things they describe. e.g. for elements, by their type then name; for
   relationships, by the source and then destination."
-  [d]
-  (-> d
-     (sort-by-specified-keys [:type :scope :description :elements :relationships :styles :size])
-     (update-map-val :elements #(sort-by (join-juxt-fn :type :name) %))
-     (update-map-val :relationships #(sort-by (join-juxt-fn :source :destination) %))))
+  [doc]
+  (as-> doc d
+     (reorder [:type :scope :description :elements :relationships :styles :size] d)
+     (update-map-val d :elements #(sort-by (join-juxt-fn :type :name) %))
+     (update-map-val d :elements #(map (partial reorder [:type :name :description :tags :position])
+                                       %))
+     (update-map-val d :relationships #(sort-by (join-juxt-fn :source :destination) %))
+     (update-map-val d :relationships #(map (partial reorder [:source :description :destination :technology :vertices :order])
+                                            %))))
 
 (defn fixup-structurizr [s]
   (-> s (str/replace #"(\d+,\d+)" "'$1'")))
@@ -78,6 +101,7 @@
       parse-string
       shrink
       sort-structurizr
+      shrink ;; extra shink due to bug in reorder
       (generate-string :dumper-options {:flow-style :block})
       fixup-structurizr))
 
