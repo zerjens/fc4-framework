@@ -7,7 +7,7 @@
             [clojure.walk :as walk :refer [postwalk]]
             [clojure.set :refer [difference intersection]]))
 
-(defn split-front-matter
+(defn split-file
   "Accepts a string containing either a single YAML document, or a YAML document
   and front matter (which itself is a YAML document). Returns a seq containing 2
   strings. If the input string does not contain front matter, or does not
@@ -97,7 +97,7 @@
       fixup-structurizr))
 
 (defn process-file [s]
-  (let [[front main] (split-front-matter s)
+  (let [[front main] (split-file s)
         main-processed (process-structurizr-doc-string main)]
     (str front "\n---\n" main-processed)))
 
