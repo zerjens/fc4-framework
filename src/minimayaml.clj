@@ -5,7 +5,7 @@
             [flatland.ordered.map :refer [ordered-map]]
             [clojure.string :as str :refer [blank? join]]
             [clojure.walk :as walk :refer [postwalk]]
-            [clojure.set :refer [difference]]))
+            [clojure.set :refer [difference intersection]]))
 
 (defn split-front-matter
   "Accepts a string containing either a single YAML document, or a YAML document
@@ -41,32 +41,21 @@
                   el))
             nm))
 
-; (defn reorder
-;   "Accepts a seq of keys and a map; returns a new ordered map containing the
-;   specified keys and their corresponding values from the input map, in the same
-;   order as the specified keys. If any keys present in the input map are omitted
-;   from the seq of keys, the corresponding k/v pairs will be sorted “naturally”
-;   after the specified k/v pairs."
-;   [ks m]
-;   (let [specified-keys (set ks)
-;         present-keys (set (keys m))
-;         unspecified-keys (difference present-keys specified-keys)
-;         all-keys-in-order (concat specified-keys (sort-by identity unspecified-keys))]
-;     (into (ordered-map)
-;           (map #(vector % (get m %))
-;               all-keys-in-order))))
-
 (defn reorder
-  "Accepts an ordered map and a seq of keys; returns a new ordered map
-  containing the specified keys and their corresponding values from the input
-  map, in the same order as the specified keys.
-  
-  If a specified key is not present in the input map, it will be present in the output map,
-  but its value will be nil. This seems like a bug, let’s fix this."
+  "Accepts a seq of keys and a map; returns a new ordered map containing the
+  specified keys and their corresponding values from the input map, in the same
+  order as the specified keys. If any keys present in the input map are omitted
+  from the seq of keys, the corresponding k/v pairs will be sorted “naturally”
+  after the specified k/v pairs."
   [ks m]
-  (into (ordered-map)
-        (map #(vector % (get m %))
-             ks)))
+  (let [specified-keys (set ks)
+        present-keys (set (keys m))
+        specified-and-present-keys (intersection specified-keys present-keys)
+        unspecified-but-present-keys (difference present-keys specified-keys)
+        all-keys-in-order (concat specified-and-present-keys (sort-by identity unspecified-but-present-keys))]
+    (into (ordered-map)
+          (map #(vector % (get m %))
+              all-keys-in-order))))
 
 (defn update-map-val [m k f]
   (->> (get m k)
@@ -104,7 +93,6 @@
       parse-string
       shrink
       sort-structurizr
-      shrink ;; extra shink due to bug in reorder
       (generate-string :dumper-options {:flow-style :block})
       fixup-structurizr))
 
