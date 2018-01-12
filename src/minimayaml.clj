@@ -94,7 +94,10 @@
                                             %))))
 
 (defn fixup-structurizr [s]
-  (-> s (str/replace #"(\d+,\d+)" "'$1'")))
+  (-> s
+    (str/replace #"(\d+,\d+)" "'$1'")
+    (str/replace #"(elements|relationships|styles|size):" "\n$1:")
+    (str/replace #"(description): Uses\n" "$1: uses\n")))
 
 (defn process-structurizr-doc-string [s]
   (-> s
