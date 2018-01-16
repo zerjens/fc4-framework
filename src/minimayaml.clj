@@ -57,11 +57,6 @@
           (map #(vector % (get m %))
               all-keys-in-order))))
 
-(defn update-map-val [m k f]
-  (->> (get m k)
-       f
-       (assoc m k)))
-
 (defn join-juxt-fn [& ks]
   (let [jfn (apply juxt ks)]
     (fn [item] (join (jfn item)))))
@@ -75,12 +70,12 @@
   [doc]
   (as-> doc d
      (reorder [:type :scope :description :elements :relationships :styles :size] d)
-     (update-map-val d :elements #(sort-by (join-juxt-fn :type :name) %))
-     (update-map-val d :elements #(map (partial reorder [:type :name :description :tags :position])
-                                       %))
-     (update-map-val d :relationships #(sort-by (join-juxt-fn :source :destination) %))
-     (update-map-val d :relationships #(map (partial reorder [:source :description :destination :technology :vertices :order])
-                                            %))))
+     (update-in d [:elements] #(sort-by (join-juxt-fn :type :name) %))
+     (update-in d [:elements] #(map (partial reorder [:type :name :description :tags :position])
+                                    %))
+     (update-in d [:relationships] #(sort-by (join-juxt-fn :source :destination) %))
+     (update-in d [:relationships] #(map (partial reorder [:source :description :destination :technology :vertices :order])
+                                         %))))     
 
 (defn fixup-structurizr [s]
   (-> s
