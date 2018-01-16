@@ -76,7 +76,7 @@
   (as-> doc d
      (reorder [:type :scope :description :elements :relationships :styles :size] d)
      (update-in d [:elements] #(sort-by (join-juxt-fn :type :name) %))
-     (update-in d [:elements] #(map (partial reorder [:type :name :description :tags :position])
+     (update-in d [:elements] #(map (partial reorder [:type :name :description :tags :position :containers])
                                     %))
      (update-in d [:relationships] #(sort-by (join-juxt-fn :source :destination) %))
      (update-in d [:relationships] #(map (partial reorder [:source :description :destination :technology :vertices :order])
