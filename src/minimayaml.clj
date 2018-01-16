@@ -66,7 +66,7 @@
   (let [jfn (apply juxt ks)]
     (fn [item] (join (jfn item)))))
 
-(defn sort-structurizr
+(defn reorder-structurizr
   "Accepts a map representing a parsed Structurizr YAML document, as parsed by
   clj-yaml. Returns the same map with its top-level kv-pairs sorted with a
   custom sort, and second-level nodes sorted alphabetically by the names of the
@@ -92,8 +92,8 @@
 (defn process-structurizr-doc-string [s]
   (-> s
       parse-string
-      sort-structurizr
-      shrink ; must follow sort-structurizr because that tends to introduce new keys with nil values
+      reorder-structurizr
+      shrink ; must follow reorder-structurizr because that tends to introduce new keys with nil values
       (generate-string :dumper-options {:flow-style :block})
       fixup-structurizr))
 
