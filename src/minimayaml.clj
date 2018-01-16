@@ -86,9 +86,8 @@
   (-> s
     (str/replace #"(\d+,\d+)" "'$1'")
     (str/replace #"(elements|relationships|styles|size):" "\n$1:")
-    (str/replace #"(description): Uses\n" "$1: uses\n")
-    ;; The below approach is brittle/iffy; TODO: look into using a custom SnakeYAML formatter instead.
-    (str/replace #"\n- (.+)\n" "\n-\n  $1\n")))
+    (str/replace #"(description): Uses\n" "$1: uses\n")))
+    
 
 (defn process-structurizr-doc-string [s]
   (-> s
