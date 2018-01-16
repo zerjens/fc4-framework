@@ -48,14 +48,19 @@
   from the seq of keys, the corresponding k/v pairs will be sorted “naturally”
   after the specified k/v pairs."
   [ks m]
-  (let [specified-keys (set ks)
-        present-keys (set (keys m))
-        specified-and-present-keys (intersection specified-keys present-keys)
+  (let [specified-keys (set ks) ; reminder: this set is unordered.
+        present-keys (set (keys m)) ; reminder: this set is unordered.
         unspecified-but-present-keys (difference present-keys specified-keys)
-        all-keys-in-order (concat specified-and-present-keys (sort-by identity unspecified-but-present-keys))]
+        ; The below starts with ks because the above sets don’t retain order. I
+        ; tried using flatland.ordered.set but the difference and intersection
+        ; functions from clojure.set did not work as expected with those. This
+        ; means this function won’t filter out keys that are specified but not
+        ; present, and therefore those keys will be present in the output map with
+        ; nil values. This is acceptable to me; I can work with it.
+        all-keys-in-order (concat ks (sort-by identity unspecified-but-present-keys))]
     (into (ordered-map)
           (map #(vector % (get m %))
-              all-keys-in-order))))
+               all-keys-in-order))))
 
 (defn join-juxt-fn [& ks]
   (let [jfn (apply juxt ks)]
@@ -88,8 +93,8 @@
 (defn process-structurizr-doc-string [s]
   (-> s
       parse-string
-      shrink
       sort-structurizr
+      shrink ; must follow sort-structurizr because that tends to introduce new keys with nil values
       (generate-string :dumper-options {:flow-style :block})
       fixup-structurizr))
 
