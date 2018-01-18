@@ -80,7 +80,9 @@
                                     %))
      (update-in d [:relationships] #(sort-by (join-juxt-fn :source :destination) %))
      (update-in d [:relationships] #(map (partial reorder [:source :description :destination :technology :vertices :order])
-                                         %))))     
+                                         %))
+     (update-in d [:styles] #(sort-by (join-juxt-fn :type :tag) %))
+     (update-in d [:styles] #(map (partial reorder [:type :tag]) %))))
 
 (defn fixup-structurizr [s]
   (-> s
