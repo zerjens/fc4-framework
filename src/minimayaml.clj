@@ -75,12 +75,11 @@
   [doc]
   (as-> doc d
      (reorder [:type :scope :description :elements :relationships :styles :size] d)
+     ;; TODO: this calls for a more declarative style; some kind of “spec” data structure that declares all this
      (update-in d [:elements] #(sort-by (join-juxt-fn :type :name) %))
-     (update-in d [:elements] #(map (partial reorder [:type :name :description :tags :position :containers])
-                                    %))
+     (update-in d [:elements] #(map (partial reorder [:type :name :description :tags :position :containers]) %))
      (update-in d [:relationships] #(sort-by (join-juxt-fn :source :destination) %))
-     (update-in d [:relationships] #(map (partial reorder [:source :description :destination :technology :vertices :order])
-                                         %))
+     (update-in d [:relationships] #(map (partial reorder [:source :description :destination :technology :vertices :order]) %))
      (update-in d [:styles] #(sort-by (join-juxt-fn :type :tag) %))
      (update-in d [:styles] #(map (partial reorder [:type :tag]) %))))
 
@@ -89,7 +88,6 @@
     (str/replace #"(\d+,\d+)" "'$1'")
     (str/replace #"(elements|relationships|styles|size):" "\n$1:")
     (str/replace #"(description): Uses\n" "$1: uses\n")))
-    
 
 (defn process-structurizr-doc-string [s]
   (-> s
