@@ -111,7 +111,7 @@
   (-> s
       parse-string
       reorder-structurizr
-      (round-coords 100 100)
+      (round-coords 100 50)
       shrink ; must follow reorder-structurizr because that tends to introduce new keys with nil values
       (generate-string :dumper-options {:flow-style :block})
       fixup-structurizr))
