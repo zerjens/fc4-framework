@@ -1,10 +1,10 @@
-(ns minimayaml.repl
+(ns restructurizr.repl
   "Some useful funcs for using Minimayaml from the REPL."
   (:require [clojure.repl :as cr]
             [clojure.core.async :as ca :refer [chan go-loop offer! poll!]]
             [clojure.string :as str :refer [includes?]]
-            [minimayaml.core :as c]
-            [minimayaml.clipboard :as cb]))
+            [restructurizr.core :as c]
+            [restructurizr.clipboard :as cb]))
 
 (def stop-chan (chan 1))
 
