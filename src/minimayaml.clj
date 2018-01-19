@@ -83,6 +83,24 @@
      (update-in d [:styles] #(sort-by (join-juxt-fn :type :tag) %))
      (update-in d [:styles] #(map (partial reorder [:type :tag]) %))))
 
+(defn round-to-closest [target n]
+  (-> (/ n (float target))
+      Math/round
+      (* target)))
+
+(defn round-coords [d target min-margin]
+  (postwalk
+    (fn [e]
+      (if-let [[_ x y] (when (string? e)
+                         (re-find #"^(-?\d+), ?(-?\d+)$" e))]
+        (->> [x y]
+             (map #(Integer/parseInt %))
+             (map (partial round-to-closest target))
+             (map (partial max min-margin)) ; minimum left/top margins
+             (join ","))
+        e))
+    d))
+
 (defn fixup-structurizr [s]
   (-> s
     (str/replace #"(\d+,\d+)" "'$1'")
@@ -93,6 +111,7 @@
   (-> s
       parse-string
       reorder-structurizr
+      (round-coords 100 100)
       shrink ; must follow reorder-structurizr because that tends to introduce new keys with nil values
       (generate-string :dumper-options {:flow-style :block})
       fixup-structurizr))
