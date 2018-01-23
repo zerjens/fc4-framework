@@ -3,9 +3,10 @@
   (:require [clojure.repl :as cr]
             [clojure.core.async :as ca :refer [chan go-loop offer! poll!]]
             [clojure.string :as str :refer [includes?]]
-            [restructurizr.core :as c]
-            [restructurizr.clipboard :as cb]))
-
+            [restructurizr [core :as rc]
+                           [clipboard :as cb]
+                           [files :as rf :refer [process-dir]]]))
+                          
 (def stop-chan (chan 1))
 
 (defn pcb
@@ -18,7 +19,7 @@
              (includes? contents "type")
              (includes? contents "scope"))
       (-> contents
-          c/process-file
+          rc/process-file
           cb/spit)
       (throw (RuntimeException. "Not a Structurizr diagram.")))))
 
@@ -50,3 +51,4 @@
 (cr/doc pcb)
 (cr/doc cpcb)
 (cr/doc stop)
+(cr/doc process-dir)
