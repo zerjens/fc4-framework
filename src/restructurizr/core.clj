@@ -7,6 +7,10 @@
             [clojure.walk :as walk :refer [postwalk]]
             [clojure.set :refer [difference intersection]]))
 
+(def default-front-matter
+  (str "link__for_use_with: https://structurizr.com/express\n"
+       "link__diagram_scheme_description: https://c4model.com/"))
+
 (defn split-file
   "Accepts a string containing either a single YAML document, or a YAML document
   and front matter (which itself is a YAML document). Returns a seq containing 2
@@ -148,7 +152,9 @@
 (defn process-file [s]
   (let [[front main] (split-file s)
         main-processed (process-structurizr-doc-string main)]
-    (str front "\n---\n" main-processed)))
+    (str (case front "" default-front-matter front)
+         "\n---\n"
+         main-processed)))
 
 (defn -main []
   (->> (slurp *in*)
