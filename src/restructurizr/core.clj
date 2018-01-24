@@ -120,8 +120,7 @@
   (postwalk
     (fn [e]
       ; not all values of :position have an x and a y — relationship positions have a single value
-      (if-let [coords (when-let [pos (:position e)]
-                         (re-find #"^(-?\d+), ?(-?\d+)$" pos))]
+      (if-let [coords (some->> (:position e) (re-find #"^(-?\d+), ?(-?\d+)$"))]
         (let [[_ x y] coords
               offsets (case (:type e) "Person" (vals person-offsets) [0 0])
               new-coords (->> [x y]
