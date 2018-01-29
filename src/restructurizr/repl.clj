@@ -1,7 +1,7 @@
 (ns restructurizr.repl
   "Some useful funcs for using Minimayaml from the REPL."
   (:require [clojure.repl :as cr]
-            [clojure.core.async :as ca :refer [chan go-loop offer! poll!]]
+            [clojure.core.async :as ca :refer [<! chan go-loop offer! poll! timeout]]
             [clojure.string :as str :refer [includes?]]
             [restructurizr [core :as rc]
                            [clipboard :as cb]
@@ -63,7 +63,7 @@
       (if (poll! stop-chan)
         (do (println "Stopped!") (flush))
         (let [contents (cb/slurp)]
-          (Thread/sleep 1000)
+          (<! (timeout 1000))
           (recur contents)))))
   nil)
 
