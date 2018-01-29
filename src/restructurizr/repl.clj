@@ -46,9 +46,9 @@
        (flush)
        nil)))
 
-(defn cpcb
-  "Continuously Process Clipboard — call pcb every second, if the contents of the clipboard has
-  changed since the prior call. Stop the routine by calling stop."
+(defn start
+  "Start continuously processing the clipboard in the background, once a second, when the contents
+  of the clipboard change. Stop the routine by calling stop."
   []
   ;; Just in case stop was accidentally called twice, in which case there’d be a superfluous value
   ;; in the channel, we’ll remove a value from the channel just before we get started.
@@ -68,11 +68,11 @@
   nil)
 
 (defn stop
-  "Stop the goroutine started by cpcb."
+  "Stop the goroutine started by start."
   []
   (offer! stop-chan true))
 
 (cr/doc pcb)
-(cr/doc cpcb)
+(cr/doc start)
 (cr/doc stop)
 (cr/doc process-dir)

@@ -11,4 +11,4 @@ A tool for reorganizing, restructuring, and reformatting YAML documents that hav
 1. Run in your shell: `clj`
 1. Run in the REPL:
    1. `(use 'restructurizr.repl)`
-   1. Either `(pcb)` or `(cpcb)`
+   1. Either `(pcb)` or `(start)`
