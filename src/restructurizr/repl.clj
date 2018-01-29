@@ -9,15 +9,18 @@
                           
 (def stop-chan (chan 1))
 
+(defn probably-structurizr-doc? [v]
+  (and (string? v)
+       (includes? v "type")
+       (includes? v "scope")))
+
 (defn pcb
   "Process Clipboard — process the contents of the clipboard and write the results back to the
   clipboard. If the contents of the clipboard are not a Structurizr diagram, a RuntimeException is
   thrown."
   []
   (let [contents (cb/slurp)]
-    (if (and (string? contents)
-             (includes? contents "type")
-             (includes? contents "scope"))
+    (if (probably-structurizr-doc? contents)
       (-> contents
           rc/process-file
           second
@@ -34,7 +37,8 @@
            _ (cb/spit str-result)
            {:keys [:type :scope]} main]
        (println (current-local-time-str) "-> processed" type "for" scope "with great success!")
-       (flush))
+       (flush)
+       str-result)
      (catch Exception err
        ; toString _should_ suffice but some of the SnakeYAML exception classes seem to have a bug in
        ; their toString implementations wherein they don’t print their names.
@@ -43,24 +47,28 @@
        nil)))
 
 (defn cpcb
-  "Continuously Process Clipboard — call pcb every second. Stop the routine by calling stop.
-   TODO: there’s a huge chance for a race condition here — need to compare clipboard contents
-   with prior output and only process if it’s changed."
+  "Continuously Process Clipboard — call pcb every second, if the contents of the clipboard has
+  changed since the prior call. Stop the routine by calling stop."
   []
   ;; Just in case stop was accidentally called twice, in which case there’d be a superfluous value
   ;; in the channel, we’ll remove a value from the channel just before we get started.
   (poll! stop-chan)
 
-  (go-loop []
-    (let [stop? (poll! stop-chan)]
-      (when-not stop?
-        (try-process (cb/slurp))
-        (Thread/sleep 1000)
-        (recur))))
+  (go-loop [prior-contents nil]
+    (let [contents (cb/slurp)
+          process? (and (not= contents prior-contents)
+                        (probably-structurizr-doc? contents))
+          output (when process?
+                   (try-process contents))]          
+      (if (poll! stop-chan)
+        (do (println "Stopped!") (flush))
+        (let [contents (cb/slurp)]
+          (Thread/sleep 1000)
+          (recur contents)))))
   nil)
 
 (defn stop
-  "Stop the goroutine started by cpcb"
+  "Stop the goroutine started by cpcb."
   []
   (offer! stop-chan true))
 
