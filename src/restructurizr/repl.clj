@@ -26,24 +26,24 @@
 (defn cpcb
   "Continuously Process Clipboard — call pcb every second. Stop the routine by calling stop.
    TODO: there’s a huge chance for a race condition here — need to compare clipboard contents
-   with prior output and only process if it’s changed.
-   "
-  
+   with prior output and only process if it’s changed."
   []
   ;; Just in case stop was accidentally called twice, in which case there’d be a superfluous value
   ;; in the channel, we’ll remove a value from the channel just before we get started.
   (poll! stop-chan)
+
   (go-loop []
-    (Thread/sleep 1000)
-    (try
-      (pcb)
-      (print "🎉 ")
-      (flush)
-      (catch Exception err
-        (print (-> err class .getSimpleName) "")
-        (flush)))
-    (when-not (poll! stop-chan)
-      (recur)))
+    (let [stop? (poll! stop-chan)]
+      (when-not stop?
+        (try
+          (pcb)
+          (print ".")
+          (flush)
+          (catch Exception err
+            (println (-> err class .getSimpleName) "->" (.getMessage err))
+            (flush)))
+        (Thread/sleep 1000)
+        (recur))))
   nil)
 
 (defn stop
