@@ -28,4 +28,5 @@
     (println (relativize (str file) dir-path))
     (->> (slurp file)
          rc/process-file
+         second
          (spit file))))

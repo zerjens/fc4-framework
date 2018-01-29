@@ -20,8 +20,27 @@
              (includes? contents "scope"))
       (-> contents
           rc/process-file
+          second
           cb/spit)
       (throw (RuntimeException. "Not a Structurizr diagram.")))))
+
+(def current-local-time-format (java.text.SimpleDateFormat. "HH:mm:ss"))
+
+(defn current-local-time-str [] (.format current-local-time-format (java.util.Date.)))
+
+(defn try-process [contents]
+  (try
+     (let [[main str-result] (rc/process-file contents)
+           _ (cb/spit str-result)
+           {:keys [:type :scope]} main]
+       (println (current-local-time-str) "-> processed" type "for" scope "with great success!")
+       (flush))
+     (catch Exception err
+       ; toString _should_ suffice but some of the SnakeYAML exception classes seem to have a bug in
+       ; their toString implementations wherein they don’t print their names.
+       (println (-> err class .getSimpleName) "->" (.getMessage err))
+       (flush)
+       nil)))
 
 (defn cpcb
   "Continuously Process Clipboard — call pcb every second. Stop the routine by calling stop.
@@ -35,13 +54,7 @@
   (go-loop []
     (let [stop? (poll! stop-chan)]
       (when-not stop?
-        (try
-          (pcb)
-          (print ".")
-          (flush)
-          (catch Exception err
-            (println (-> err class .getSimpleName) "->" (.getMessage err))
-            (flush)))
+        (try-process (cb/slurp))
         (Thread/sleep 1000)
         (recur))))
   nil)

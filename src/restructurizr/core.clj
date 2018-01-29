@@ -1,7 +1,7 @@
 #!/usr/local/bin/clojure
 
 (ns restructurizr.core
-  (:require [clj-yaml.core :as yaml :refer [parse-string generate-string]]
+  (:require [clj-yaml.core :as yaml]
             [flatland.ordered.map :refer [ordered-map]]
             [clojure.string :as str :refer [blank? join]]
             [clojure.walk :as walk :refer [postwalk]]
@@ -139,25 +139,34 @@
     (str/replace #"(elements|relationships|styles|size):" "\n$1:")
     (str/replace #"(description): Uses\n" "$1: uses\n")))
 
-(defn process-structurizr-doc-string [s]
-  (-> s
-      parse-string
-      reorder-structurizr
+(defn process-structurizr-doc [d]
+  (-> (reorder-structurizr d)
       (snap-to-grid 100 50)
-      shrink ; must follow reorder-structurizr because that tends to introduce new keys with nil values
-      (generate-string :dumper-options {:flow-style :block})
-      fixup-structurizr))
+      shrink)) ; must follow reorder-structurizr because that tends to introduce new keys with nil values
+      
+(defn stringify-structurizr-doc [d]
+   (-> (yaml/generate-string d :dumper-options {:flow-style :block})
+       fixup-structurizr))
 
-(defn process-file [s]
+(defn process-file
+  "Accepts a string containing either a single YAML document, or a YAML document and front matter
+  (which itself is a YAML document). Returns a seq containing in the first position the fully
+  processed main document as an ordered-map, and in the second a string containing first some front
+  matter, the front matter separator, and then the fully processed main document."
+  [s]
   (let [[front main] (split-file s)
-        main-processed (process-structurizr-doc-string main)]
-    (str (case front "" default-front-matter front)
-         "\n---\n"
-         main-processed)))
+        main-processed (-> main
+                           yaml/parse-string
+                           process-structurizr-doc)
+        str-output (str (case front "" default-front-matter front)
+                        "\n---\n"
+                        (stringify-structurizr-doc main-processed))]
+    [main-processed str-output]))
 
 (defn -main []
   (->> (slurp *in*)
        process-file
+       second
        print)
   (flush)
   (Thread/sleep 10))
