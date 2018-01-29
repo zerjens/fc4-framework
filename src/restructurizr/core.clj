@@ -92,22 +92,40 @@
       Math/round
       (* target)))
 
-; ;; TODO: This was superceded by snap-to-grid but keeping it around because we might be able to use
-; ;; this to “snap” the relationship vertices.
-; (defn round-coords [d target min-margin]
-;   (postwalk
-;     (fn [e]
-;       (if-let [[_ x y] (when (string? e)
-;                          (re-find #"^(-?\d+), ?(-?\d+)$" e))]
-;         (->> [x y]
-;              (map #(Integer/parseInt %))
-;              (map (partial round-to-closest target))
-;              (map (partial max min-margin)) ; minimum left/top margins
-;              (join ","))
-;         e))
-;     d))
+(def elem-offsets {"Person" [25, -50]})
 
-(def person-offsets {:x 25, :y -50})
+(defn snap-coords
+  "Accepts an x and a y and config values and returns a string in the form \"x,y\"."
+  ([x y to-closest min-margin]
+   (snap-coords x y to-closest min-margin (repeat 0)))
+  ([x y to-closest min-margin offsets]
+   (->> [x y]
+       (map #(Integer/parseInt %))
+       (map (partial round-to-closest to-closest))
+       (map (partial max min-margin)) ; minimum left/top margins
+       (map (partial +) offsets)
+       (join ","))))
+
+(defn snap-elem-to-grid
+  "Accepts an ordered map representing an element (a software system, person, container, or
+  component) and snaps its position (coords) to a grid using the specified values."
+  [e to-closest min-margin]
+  (let [[_ x y] (->> (:position e)
+                     (re-find #"^(-?\d+), ?(-?\d+)$"))
+        offsets (get elem-offsets (:type e) (repeat 0))
+        new-coords (snap-coords x y to-closest min-margin offsets)]
+    (assoc e :position new-coords)))
+
+(defn snap-vertices-to-grid
+  "Accepts an ordered-map representing a relationship, and snaps its vertices, if any, to a grid
+  using the specified values."
+  [e to-closest min-margin]
+  (assoc e :vertices
+    (map #(let [[_ x y] (re-find #"^(-?\d+), ?(-?\d+)$" %)]
+            (snap-coords x y to-closest min-margin))
+         (:vertices e))))
+
+(def elem-types #{"Person" "Software System" "Container" "Component"})
 
 (defn snap-to-grid
   "Accepts a parsed structurizr doc, a grid-size number, and a min-margin number. Searches the doc
@@ -115,22 +133,20 @@
   the specified size, and to ensure that each coord is no “smaller” than the min-margin number.
   Accounts for a quirk of Structurizr Express wherein elements of type “Person” need to be offset
   from other elements in order to align properly with them."
-  ;; TODO: this does not currently “snap” the coords of relationship vertices
   [d to-closest min-margin]
   (postwalk
-    (fn [e]
-      ; not all values of :position have an x and a y — relationship positions have a single value
-      (if-let [coords (some->> (:position e) (re-find #"^(-?\d+), ?(-?\d+)$"))]
-        (let [[_ x y] coords
-              offsets (case (:type e) "Person" (vals person-offsets) [0 0])
-              new-coords (->> [x y]
-                              (map #(Integer/parseInt %))
-                              (map (partial round-to-closest to-closest))
-                              (map (partial max min-margin)) ; minimum left/top margins
-                              (map (partial +) offsets)
-                              (join ","))]
-          (assoc e :position new-coords))
-        e))
+    #(cond
+       (and (contains? elem-types (:type %))
+             ; Checking for :position alone wouldn’t be sufficient; relationships can also have it
+             ; and it means something different for them.
+            (:position %))
+       (snap-elem-to-grid % to-closest min-margin)
+ 
+       (:vertices %)
+       (snap-vertices-to-grid % (/ to-closest 2) min-margin)
+ 
+       :else
+       %)
     d))
 
 (defn fixup-structurizr [s]
