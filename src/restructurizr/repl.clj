@@ -30,6 +30,9 @@
    "
   
   []
+  ;; Just in case stop was accidentally called twice, in which case there’d be a superfluous value
+  ;; in the channel, we’ll remove a value from the channel just before we get started.
+  (poll! stop-chan)
   (go-loop []
     (Thread/sleep 1000)
     (try
