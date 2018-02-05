@@ -87,6 +87,12 @@
      (update-in d [:styles] #(sort-by (join-juxt-fn :type :tag) %))
      (update-in d [:styles] #(map (partial reorder [:type :tag]) %))))
 
+(defn parse-coords [s]
+  (some->> s
+           (re-find #"^(-?\d+), ?(-?\d+)$")
+           (drop 1)
+           (map #(Integer/parseInt %))))
+
 (defn round-to-closest [target n]
   (-> (/ n (float target))
       Math/round
@@ -95,25 +101,23 @@
 (def elem-offsets {"Person" [25, -50]})
 
 (defn snap-coords
-  "Accepts an x and a y and config values and returns a string in the form \"x,y\"."
-  ([x y to-closest min-margin]
-   (snap-coords x y to-closest min-margin (repeat 0)))
-  ([x y to-closest min-margin offsets]
-   (->> [x y]
-       (map #(Integer/parseInt %))
-       (map (partial round-to-closest to-closest))
-       (map (partial max min-margin)) ; minimum left/top margins
-       (map (partial +) offsets)
-       (join ","))))
+  "Accepts a seq of X and Y numbers, and config values and returns a string in the form \"x,y\"."
+  ([coords to-closest min-margin]
+   (snap-coords coords to-closest min-margin (repeat 0)))
+  ([coords to-closest min-margin offsets]
+   (->> coords
+        (map (partial round-to-closest to-closest))
+        (map (partial max min-margin)) ; minimum left/top margins
+        (map (partial +) offsets)
+        (join ","))))
 
 (defn snap-elem-to-grid
   "Accepts an ordered map representing an element (a software system, person, container, or
   component) and snaps its position (coords) to a grid using the specified values."
   [e to-closest min-margin]
-  (let [[_ x y] (->> (:position e)
-                     (re-find #"^(-?\d+), ?(-?\d+)$"))
+  (let [coords (parse-coords (:position e))
         offsets (get elem-offsets (:type e) (repeat 0))
-        new-coords (snap-coords x y to-closest min-margin offsets)]
+        new-coords (snap-coords coords to-closest min-margin offsets)]
     (assoc e :position new-coords)))
 
 (defn snap-vertices-to-grid
@@ -121,8 +125,7 @@
   using the specified values."
   [e to-closest min-margin]
   (assoc e :vertices
-    (map #(let [[_ x y] (re-find #"^(-?\d+), ?(-?\d+)$" %)]
-            (snap-coords x y to-closest min-margin))
+    (map #(snap-coords (parse-coords %) to-closest min-margin)
          (:vertices e))))
 
 (def elem-types #{"Person" "Software System" "Container" "Component"})
