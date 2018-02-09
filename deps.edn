@@ -1,0 +1,3 @@
+{:deps
+ {org.clojure/core.async {:mvn/version "0.4.474"}
+  circleci/clj-yaml {:mvn/version "0.5.6"}}}
