@@ -19,10 +19,10 @@
   second string may or may not be a valid YAML document, depending on how
   mangled the document separator was."
   [s]
-  (let [split (str/split s #"\n[-]{3}\n" 2)]
-     (if (= (count split) 2)
-         split
-         ["" (first split)])))
+  (let [[first second] (str/split s #"\n[-]{3}\n" 2)]
+     (if second
+         [first second]
+         ["" first])))
 
 (defn blank-nil-or-empty? [v]
   (or (nil? v)
@@ -46,7 +46,9 @@
             nm))
 
 (defn reorder
-  "Accepts a seq of keys and a map; returns a new ordered map containing the
+  "Reorder a map as per a seq of keys.
+  
+  Accepts a seq of keys and a map; returns a new ordered map containing the
   specified keys and their corresponding values from the input map, in the same
   order as the specified keys. If any keys present in the input map are omitted
   from the seq of keys, the corresponding k/v pairs will be sorted “naturally”
@@ -61,12 +63,17 @@
         ; means this function won’t filter out keys that are specified but not
         ; present, and therefore those keys will be present in the output map with
         ; nil values. This is acceptable to me; I can work with it.
-        all-keys-in-order (concat ks (sort-by identity unspecified-but-present-keys))]
+        all-keys-in-order (concat ks (sort unspecified-but-present-keys))]
     (into (ordered-map)
           (map #(vector % (get m %))
                all-keys-in-order))))
 
-(defn join-juxt-fn [& ks]
+(defn join-juxt-fn
+  "Accepts keys, returns a function that will first apply all the keys as functions using juxt and
+  then combine the results with clojure.string/join.
+  
+  Can be useful for extracting composite sort values from maps."
+  [& ks]  
   (let [jfn (apply juxt ks)]
     (fn [item] (join (jfn item)))))
 
@@ -77,15 +84,14 @@
   things they describe. e.g. for elements, by their type then name; for
   relationships, by the source and then destination."
   [doc]
-  (as-> doc d
-     (reorder [:type :scope :description :elements :relationships :styles :size] d)
-     ;; TODO: this calls for a more declarative style; some kind of “spec” data structure that declares all this
-     (update-in d [:elements] #(sort-by (join-juxt-fn :type :name) %))
-     (update-in d [:elements] #(map (partial reorder [:type :name :description :tags :position :containers]) %))
-     (update-in d [:relationships] #(sort-by (join-juxt-fn :source :destination) %))
-     (update-in d [:relationships] #(map (partial reorder [:source :description :destination :technology :vertices :order]) %))
-     (update-in d [:styles] #(sort-by (join-juxt-fn :type :tag) %))
-     (update-in d [:styles] #(map (partial reorder [:type :tag]) %))))
+  (-> (reorder [:type :scope :description :elements :relationships :styles :size] doc)
+      ;; TODO: this calls for a more declarative style; some kind of “spec” data structure that declares all this
+      (update-in [:elements] #(sort-by (join-juxt-fn :type :name) %))
+      (update-in [:elements] #(map (partial reorder [:type :name :description :tags :position :containers]) %))
+      (update-in [:relationships] #(sort-by (join-juxt-fn :source :destination) %))
+      (update-in [:relationships] #(map (partial reorder [:source :description :destination :technology :vertices :order]) %))
+      (update-in [:styles] #(sort-by (join-juxt-fn :type :tag) %))
+      (update-in [:styles] #(map (partial reorder [:type :tag]) %))))
 
 (defn parse-coords [s]
   (some->> s
@@ -183,9 +189,9 @@
     [main-processed str-output]))
 
 (defn -main []
-  (->> (slurp *in*)
-       process-file
-       second
-       print)
+  (-> (slurp *in*)
+      process-file
+      second
+      print)
   (flush)
   (Thread/sleep 10))

@@ -3,9 +3,9 @@
   (:require [clojure.repl :as cr]
             [clojure.core.async :as ca :refer [<! chan go-loop offer! poll! timeout]]
             [clojure.string :as str :refer [includes?]]
-            [restructurizr [core :as rc]
-                           [clipboard :as cb]
-                           [files :as rf :refer [process-dir]]]))
+            [restructurizr.core :as rc]
+            [restructurizr.clipboard :as cb]
+            [restructurizr.files :as rf]))
                           
 (def stop-chan (chan 1))
 
@@ -71,6 +71,15 @@
   "Stop the goroutine started by start."
   []
   (offer! stop-chan true))
+
+;; Create an “alias” to process-dir in this ns so a user can run
+;; `(use this-ns)` in a REPL and then call process-dir without needing to specify a different
+;; namespace.
+(def process-dir rf/process-dir)
+
+;; Copy the metadata from the actual process-dir to the local “alias” — mainly so the call to doc
+;; below will work. Source: https://stackoverflow.com/a/13110173/7012
+(alter-meta! #'process-dir merge (select-keys (meta #'rf/process-dir) [:doc :arglists]))
 
 (cr/doc pcb)
 (cr/doc start)
