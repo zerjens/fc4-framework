@@ -5,8 +5,9 @@
             [clojure.string :as str :refer [includes?]]
             [restructurizr.core :as rc]
             [restructurizr.clipboard :as cb]
-            [restructurizr.files :as rf]))
-                          
+            [restructurizr.files :as rf]
+            [potemkin :refer [import-vars]]))
+
 (def stop-chan (chan 1))
 
 (defn probably-structurizr-doc? [v]
@@ -27,9 +28,11 @@
           cb/spit)
       (throw (RuntimeException. "Not a Structurizr diagram.")))))
 
-(def current-local-time-format (java.text.SimpleDateFormat. "HH:mm:ss"))
+(def current-local-time-format
+  (java.text.SimpleDateFormat. "HH:mm:ss"))
 
-(defn current-local-time-str [] (.format current-local-time-format (java.util.Date.)))
+(defn current-local-time-str []
+  (.format current-local-time-format (java.util.Date.)))
 
 (defn try-process [contents]
   (try
@@ -72,16 +75,9 @@
   []
   (offer! stop-chan true))
 
-;; Create an “alias” to process-dir in this ns so a user can run
-;; `(use this-ns)` in a REPL and then call process-dir without needing to specify a different
-;; namespace.
-(def process-dir rf/process-dir)
+;; Make process-dir readily accessible
+(import-vars [restructurizr.files process-dir])
 
-;; Copy the metadata from the actual process-dir to the local “alias” — mainly so the call to doc
-;; below will work. Source: https://stackoverflow.com/a/13110173/7012
-(alter-meta! #'process-dir merge (select-keys (meta #'rf/process-dir) [:doc :arglists]))
-
-(cr/doc pcb)
-(cr/doc start)
-(cr/doc stop)
-(cr/doc process-dir)
+;; Print docs for the most handy-dandy funcs
+(doseq [s ['pcb 'start 'stop 'process-dir]]
+  (#'cr/print-doc (meta (resolve s))))

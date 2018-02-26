@@ -13,16 +13,17 @@
 
 (defn split-file
   "Accepts a string containing either a single YAML document, or a YAML document
-  and front matter (which itself is a YAML document). Returns a seq containing 2
-  strings. If the input string does not contain front matter, or does not
-  contain a valid separator, the first string will be blank. In that case the
-  second string may or may not be a valid YAML document, depending on how
-  mangled the document separator was."
+  and front matter (which itself is a YAML document). Returns a seq like
+  [front? main] wherein front? may be nil if the input string does not contain
+  front matter, or does not contain a valid separator. In that case main may or
+  may not be a valid YAML document, depending on how mangled the document
+  separator was."
   [s]
-  (let [[first second] (str/split s #"\n[-]{3}\n" 2)]
-     (if second
-         [first second]
-         ["" first])))
+  (let [matcher (re-matcher #"(?ms)((?<front>.+)---\n)?(?<main>.+)\Z" s)
+        _ (.find matcher)
+        front (.group matcher "front")
+        main (.group matcher "main")]
+    [front main]))
 
 (defn blank-nil-or-empty? [v]
   (or (nil? v)
@@ -65,7 +66,7 @@
         ; nil values. This is acceptable to me; I can work with it.
         all-keys-in-order (concat ks (sort unspecified-but-present-keys))]
     (into (ordered-map)
-          (map #(vector % (get m %))
+          (map (juxt identity (partial get m))
                all-keys-in-order))))
 
 (defn join-juxt-fn
@@ -77,21 +78,33 @@
   (let [jfn (apply juxt ks)]
     (fn [item] (join (jfn item)))))
 
+(defn reorder-elements [d]
+  (update-in d [:elements]
+    #(->> (sort-by (join-juxt-fn :type :name) %)
+          (map (partial reorder [:type :name :description :tags :position :containers])))))
+
+(defn reorder-relationships [d]
+  (update-in d [:relationships]
+    #(->> (sort-by (join-juxt-fn :source :destination) %)
+          (map (partial reorder [:source :description :destination :technology :vertices :order])))))
+
+(defn reorder-styles [d]
+  (update-in d [:styles]
+    #(->> (sort-by (join-juxt-fn :type :tag) %)
+          (map (partial reorder [:type :tag])))))
+
 (defn reorder-structurizr
   "Accepts a map representing a parsed Structurizr YAML document, as parsed by
   clj-yaml. Returns the same map with its top-level kv-pairs sorted with a
   custom sort, and second-level nodes sorted alphabetically by the names of the
   things they describe. e.g. for elements, by their type then name; for
   relationships, by the source and then destination."
-  [doc]
-  (-> (reorder [:type :scope :description :elements :relationships :styles :size] doc)
-      ;; TODO: this calls for a more declarative style; some kind of “spec” data structure that declares all this
-      (update-in [:elements] #(sort-by (join-juxt-fn :type :name) %))
-      (update-in [:elements] #(map (partial reorder [:type :name :description :tags :position :containers]) %))
-      (update-in [:relationships] #(sort-by (join-juxt-fn :source :destination) %))
-      (update-in [:relationships] #(map (partial reorder [:source :description :destination :technology :vertices :order]) %))
-      (update-in [:styles] #(sort-by (join-juxt-fn :type :tag) %))
-      (update-in [:styles] #(map (partial reorder [:type :tag]) %))))
+  [d]
+  (->> d
+      (reorder [:type :scope :description :elements :relationships :styles :size])
+      reorder-elements
+      reorder-relationships
+      reorder-styles))
 
 (defn parse-coords [s]
   (some->> s
@@ -104,17 +117,19 @@
       Math/round
       (* target)))
 
-(def elem-offsets {"Person" [25, -50]})
+(def elem-offsets
+  {"Person" [25, -50]})
 
 (defn snap-coords
-  "Accepts a seq of X and Y numbers, and config values and returns a string in the form \"x,y\"."
+  "Accepts a seq of X and Y numbers, and config values and returns a string in
+  the form \"x,y\"."
   ([coords to-closest min-margin]
    (snap-coords coords to-closest min-margin (repeat 0)))
   ([coords to-closest min-margin offsets]
    (->> coords
         (map (partial round-to-closest to-closest))
         (map (partial max min-margin)) ; minimum left/top margins
-        (map (partial +) offsets)
+        (map + offsets)
         (join ","))))
 
 (defn snap-elem-to-grid
@@ -134,7 +149,8 @@
     (map #(snap-coords (parse-coords %) to-closest min-margin)
          (:vertices e))))
 
-(def elem-types #{"Person" "Software System" "Container" "Component"})
+(def elem-types
+  #{"Person" "Software System" "Container" "Component"})
 
 (defn snap-to-grid
   "Accepts a parsed structurizr doc, a grid-size number, and a min-margin number. Searches the doc
@@ -179,11 +195,11 @@
   processed main document as an ordered-map, and in the second a string containing first some front
   matter, the front matter separator, and then the fully processed main document."
   [s]
-  (let [[front main] (split-file s)
+  (let [[front? main] (split-file s)
         main-processed (-> main
                            yaml/parse-string
                            process-structurizr-doc)
-        str-output (str (case front "" default-front-matter front)
+        str-output (str (or front? default-front-matter)
                         "\n---\n"
                         (stringify-structurizr-doc main-processed))]
     [main-processed str-output]))
