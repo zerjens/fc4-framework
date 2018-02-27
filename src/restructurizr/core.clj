@@ -95,7 +95,7 @@
       (if (= key :root)
           (reorder key-order d)
           (update-in d [key]
-            #(->> (sort-by (apply comp (cons join sort-keys)) %)
+            #(->> (sort-by (comp join (apply juxt sort-keys)) %)
                   (map (partial reorder key-order))))))
     diagram
     desired-order))
