@@ -69,42 +69,36 @@
           (map (juxt identity (partial get m))
                all-keys-in-order))))
 
-(defn join-juxt-fn
-  "Accepts keys, returns a function that will first apply all the keys as functions using juxt and
-  then combine the results with clojure.string/join.
-  
-  Can be useful for extracting composite sort values from maps."
-  [& ks]  
-  (let [jfn (apply juxt ks)]
-    (fn [item] (join (jfn item)))))
-
-(defn reorder-elements [d]
-  (update-in d [:elements]
-    #(->> (sort-by (join-juxt-fn :type :name) %)
-          (map (partial reorder [:type :name :description :tags :position :containers])))))
-
-(defn reorder-relationships [d]
-  (update-in d [:relationships]
-    #(->> (sort-by (join-juxt-fn :source :destination) %)
-          (map (partial reorder [:source :description :destination :technology :vertices :order])))))
-
-(defn reorder-styles [d]
-  (update-in d [:styles]
-    #(->> (sort-by (join-juxt-fn :type :tag) %)
-          (map (partial reorder [:type :tag])))))
+(def desired-order
+  {:root          {:sort-keys nil
+                   :key-order [:type :scope :description :elements
+                               :relationships :styles :size]}
+   :elements      {:sort-keys [:type :name]
+                   :key-order [:type :name :description :tags :position
+                               :containers]}
+   :relationships {:sort-keys [:source :destination]
+                   :key-order [:source :description :destination :technology
+                               :vertices :order]}
+   :styles        {:sort-keys [:type :tag]
+                   :key-order [:type :tag]}})
 
 (defn reorder-structurizr
-  "Accepts a map representing a parsed Structurizr YAML document, as parsed by
-  clj-yaml. Returns the same map with its top-level kv-pairs sorted with a
-  custom sort, and second-level nodes sorted alphabetically by the names of the
-  things they describe. e.g. for elements, by their type then name; for
-  relationships, by the source and then destination."
-  [d]
-  (->> d
-      (reorder [:type :scope :description :elements :relationships :styles :size])
-      reorder-elements
-      reorder-relationships
-      reorder-styles))
+  "Apply desired order/sort to diagram keys and values.
+  
+  Accepts a map representing a parsed Structurizr YAML document, as parsed by
+  clj-yaml. Returns the same map with custom ordering/sorting applied to the
+  root-level key-value pairs and many of the nested sequences of key-value
+  pairs as per desired-order."
+  [diagram]
+  (reduce
+    (fn [d [key {:keys [sort-keys key-order]}]]
+      (if (= key :root)
+          (reorder key-order d)
+          (update-in d [key]
+            #(->> (sort-by (apply comp (cons join sort-keys)) %)
+                  (map (partial reorder key-order))))))
+    diagram
+    desired-order))
 
 (defn parse-coords [s]
   (some->> s
