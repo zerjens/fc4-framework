@@ -14,9 +14,9 @@
                     (ends-with? % ".yml")))))
 
 (defn relativize [path parent-path]
-  (.substring path (if (ends-with? parent-path "/")
-                       (count parent-path)
-                       (inc (count parent-path)))))
+  (subs path (if (ends-with? parent-path "/")
+                 (count parent-path)
+                 (inc (count parent-path)))))
 
 (defn process-dir
   "Accepts a directory path as a string, finds all the YAML files in that dir or in any of its
@@ -28,4 +28,5 @@
     (println (relativize (str file) dir-path))
     (->> (slurp file)
          rc/process-file
+         second
          (spit file))))
