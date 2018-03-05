@@ -1,11 +1,11 @@
-(ns restructurizr.repl
+(ns fc4c.repl
   "Some useful funcs for using Minimayaml from the REPL."
   (:require [clojure.repl :as cr]
             [clojure.core.async :as ca :refer [<! chan go-loop offer! poll! timeout]]
             [clojure.string :as str :refer [includes?]]
-            [restructurizr.core :as rc]
-            [restructurizr.clipboard :as cb]
-            [restructurizr.files :as rf]
+            [fc4c.core :as rc]
+            [fc4c.clipboard :as cb]
+            [fc4c.files :as rf]
             [potemkin :refer [import-vars]]))
 
 (def stop-chan (chan 1))
@@ -76,7 +76,7 @@
   (offer! stop-chan true))
 
 ;; Make process-dir readily accessible
-(import-vars [restructurizr.files process-dir])
+(import-vars [fc4c.files process-dir])
 
 ;; Print docs for the most handy-dandy funcs
 (doseq [s ['pcb 'start 'stop 'process-dir]]

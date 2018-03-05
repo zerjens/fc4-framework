@@ -1,4 +1,4 @@
-(ns restructurizr.clipboard
+(ns fc4c.clipboard
   "A few useful funcs lifted from https://gist.github.com/Folcon/1167903"
   (:refer-clojure :exclude [get slurp spit]))
 

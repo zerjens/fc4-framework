@@ -1,6 +1,6 @@
 #!/usr/local/bin/clojure
 
-(ns restructurizr.core
+(ns fc4c.core
   (:require [clj-yaml.core :as yaml]
             [flatland.ordered.map :refer [ordered-map]]
             [clojure.string :as str :refer [blank? join]]

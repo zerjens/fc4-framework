@@ -1,5 +1,5 @@
-(ns restructurizr.files
-  (:require [restructurizr.core :as rc]
+(ns fc4c.files
+  (:require [fc4c.core :as rc]
             [clojure.java.io :as io]
             [clojure.string :as str :refer [ends-with?]]))
 
@@ -21,7 +21,7 @@
 (defn process-dir
   "Accepts a directory path as a string, finds all the YAML files in that dir or in any of its
   child dirs (recursively) to an unlimited depth, and processes each one with
-  restructurizr.core/process-file, overwriting its current contents. Prints out the path of each
+  fc4c.core/process-file, overwriting its current contents. Prints out the path of each
   file before processing it. If an error occurs, it is thrown immediately, aborting the work."
   [dir-path]
   (doseq [file (yaml-files dir-path)]
