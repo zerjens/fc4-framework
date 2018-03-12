@@ -49,9 +49,12 @@
        (flush)
        nil)))
 
-(defn start
-  "Start continuously processing the clipboard in the background, once a second, when the contents
-  of the clipboard change. Stop the routine by calling stop."
+(defn wcb
+  "Start a background routine that watches the clipboard for changes. If the
+  changed content is a Structurizr diagram in YAML, processes it and writes the
+  result back to the clipboard.
+  
+  Stop the routine by calling stop."
   []
   ;; Just in case stop was accidentally called twice, in which case there’d be a superfluous value
   ;; in the channel, we’ll remove a value from the channel just before we get started.
@@ -79,5 +82,5 @@
 (import-vars [fc4c.files process-dir])
 
 ;; Print docs for the most handy-dandy funcs
-(doseq [s ['pcb 'start 'stop 'process-dir]]
+(doseq [s ['pcb 'wcb 'stop 'process-dir]]
   (#'cr/print-doc (meta (resolve s))))
