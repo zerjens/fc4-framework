@@ -8,8 +8,9 @@
             [clojure.set :refer [difference intersection]]))
 
 (def default-front-matter
-  (str "link__for_use_with: https://structurizr.com/express\n"
-       "link__diagram_scheme_description: https://c4model.com/"))
+  (str "links:\n"
+       "  The FC4 Framework: https://fundingcircle.github.io/fc4-framework/\n"
+       "  Structurizr Express: https://structurizr.com/express"))
 
 (defn split-file
   "Accepts a string containing either a single YAML document, or a YAML document
@@ -82,11 +83,10 @@
    :styles        {:sort-keys [:type :tag]
                    :key-order [:type :tag]}})
 
-(defn reorder-structurizr
+(defn reorder-diagram
   "Apply desired order/sort to diagram keys and values.
   
-  Accepts a map representing a parsed Structurizr YAML document, as parsed by
-  clj-yaml. Returns the same map with custom ordering/sorting applied to the
+  Accepts a diagram as a map. Returns the same map with custom ordering/sorting applied to the
   root-level key-value pairs and many of the nested sequences of key-value
   pairs as per desired-order."
   [diagram]
@@ -147,9 +147,10 @@
   #{"Person" "Software System" "Container" "Component"})
 
 (defn snap-to-grid
-  "Accepts a parsed structurizr doc, a grid-size number, and a min-margin number. Searches the doc
+  "Accepts a diagram as a map, a grid-size number, and a min-margin number. Searches the doc
   for elements and adjusts their positions so as to effectively “snap” them to a virtual grid of
   the specified size, and to ensure that each coord is no “smaller” than the min-margin number.
+  
   Accounts for a quirk of Structurizr Express wherein elements of type “Person” need to be offset
   from other elements in order to align properly with them."
   [d to-closest min-margin]
@@ -168,20 +169,27 @@
        %)
     d))
 
-(defn fixup-structurizr [s]
+(defn fixup-yaml
+  "Accepts a diagram as a YAML string and applies some custom formatting rules."
+  [s]
   (-> s
     (str/replace #"(\d+,\d+)" "'$1'")
     (str/replace #"(elements|relationships|styles|size):" "\n$1:")
     (str/replace #"(description): Uses\n" "$1: uses\n")))
 
-(defn process-structurizr-doc [d]
-  (-> (reorder-structurizr d)
+(defn process
+  "Accepts a diagram as a map; reorders everything, snaps all coordinates to a
+  virtual grid, and removes all empty/blank nodes."
+  [d]
+  (-> (reorder-diagram d)
       (snap-to-grid 100 50)
-      shrink)) ; must follow reorder-structurizr because that tends to introduce new keys with nil values
+      shrink)) ; must follow reorder-diagram because that tends to introduce new keys with nil values
       
-(defn stringify-structurizr-doc [d]
-   (-> (yaml/generate-string d :dumper-options {:flow-style :block})
-       fixup-structurizr))
+(defn stringify
+  "Accepts a diagram as a map, converts it to a YAML string."
+  [d]
+  (-> (yaml/generate-string d :dumper-options {:flow-style :block})
+      fixup-yaml))
 
 (defn process-file
   "Accepts a string containing either a single YAML document, or a YAML document and front matter
@@ -192,10 +200,10 @@
   (let [[front? main] (split-file s)
         main-processed (-> main
                            yaml/parse-string
-                           process-structurizr-doc)
+                           process)
         str-output (str (or front? default-front-matter)
                         "\n---\n"
-                        (stringify-structurizr-doc main-processed))]
+                        (stringify main-processed))]
     [main-processed str-output]))
 
 (defn -main []

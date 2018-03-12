@@ -10,23 +10,23 @@
 
 (def stop-chan (chan 1))
 
-(defn probably-structurizr-doc? [v]
+(defn probably-diagram-yaml? [v]
   (and (string? v)
        (includes? v "type")
        (includes? v "scope")))
 
 (defn pcb
   "Process Clipboard — process the contents of the clipboard and write the results back to the
-  clipboard. If the contents of the clipboard are not a Structurizr diagram, a RuntimeException is
+  clipboard. If the contents of the clipboard are not a FC4 diagram, a RuntimeException is
   thrown."
   []
   (let [contents (cb/slurp)]
-    (if (probably-structurizr-doc? contents)
+    (if (probably-diagram-yaml? contents)
       (-> contents
           rc/process-file
           second
           cb/spit)
-      (throw (RuntimeException. "Not a Structurizr diagram.")))))
+      (throw (RuntimeException. "Not a FC4 diagram.")))))
 
 (def current-local-time-format
   (java.text.SimpleDateFormat. "HH:mm:ss"))
@@ -51,7 +51,7 @@
 
 (defn wcb
   "Start a background routine that watches the clipboard for changes. If the
-  changed content is a Structurizr diagram in YAML, processes it and writes the
+  changed content is a FC4 diagram in YAML, processes it and writes the
   result back to the clipboard.
   
   Stop the routine by calling stop."
@@ -63,7 +63,7 @@
   (go-loop [prior-contents nil]
     (let [contents (cb/slurp)
           process? (and (not= contents prior-contents)
-                        (probably-structurizr-doc? contents))
+                        (probably-diagram-yaml? contents))
           output (when process?
                    (try-process contents))]          
       (if (poll! stop-chan)
