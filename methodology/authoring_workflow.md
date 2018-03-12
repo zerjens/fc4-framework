@@ -6,7 +6,7 @@ Please note: the current workflow is _temporary._ We know it’s highly manual a
 
 Once a basic YAML file has been created with some initial contents, the basic authoring workflow is:
 
-1. Create a new git branch in your local instance of [the diagram repository](5_Repository.md)
+1. Create a new git branch in your local instance of [the diagram repository](repository.md)
 1. In your text editor: either create a new diagram source file or an existing diagram source file
 1. In a terminal, in your FC4C working dir:
    1. Open a Clojure REPL with `clj`
@@ -39,4 +39,4 @@ Soon we’ll start looking into less manual, more automated workflows for author
 
 ----
 
-Please continue to [Publishing](6_Publishing.md) or go back to [the top page](README.md).
+Please continue to [Publishing](publishing.md) or go back to [the top page](README.md).
