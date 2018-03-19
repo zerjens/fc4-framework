@@ -14,15 +14,17 @@ This methodology does not specify, and is not concerned with, the question of ho
 
 There can be lots of other files in the same repo, or you could dedicate a repo to host only your diagrams — it’s your call.
 
-At Funding Circle we have a `docs` repo that hosts cross-domain, cross-system, cross-team documentation; we host our diagrams in that repo, in a root-level directory imaginitively named `diagrams`.
+Some users of the framework host their diagrams in a `docs` repo that hosts cross-domain, cross-system, or cross-team documentation. In such a case the diagrams might be in a root-level dir with an imaginitive name such as `diagrams`.
 
 ### On Storing the Images in the Repository
 
 You may be wondering why the rendered image files are committed to the repo, rather than considered akin to deployment artifacts that can always be regenerated from the diagram source files, and might therefore be reasonably considered outside of the set of content that it’s important or advisable to store in a _source_ control system.
 
-Indeed, storing these files in the repository does tend to baloon the storage size of the repository; a repository storing only the source for 100 diagrams might be ~10 MB, whereas a repository storing the source and images for 100 diagrams might be 100 MB or more.
+Indeed, storing these files in the repository does tend to balloon the storage size of the repository; a repository storing only the source for 100 diagrams might be ~10 MB, whereas a repository storing the source and images for 100 diagrams might be 100 MB or more.
 
 Despite the downsides, it’s still worthwhile to store the images in the repository. The main reason is that doing so enables seeing the changes made to the diagrams, graphically, via image diffing features of e.g. [GitHub](https://help.github.com/articles/rendering-and-diffing-images/#viewing-differences) and possibly other git hosting services. This can make peer review drastically more effective.
+
+If you prefer to keep your Git repositories svelte, [Git Large File Storage (LFS)](https://git-lfs.github.com/) should work well with this methodology.
 
 ### Directory Structure
 
@@ -53,11 +55,11 @@ Here are some recommendations for file names:
 
 | Diagram              | Recommended File Name Mask                   |
 | -------------------- | -------------------------------------------- |
-| System Landscape     | `system_landscape.{yaml|png}`                |
-| System Context       | `{system}_01_{context}.{yaml|png}`           |
-| Container            | `{system}_02_{container}.{yaml|png}`         |
-| Intra-System Dynamic | `{system}_03_{dataflow|workflow}.{yaml|png}` |
-| Inter-System Dynamic | `{case}_{dataflow|workflow}.{yaml|png}`      |
+| System Landscape     | `system_landscape.{yaml\|png}`                |
+| System Context       | `{system}_01_{context}.{yaml\|png}`           |
+| Container            | `{system}_02_{container}.{yaml\|png}`         |
+| Intra-System Dynamic | `{system}_03_{dataflow\|workflow}.{yaml\|png}` |
+| Inter-System Dynamic | `{case}_{dataflow\|workflow}.{yaml\|png}`      |
 
 * If the diagrams might be published externally, the file names should be prefixed with `{org}_`
 * If the org has multiple landscapes, the names of the System Landscape files should be prefixed with `{landscape}_` — after the `{org}_` prefix, if present
@@ -88,9 +90,9 @@ Here are some recommendations for file names:
     diagrams
     └── fc4
         ├── README.md
-        ├── ce
-        ├── global
-        ├── uk
+        ├── some_landscape
+        ├── some_other_landscape
+        ├── third_landscape
         │   ├── some_app
         │   │   ├── some_app_01_system_context.png
         │   │   ├── some_app_01_system_context.yaml
@@ -98,8 +100,8 @@ Here are some recommendations for file names:
         │   │   └── some_app_02_container.yaml
         │   │   ├── some_app_03_dataflow.png
         │   │   └── some_app_03_dataflow.yaml
-        │   ├── uk_system_landscape.png
-        │   └── uk_system_landscape.yaml
+        │   ├── third_landscape_system_landscape.png
+        │   └── third_landscape_system_landscape.yaml
         └── us
 
 * The `fc4` level in the above hierarchy is optional.
