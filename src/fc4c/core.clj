@@ -77,9 +77,9 @@
    :elements      {:sort-keys [:type :name]
                    :key-order [:type :name :description :tags :position
                                :containers]}
-   :relationships {:sort-keys [:source :destination]
-                   :key-order [:source :description :destination :technology
-                               :vertices :order]}
+   :relationships {:sort-keys [:order :source :destination]
+                   :key-order [:order :source :description :destination
+                               :technology :vertices]}
    :styles        {:sort-keys [:type :tag]
                    :key-order [:type :tag]}})
 
