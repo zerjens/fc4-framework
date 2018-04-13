@@ -20,4 +20,4 @@ The functionality of FC4C may expand over time to include additional features to
 
 ----
 
-Please continue to [The Authoring Workflow](5_Authoring_Workflow.md) or go back to [the top page](README.md).
+Please continue to [The Repository](repository.md) or go back to [the top page](README.md).

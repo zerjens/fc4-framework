@@ -31,4 +31,4 @@ Anyone using this methodology is of course free to use or not use whichever diag
 
 ----
 
-Please continue to [The Textual Notation](2_Textual_Notation.md) or go back to [the top page](README.md).
+Please continue to [The Textual Notation](textual_notation.md) or go back to [the top page](README.md).

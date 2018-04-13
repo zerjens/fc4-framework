@@ -8,7 +8,7 @@ We have a few key requirements for our textual notation:
 | the source of our diagrams to be _structured data_   | the information of a diagram can be machine-readable and machine-writeable — i.e. so that software tooling can consume and/or generate the information. |
 | the source to be human readable and writeable        | people can efficiently and effectively author and review the source of the diagrams. |
 
-For now we are using a [YAML](http://yaml.org) format that meets these requirements. It comes from, and is supported by, Structurizr Express, a tool described in [The Toolset](4_Toolset.md).
+For now we are using a [YAML](http://yaml.org) format that meets these requirements. It comes from, and is supported by, Structurizr Express, a tool described in [The Toolset](Toolset.md).
 
 The format supports describing:
 
@@ -114,4 +114,4 @@ size: A5_Landscape
 
 ----
 
-Please continue to [The Graphical Notation](3_Graphical_Notation.md) or go back to [the top page](README.md).
+Please continue to [The Graphical Notation](graphical_notation.md) or go back to [the top page](README.md).
