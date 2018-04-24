@@ -105,7 +105,6 @@ Here are some recommendations for file names:
         └── us
 
 * The `fc4` level in the above hierarchy is optional.
-* In this example, each landscape happens to be a region; this is immaterial. A landscape can be anything.
 
 ----
 
