@@ -3,6 +3,7 @@
 A tool for reorganizing, restructuring, and reformatting
 [FC4](https://fundingcircle.github.io/fc4-framework/) diagrams.
 
+
 ## Purpose
 
 As explained in
@@ -22,7 +23,18 @@ As explained in
 3. `cd` into the repo
 4. To install the dependencies, run: `clj -e '(println "deps installed!")'`
 
-## Usage (Workflow)
+## Basic Usage
+
+1. Have `clj` installed ([guide](https://clojure.org/guides/getting_started))
+1. In your shell: `clj`
+1. In the REPL:
+   1. `(use 'fc4c.repl)`
+   1. Read the printed descriptions of `pcb` and `wcb`
+   1. Run either `(pcb)` or `(wcb)`
+
+(There will soon be an option to run `wcb` directly from the command-line.)
+
+## Full Usage Workflow
 
 As explained in [The Authoring Workflow](https://fundingcircle.github.io/fc4-framework/methodology/authoring_workflow.html) section of
 [the FC4 Methodology](https://fundingcircle.github.io/fc4-framework/methodology/):
@@ -42,6 +54,32 @@ As explained in [The Authoring Workflow](https://fundingcircle.github.io/fc4-fra
 >    1. This will cause FC4C to process the contents of your clipboard.
 > 1. Paste the diagram source back into the SE YAML textarea so as to re-render the diagram, now that the elements have been “snapped” to a virtual grid.
 > 1. Continue to cut and past the diagram source between your text editor and SE, using SE to preview and adjust the rendered diagram, while FC4C cleans up the diagram as you work.
+
+## Running the Tests
+
+1. Use CI
+2. No, seriously, use CI!
+3. Just kidding, I know sometimes you need to run the tests locally ;)
+
+### With Docker
+
+Run this in your shell:
+
+```bash
+docker run --rm `docker build -q .`
+```
+
+### Without Docker
+
+If you’re old-school and prefer to run tests on bare metal:
+
+1. Have `clj` installed ([guide](https://clojure.org/guides/getting_started))
+1. Run in your shell: `clj -A:run-tests`
+
+## Starting a REPL for Dev/Test
+
+You could just run `clj` but you’re likely to want the test deps and code to be accessible. In that
+case run `clj -Adev`
 
 ## Contributors
 
