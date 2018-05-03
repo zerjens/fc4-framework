@@ -24,9 +24,9 @@ Once a basic YAML file has been created with some initial contents, the basic au
 1. Continue to cut and past the diagram source between your text editor and SE, using SE to preview and adjust the rendered diagram, while FC4C cleans up the diagram as you work.
 1. When you’re ready to wrap up:
    1. Paste the diagram source into your text editor and save the YAML file.
-   2. Paste the diagram source into SE, hit tab to re-render the diagram, then click the _Export to PNG_ button in the toolbar.
-      1. The rendered diagram will open in a new browser tab.
-      2. Save the rendered diagram to a PNG file next to the YAML file and with the same name as the YAML file, except for the filename extension of course.
+   1. Paste the diagram source into SE, hit tab to re-render the diagram, then click the _Export to PNG_ button in the toolbar.
+   1. The rendered diagram will open in a new browser tab.
+   1. Save the rendered diagram to a PNG file next to the YAML file and with the same name as the YAML file, except for the filename extension of course.
 1. Use your git UI of choice to commit your changes.
 1. Push your local changes to the origin repository regularly.
 1. When you’re ready to submit your changes for review, open a (Merge|Pull) Request to get your changes reviewed and then merged into master.
