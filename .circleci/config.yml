@@ -1,0 +1,27 @@
+version: 2
+jobs:
+   build:
+     docker:
+       - image: circleci/clojure:tools-deps
+     steps:
+       - checkout
+
+       # Restore the dependencies cache, if it exists
+       - restore_cache:
+           keys:
+           - dependencies-{{ checksum "deps.edn" }}
+           # fallback to using the latest cache if no exact match is found
+           - dependencies-
+
+       # Download deps if necessary. (clj automatically downloads deps if necessary)
+       - run: clj -e '(println "deps are installed!")'
+
+       # Run the tests
+       - run: "clj -A:run-tests"
+
+       # Save the dependencies cache
+       - save_cache:
+           key: dependencies-{{ checksum "deps.edn" }}
+           paths:
+           - ~/.m2
+           - ~/.gitlibs
