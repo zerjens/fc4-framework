@@ -21,7 +21,7 @@ As explained in
 1. Install Clojure as per [this guide](https://clojure.org/guides/getting_started)
 2. Clone this repo
 3. `cd` into the repo
-4. To install the dependencies, run: `clj -e '(println "deps installed!")'`
+4. To install the dependencies, run: `clojure -e '(println "deps installed!")'`
 
 ## Basic Usage
 
@@ -74,7 +74,7 @@ docker run --rm `docker build -q .`
 If you’re old-school and prefer to run tests on bare metal:
 
 1. Have `clj` installed ([guide](https://clojure.org/guides/getting_started))
-1. Run in your shell: `clj -A:run-tests`
+1. Run in your shell: `clojure -A:run-tests`
 
 ## Starting a REPL for Dev/Test
 

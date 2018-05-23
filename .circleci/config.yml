@@ -14,10 +14,10 @@ jobs:
            - dependencies-
 
        # Download deps if necessary. (clj automatically downloads deps if necessary)
-       - run: clj -e '(println "deps are installed!")'
+       - run: clojure -e '(println "deps are installed!")'
 
        # Run the tests
-       - run: "clj -A:run-tests"
+       - run: "clojure -A:run-tests"
 
        # Save the dependencies cache
        - save_cache:
