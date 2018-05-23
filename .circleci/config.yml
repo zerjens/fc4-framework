@@ -14,7 +14,7 @@ jobs:
            - dependencies-
 
        # Download deps if necessary. (clj automatically downloads deps if necessary)
-       - run: "clojure -R:dev -e '(println \"deps are installed!\")'"
+       - run: "clojure -R:run-tests -e '(println \"deps are installed!\")'"
 
        # Run the tests
        - run: "clojure -A:run-tests"
