@@ -21,7 +21,7 @@ As explained in
 1. Install Clojure as per [this guide](https://clojure.org/guides/getting_started)
 2. Clone this repo
 3. `cd` into the repo
-4. To install the dependencies, run: `clojure -e '(println "deps installed!")'`
+4. To install the dependencies, run: `clojure -R:dev -e '(println "deps installed!")'`
 
 ## Basic Usage
 
