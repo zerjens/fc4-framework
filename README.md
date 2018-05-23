@@ -3,6 +3,7 @@
 A tool for reorganizing, restructuring, and reformatting
 [FC4](https://fundingcircle.github.io/fc4-framework/) diagrams.
 
+[![CircleCI](https://circleci.com/gh/FundingCircle/fc4c.svg?style=shield)](https://circleci.com/gh/FundingCircle/fc4c)
 
 ## Purpose
 
