@@ -17,11 +17,10 @@ jobs:
        - run: "clojure -R:run-tests -e '(println \"deps are installed!\")'"
 
        # Run the tests
-       # The max heap size is set to 1GB because CI machines/containers frequently have <=4GB of
-       # RAM, and JDK 8 defaults to setting the max heap to 1/4 of the total RAM, but such a small
-       # heap max leads to OOM errors when running the tests (at 512MB; I’ve only tested 512MB and
-       # 1GB).
-       - run: "clojure -J-Xmx1g -A:run-tests"
+       # The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8
+       # defaults to setting the max heap to ¼ of the total RAM, and CI containers frequently have
+       # <= 4GB RAM.)
+       - run: "clojure -J-Xmx2g -A:run-tests"
 
        # Save the dependencies cache
        - save_cache:

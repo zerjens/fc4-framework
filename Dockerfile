@@ -13,7 +13,6 @@ RUN clojure -Rrun-tests -e '(println "Our deps are in the house!")'
 # Now copy all the app code.
 COPY . ./
 
-# The max heap size is set to 1GB because Docker machines frequently have less than 4GB of RAM, and
-# JDK 8 defaults to setting the max heap to 1/4 of the total RAM, but such a small heap max leads
-# to OOM errors when running the tests (at 512MB; I’ve only tested 512MB and 1GB).
-ENTRYPOINT clojure -J-Xmx1g -A:run-tests
+# The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8 defaults to
+# setting the max heap to ¼ of the total RAM, and containers frequently have <= 4GB RAM.)
+ENTRYPOINT clojure -J-Xmx2g -A:run-tests
