@@ -13,7 +13,7 @@ jobs:
            # fallback to using the latest cache if no exact match is found
            - dependencies-
 
-       # Download deps if necessary. (clj automatically downloads deps if necessary)
+       # Download deps if necessary. (clojure automatically downloads deps if necessary)
        - run: "clojure -R:run-tests -e '(println \"deps are installed!\")'"
 
        # Run the tests
