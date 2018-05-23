@@ -1,22 +1,12 @@
-FROM openjdk:8-alpine
+FROM clojure:tools-deps-alpine
 
 LABEL maintainer="Avi Flax <avi.flax@fundingcircle.com>"
 
-WORKDIR /tmp
-RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-RUN apk add --update --no-cache bash curl
-RUN curl -O https://download.clojure.org/install/linux-install-1.9.0.326.sh
-RUN chmod +x linux-install-1.9.0.326.sh
-RUN ./linux-install-1.9.0.326.sh
-
-# Use the `clojure` script to evaluate a simple form so as to to download Clojure itself so we
-# don’t have to re-download it and make a new image whenever the deps or the app code change.
-RUN clojure -e '(println "Clojure is in the house!")'
-
 WORKDIR /code
 
-# Copy deps.edn, then trigger clj to download the deps, separately from and prior to copying the
-# app code so that we don’t have to re-download deps every time the app code changes.
+# Copy deps.edn then invoke `clojure` with a simple form just to download the deps, separately
+# from and prior to copying the app code so that we don’t have to re-download deps every time the
+# app code changes.
 COPY deps.edn ./
 RUN clojure -Rrun-tests -e '(println "Our deps are in the house!")'
 
