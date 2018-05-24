@@ -20,5 +20,5 @@
                                      ;; This fork returns a non-zero status when tests fail; crucial when building in a CI server.
                                      ;; See https://github.com/cognitect-labs/test-runner/pull/12
                                      com.cognitect/test-runner  {:git/url "https://github.com/Olical/test-runner"
-                                                                 :sha "427a16c634201492984d2161d305baa09ab864cd"}}
+                                                                 :sha "7c4f5bd4987ec514889c7cd7e3d13f4ef95f256b"}}
                        :main-opts   ["-m" "cognitect.test-runner"]}}}
