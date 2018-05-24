@@ -4,9 +4,11 @@
   (:require [fc4c.spec :as fs]
             [clj-yaml.core :as yaml]
             [clojure.spec.alpha :as s]
+            [clojure.test.check.generators :as gen]
             [com.gfredericks.test.chuck.generators :as gen']
             [flatland.ordered.map :refer [ordered-map]]
-            [clojure.string :as str :refer [blank? includes? join split trim]]
+            [clojure.string :as str :refer [blank? ends-with? includes? join
+                                            split trim]]
             [clojure.walk :as walk :refer [postwalk]]
             [clojure.set :refer [difference intersection]]))
 
@@ -23,7 +25,7 @@
   may not be a valid YAML document, depending on how mangled the document
   separator was."
   [s]
-  (let [matcher (re-matcher #"(?ms)((?<front>.+)---\n)?(?<main>.+)\Z" s)
+  (let [matcher (re-matcher #"(?ms)((?<front>.+)\n---\n)?(?<main>.+)\Z" s)
         _ (.find matcher)
         front (.group matcher "front")
         main (.group matcher "main")]
@@ -300,7 +302,29 @@
         main-processed (-> main
                            yaml/parse-string
                            process)
-        str-output (str (or front? default-front-matter)
+        str-output (str (trim (or front? default-front-matter))
                         "\n---\n"
                         (stringify main-processed))]
     [main-processed str-output]))
+
+(defmacro sometimes [body]
+  `(when (< (rand) 0.5)
+     ~body))
+
+(s/def ::diagram-yaml-str
+  (s/with-gen
+    (s/and string?
+           #(not (re-seq #"\n\n---\n" %)) ; prevent extra blank line
+           (fn [s]
+             (let [parsed (-> s split-file second yaml/parse-string)]
+               (every? #(contains? parsed %) [:type :scope :description
+                                              :elements :relationships :styles
+                                              :size]))))
+    #(gen/let [diagram (s/gen :fc4c/diagram)]
+       (str (sometimes (str default-front-matter "\n---\n"))
+            (stringify diagram)))))
+
+(s/fdef process-file
+  :args (s/cat :in ::diagram-yaml-str)
+  :ret  (s/cat :main-processed :fc4c/diagram
+               :str-output ::diagram-yaml-str))
