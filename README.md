@@ -3,6 +3,7 @@
 A tool for reorganizing, restructuring, and reformatting
 [FC4](https://fundingcircle.github.io/fc4-framework/) diagrams.
 
+[![CircleCI](https://circleci.com/gh/FundingCircle/fc4c.svg?style=shield)](https://circleci.com/gh/FundingCircle/fc4c)
 
 ## Purpose
 
@@ -21,7 +22,7 @@ As explained in
 1. Install Clojure as per [this guide](https://clojure.org/guides/getting_started)
 2. Clone this repo
 3. `cd` into the repo
-4. To install the dependencies, run: `clj -e '(println "deps installed!")'`
+4. To install the dependencies, run: `clojure -R:dev -e '(println "deps installed!")'`
 
 ## Basic Usage
 
@@ -74,7 +75,7 @@ docker run --rm `docker build -q .`
 If you’re old-school and prefer to run tests on bare metal:
 
 1. Have `clj` installed ([guide](https://clojure.org/guides/getting_started))
-1. Run in your shell: `clj -A:run-tests`
+1. Run in your shell: `clojure -A:run-tests`
 
 ## Starting a REPL for Dev/Test
 
