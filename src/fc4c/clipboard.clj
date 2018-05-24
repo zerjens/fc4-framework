@@ -1,5 +1,6 @@
 (ns fc4c.clipboard
-  "A few useful funcs lifted from https://gist.github.com/Folcon/1167903"
+  (:require [clojure.core.async :as ca :refer [<! chan go-loop offer! poll! timeout]]
+            [fc4c.core :as c :refer [probably-diagram-yaml? process-file]])
   (:import [java.awt Toolkit]
            [java.awt.datatransfer DataFlavor StringSelection])
   (:refer-clojure :exclude [slurp spit]))
@@ -8,10 +9,13 @@
 ; Found in a comment to this answer: https://stackoverflow.com/a/17544259/7012
 (System/setProperty "apple.awt.UIElement" "true")
 
+;; based on code found at https://gist.github.com/Folcon/1167903
 (def clipboard (.getSystemClipboard (Toolkit/getDefaultToolkit)))
 
+;; based on code found at https://gist.github.com/Folcon/1167903
 (def string-flavor (DataFlavor/stringFlavor))
 
+;; based on code found at https://gist.github.com/Folcon/1167903
 (defn slurp []
   (try
     ;; We’re gonna check twice for the contents being a string because of
@@ -24,3 +28,73 @@
 
 (defn spit [text]
   (.setContents clipboard (StringSelection. text) nil))
+
+(defn pcb
+  "Process Clipboard — process the contents of the clipboard and write the results back to the
+  clipboard. If the contents of the clipboard are not a FC4 diagram, a RuntimeException is
+  thrown."
+  []
+  (let [contents (slurp)]
+    (if (probably-diagram-yaml? contents)
+      (-> contents
+          process-file
+          second
+          spit)
+      (throw (RuntimeException. "Not a FC4 diagram.")))))
+
+(def ^:private current-local-time-format
+  (java.text.SimpleDateFormat. "HH:mm:ss"))
+
+(defn ^:private current-local-time-str []
+  (.format current-local-time-format (java.util.Date.)))
+
+(defn ^:private try-process [contents]
+  (try
+     (let [[main str-result] (process-file contents)
+           _ (spit str-result)
+           {:keys [:type :scope]} main]
+       (println (current-local-time-str) "-> processed" type "for" scope "with great success!")
+       (flush)
+       str-result)
+     (catch Exception err
+       ; toString _should_ suffice but some of the SnakeYAML exception classes seem to have a bug in
+       ; their toString implementations wherein they don’t print their names.
+       (println (-> err class .getSimpleName) "->" (.getMessage err))
+       (flush)
+       nil)))
+
+(def ^:private stop-chan (chan 1))
+
+(defn wcb
+  "Start a background routine that watches the clipboard for changes. If the
+  changed content is a FC4 diagram in YAML, processes it and writes the
+  result back to the clipboard.
+  
+  Stop the routine by calling stop.
+  
+  Returns a channel that will block until the routine exits, at which point nil
+  will be emitted to the channel, closing it. This may be useful if a caller
+  wishes to block while this routine is running."
+  []
+  ;; Just in case stop was accidentally called twice, in which case there’d be a superfluous value
+  ;; in the channel, we’ll remove a value from the channel just before we get started.
+  (poll! stop-chan)
+
+  (go-loop [prior-contents nil]
+    (let [contents (slurp)
+          process? (and (not= contents prior-contents)
+                        (probably-diagram-yaml? contents))
+          output (when process?
+                   (try-process contents))]          
+      (if (poll! stop-chan)
+        (do (println "Stopped!")
+            (flush)
+            nil)
+        (let [contents (slurp)]
+          (<! (timeout 1000))
+          (recur contents))))))
+
+(defn stop
+  "Stop the goroutine started by wcb."
+  []
+  (offer! stop-chan true))

@@ -1,0 +1,3 @@
+#!/bin/sh
+# wcb = “watch clipboard”
+clojure -M:wcb
