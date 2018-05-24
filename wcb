@@ -1,0 +1,2 @@
+# wcb = “watch clipboard”
+clj -M:wcb

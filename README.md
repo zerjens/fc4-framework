@@ -20,6 +20,13 @@ As explained in
 ## Setup
 
 1. Install Clojure as per [this guide](https://clojure.org/guides/getting_started)
+   1. This project uses the new Clojure CLI (`clj`) and
+      [tools.deps](https://clojure.org/guides/deps_and_cli), both of which are installed by
+      [the new official Clojure installers](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
+      released alongside Clojure 1.9. If you’ve been working with Clojure for awhile, you might
+      not have these tools installed. Try `which clj` to check, and if that prints a blank line,
+      try running the appropriate
+      [installer](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
 2. Clone this repo
 3. `cd` into the repo
 4. To install the dependencies, run: `clojure -R:dev -e '(println "deps installed!")'`
@@ -27,13 +34,7 @@ As explained in
 ## Basic Usage
 
 1. Have `clj` installed ([guide](https://clojure.org/guides/getting_started))
-1. In your shell: `clj`
-1. In the REPL:
-   1. `(use 'fc4c.repl)`
-   1. Read the printed descriptions of `pcb` and `wcb`
-   1. Run either `(pcb)` or `(wcb)`
-
-(There will soon be an option to run `wcb` directly from the command-line.)
+1. Run in your shell: `./wcb`
 
 ## Full Usage Workflow
 
@@ -41,9 +42,7 @@ As explained in [The Authoring Workflow](https://fundingcircle.github.io/fc4-fra
 [the FC4 Methodology](https://fundingcircle.github.io/fc4-framework/methodology/):
 
 > 1. In your text editor: either create a new diagram source file or open an existing diagram source file
-> 1. In a terminal, in your FC4C working dir:
->    1. Open a Clojure REPL with `clj`
->    1. Evaluate `(use 'fc4c.repl')` then `(wcb)`
+> 1. In a terminal, in your FC4C working dir, run `./wcb`
 >    1. This starts a background process that will watch your clipboard for diagram source YAML and process (clean up) that YAML when it sees that it’s been changed.
 > 1. In your text editor, add/revise elements and relationships, then select-all and cut the diagram source from your editor into your system clipboard.
 >    1. This will cause FC4C to process the contents of your clipboard.

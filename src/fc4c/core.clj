@@ -6,7 +6,7 @@
             [clojure.spec.alpha :as s]
             [com.gfredericks.test.chuck.generators :as gen']
             [flatland.ordered.map :refer [ordered-map]]
-            [clojure.string :as str :refer [blank? join split trim]]
+            [clojure.string :as str :refer [blank? includes? join split trim]]
             [clojure.walk :as walk :refer [postwalk]]
             [clojure.set :refer [difference intersection]]))
 
@@ -259,6 +259,11 @@
        %)
     d))
 
+(defn probably-diagram-yaml? [v]
+  (and (string? v)
+       (includes? v "type")
+       (includes? v "scope")))
+
 (defn fixup-yaml
   "Accepts a diagram as a YAML string and applies some custom formatting rules."
   [s]
@@ -299,11 +304,3 @@
                         "\n---\n"
                         (stringify main-processed))]
     [main-processed str-output]))
-
-(defn -main []
-  (-> (slurp *in*)
-      process-file
-      second
-      print)
-  (flush)
-  (Thread/sleep 10))
