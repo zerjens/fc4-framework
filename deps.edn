@@ -22,5 +22,13 @@
                                      com.cognitect/test-runner  {:git/url "https://github.com/Olical/test-runner"
                                                                  :sha "7c4f5bd4987ec514889c7cd7e3d13f4ef95f256b"}}
                        :main-opts   ["-m" "cognitect.test-runner"]}
+           :coverage {:extra-paths  ["test"]
+                      :extra-deps   {org.clojure/test.check     {:mvn/version "0.9.0"}
+                                     cloverage                  {:mvn/version "1.0.10"}}
+                      :main-opts    ["-m" "cloverage.coverage"
+                                     "--ns-regex" "fc4c\\.core"
+                                     "--test-ns-regex" "fc4c\\.core-test"
+                                     "--fail-threshold" "85"
+                                     "--codecov"]}
            :wcb ;; wcb = “watch clipboard”
            {:main-opts ["-m" "fc4c.cli"]}}}
