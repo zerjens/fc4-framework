@@ -6,40 +6,42 @@ jobs:
      steps:
        - checkout
 
-       # Restore the dependencies cache, if it exists
        - restore_cache:
            keys:
            - dependencies-{{ checksum "deps.edn" }}
            # fallback to using the latest cache if no exact match is found
            - dependencies-
 
-       # Download deps if necessary. (clojure automatically downloads deps if necessary)
-       - run: "clojure -R:run-tests:coverage -e '(println \"deps are installed!\")'"
+       - run:
+          name: Download dependencies (if necessary)
+          # Clojure automatically downloads deps if necessary
+          command: "clojure -R:run-tests:coverage -e '(println \"deps are installed!\")'"
 
-       # Save the dependencies cache
        - save_cache:
            key: dependencies-{{ checksum "deps.edn" }}
            paths:
            - ~/.m2
            - ~/.gitlibs
 
-       # Run the tests
-       # The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8
-       # defaults to setting the max heap to ¼ of the total RAM, and CI containers frequently have
-       # <= 4GB RAM.)
-       - run: "clojure -J-Xmx2g -A:run-tests"
+       - run:
+          name: Run tests
+          # The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8
+          # defaults to setting the max heap to ¼ of the total RAM, and CI containers frequently have
+          # <= 4GB RAM.)
+          command: "clojure -J-Xmx2g -A:run-tests"
 
-       # Measure test coverage
-       # The || true is at the end there because one of the tests, which passes when run with the
-       # regular test-runner above, fails when run by the coverage tool (Cloverage). I don’t like
-       # this, but it doesn’t actually matter, so for now we just suppress it. The real problem
-       # with this is that it prevents the build from failing if the coverage is below the minimum
-       # threshold (as specified in the coverage profile in deps.edn).
-       - run: "clojure -J-Xmx2g -A:coverage || true"
+       - run:
+          name: Measure test coverage
+          # The || true is at the end there because one of the tests, which passes when run with the
+          # regular test-runner above, fails when run by the coverage tool (Cloverage). I don’t like
+          # this, but it doesn’t actually matter, so for now we just suppress it. The real problem
+          # with this is that it prevents the build from failing if the coverage is below the minimum
+          # threshold (as specified in the coverage profile in deps.edn).
+          command: "clojure -J-Xmx2g -A:coverage || true"
 
-       # Store test coverage reports
        - store_artifacts:
           path: target/coverage
 
-       # Upload test coverage report to Codecov
-       - run: bash <(curl -s https://codecov.io/bash)
+       - run:
+          name: Upload test coverage report to Codecov
+          command: bash <(curl -s https://codecov.io/bash)
