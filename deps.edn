@@ -26,9 +26,10 @@
                       :extra-deps   {org.clojure/test.check     {:mvn/version "0.9.0"}
                                      cloverage                  {:mvn/version "1.0.10"}}
                       :main-opts    ["-m" "cloverage.coverage"
-                                     "--ns-regex" "fc4c\\.core"
-                                     "--test-ns-regex" "fc4c\\.core-test"
-                                     "--fail-threshold" "85"
+                                     ;; TODO: make this regex exclude fc4c.test-utils
+                                     "--ns-regex" "^fc4c.+(?<!test)"
+                                     "--test-ns-regex" "fc4c.+\\-test$"
+                                     "--fail-threshold" "65"
                                      "--codecov"]}
            :wcb ;; wcb = “watch clipboard”
            {:main-opts ["-m" "fc4c.cli"]}}}
