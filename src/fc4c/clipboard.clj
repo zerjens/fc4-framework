@@ -9,8 +9,10 @@
 ; Found in a comment to this answer: https://stackoverflow.com/a/17544259/7012
 (System/setProperty "apple.awt.UIElement" "true")
 
-;; based on code found at https://gist.github.com/Folcon/1167903
-(def clipboard (.getSystemClipboard (Toolkit/getDefaultToolkit)))
+;; Based on code found at https://gist.github.com/Folcon/1167903
+;; This was a simple var at one point but that broke CI builds, which run on
+;; headless machines; therefore this needs to be a function.
+(defn clipboard [] (.getSystemClipboard (Toolkit/getDefaultToolkit)))
 
 ;; based on code found at https://gist.github.com/Folcon/1167903
 (def string-flavor (DataFlavor/stringFlavor))
@@ -20,14 +22,14 @@
   (try
     ;; We’re gonna check twice for the contents being a string because of
     ;; possible race conditions.
-    (when (.isDataFlavorAvailable clipboard string-flavor)
-      (let [transferable (.getContents clipboard nil)]
+    (when (.isDataFlavorAvailable (clipboard) string-flavor)
+      (let [transferable (.getContents (clipboard) nil)]
         (when (.isDataFlavorSupported transferable string-flavor)
           (.getTransferData transferable string-flavor))))
     (catch java.lang.NullPointerException e nil)))
 
 (defn spit [text]
-  (.setContents clipboard (StringSelection. text) nil))
+  (.setContents (clipboard) (StringSelection. text) nil))
 
 (defn pcb
   "Process Clipboard — process the contents of the clipboard and write the results back to the

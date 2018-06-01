@@ -22,5 +22,14 @@
                                      com.cognitect/test-runner  {:git/url "https://github.com/Olical/test-runner"
                                                                  :sha "7c4f5bd4987ec514889c7cd7e3d13f4ef95f256b"}}
                        :main-opts   ["-m" "cognitect.test-runner"]}
+           :coverage {:extra-paths  ["test"]
+                      :extra-deps   {org.clojure/test.check     {:mvn/version "0.9.0"}
+                                     cloverage                  {:mvn/version "1.0.10"}}
+                      :main-opts    ["-m" "cloverage.coverage"
+                                     ;; TODO: make this regex exclude fc4c.test-utils
+                                     "--ns-regex" "^fc4c.+(?<!test)"
+                                     "--test-ns-regex" "fc4c.+\\-test$"
+                                     "--fail-threshold" "65"
+                                     "--codecov"]}
            :wcb ;; wcb = “watch clipboard”
            {:main-opts ["-m" "fc4c.cli"]}}}
