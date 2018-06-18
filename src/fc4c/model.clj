@@ -28,16 +28,13 @@
 
 ;; Non-generic stuff:
 
-;;; Should really be a set, I guess, but that would be annoying to do yet
-;;; post-processing walk. Perhaps instead of using YAML we should just use EDN
-;;; files?
-(s/def ::repos (s/coll-of ::non-empty-simple-string))
-
-(s/def ::tags
+(s/def ::set-of-keywords
   (s/coll-of (s/and keyword?
                     (comp (partial s/valid? ::non-empty-simple-string) name))
              :kind set?))
 
+(s/def ::repos ::set-of-keywords)
+(s/def ::tags ::set-of-keywords)
 (s/def ::system ::name)
 (s/def ::container ::name)
 (s/def ::technology ::non-empty-simple-string)
@@ -102,15 +99,31 @@
 
 (s/def ::model (s/keys :req [::systems ::users]))
 
-(defn- get-tags-from-path [file relative-root]
-  (as-> (relativize file relative-root) v
+(s/def ::dir-path
+  (s/with-gen (s/and ::non-empty-simple-string
+                     #(ends-with? % "/"))
+              #(gen/let [s (s/gen ::non-empty-simple-string)]
+                 (str (->> (repeat 5 s) (join "/")) "/"))))
+
+(s/def ::file (partial instance? java.io.File))
+
+(s/def ::path-or-file (s/or ::dir-path ::file))
+
+(defn- get-tags-from-path
+  [file relative-root]
+  (as-> (or (relativize file relative-root) file) v
         (split v #"/")
         (map keyword v)
         (drop-last v)
         (set v)
-        (conj v (if (includes? (.getName file) "external")
+        (conj v (if (includes? (str file) "external")
                     :external
                     :in-house))))
+
+(s/fdef get-tags-from-path
+  :args (s/cat :file          ::dir-path
+               :relative-root ::dir-path)
+  :ret ::tags)
 
 (defn- add-ns [namespace keeword]
   (keyword (name namespace) (name keeword)))
@@ -168,41 +181,28 @@
   :args (s/cat :map (s/map-of keyword? any?))
   :ret  (s/map-of qualified-keyword? any?))
 
-;; This is starting to feel silly… I mean, really ::repos should be a set too.
-;; Perhaps instead of using YAML we should just use EDN files?
-(defn- fixup-tags
-  "Given an element, ensures that the value of ::tags is a set of keywords. This
-  is useful because our YAML files can’t specify sets of keywords."
-  [m]
-  (update-all
-    (fn [[k v :as entry]]
-      (if (= k ::tags)
-        [k (->> v (map keyword) set)]
-        entry))
-    m)
-
-(s/fdef fixup-tags
-  :args (s/cat :element (s/map-of qualified-keyword? any?))
-  ;; now that ::tags is a set of keywords, the result is a valid ::element
-  :ret  ::element))
-
-(defn- add-tags
-  [tags-from-path elem]
-  (update elem ::tags (fn [ov] (if ov
-                                 (union ov tags-from-path)
-                                 tags-from-path))))
-
-(s/fdef add-tags
-  :args (s/cat :tags ::tags
-               :elem ::element)
-  :ret  (s/merge ::element (s/keys :req [::tags])))
-
 ;;;; TODO: the functions below don’t sufficiently separate I/O from computation.
 
-;; TODO: validate the contents of the file? Or maybe have that be a separate
-;;       function?
-;; A file might contain a single system as a map, or a sequential containing
-;; multiple systems.
+(defn- to-set-of-keywords
+  [xs]
+  (-> (map keyword xs) set))
+
+(s/fdef to-set-of-keywords
+  :args (s/cat :xs (s/coll-of string?))
+  :ret  (s/coll-of keyword? :kind set?)
+  :fn (fn [{{:keys [xs]} :args, ret :ret}]
+        (= (count (distinct xs)) (count ret))))
+
+(defn- fixup-element
+  [tags-from-path elem]
+  (-> elem
+      qualify-keys
+      (update ::repos to-set-of-keywords)
+      (update ::tags to-set-of-keywords)
+      (update ::tags (partial union tags-from-path))))
+
+;; A file might contain a single element (as a map), or an array containing
+;; multiple elements.
 (defn elements-from-file [file relative-root]
   (let [parsed (-> file
                    slurp
@@ -211,9 +211,7 @@
                   [parsed]
                   parsed)
         tags-from-path (get-tags-from-path file relative-root)]
-    (map (comp (partial add-tags tags-from-path)
-               fixup-tags
-               qualify-keys)
+    (map (partial fixup-element tags-from-path)
          elems)))
 
 (defn read-elements [root-path]
@@ -233,12 +231,6 @@
         {::anom/category ::anom/fault
          ::anom/message (expound-str ::model model)
          ::model model})))
-
-(s/def ::dir-path
-  (s/with-gen (s/and ::non-empty-simple-string
-                     #(ends-with? % "/"))
-              #(gen/let [s (s/gen ::non-empty-simple-string)]
-                 (str (->> (repeat 5 s) (join "/")) "/"))))
 
 ;; Not useful for generative testing because the function does I/O; see comment
 ;; in model_test.clj.
