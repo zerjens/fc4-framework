@@ -11,7 +11,8 @@
             [fc4c.files              :as files :refer [relativize]]
             [fc4c.model              :as m :refer [elements-from-file]]
             [fc4c.spec               :as fs]
-            [fc4c.util               :as u :refer [lookup-table-by]]))
+            [fc4c.util               :as u :refer [lookup-table-by]]
+            [fc4c.view               :as v :refer [view-from-file]]))
 
 (defn yaml-files
   "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
@@ -77,3 +78,18 @@
         :ret  (s/or :success ::m/model
                     :error   (s/merge ::anom/anomaly
                                       (s/keys :req [::m/model]))))
+
+(defn read-view
+  [file-path]
+  (let [view (view-from-file (slurp file-path))]
+    (if (s/valid? ::v/view view)
+      view
+      {::anom/category ::anom/fault
+       ::anom/message (expound-str ::v/view view)
+       ::v/view view})))
+
+(s/fdef read-view
+        :args (s/cat :file-path ::fs/file-path-str)
+        :ret  (s/or :success ::v/view
+                    :error   (s/merge ::anom/anomaly
+                                      (s/keys :req [::v/view]))))

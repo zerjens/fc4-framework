@@ -9,14 +9,6 @@
 
 (s/def :structurizr/tags ::fs/non-blank-simple-str) ;; comma-delimited TODO: use a regex
 
-(def coord-pattern-base "(\\d{1,4}), ?(\\d{1,4})")
-
-(s/def :structurizr/coord-string
-  (s/with-gen string?
-    ;; unfortunately we can’t use coord-pattern here because it has anchors
-    ;; which are not supported by string-from-regex.
-    #(gen'/string-from-regex (re-pattern coord-pattern-base))))
-
 (s/def :structurizr/coord-int
   ;; The upper bound here was semi-randomly chosen; we just need a reasonable number that a real
   ;; diagram is unlikely to ever need but that won’t cause integer overflows when multiplied.
@@ -25,7 +17,7 @@
   ;; during generative testing.
   (s/int-in 0 50001))
 
-(s/def :structurizr/position :structurizr/coord-string)
+(s/def :structurizr/position ::fs/coord-string)
 
 (def int-pattern #"\d{1,6}")
 (s/def :structurizr/int-in-string
@@ -53,7 +45,7 @@
 (s/def :structurizr.relationship/source :structurizr/name)
 (s/def :structurizr.relationship/destination :structurizr/name)
 (s/def :structurizr.relationship/order :structurizr/int-in-string)
-(s/def :structurizr.relationship/vertices (s/coll-of :structurizr/coord-string :min-count 1))
+(s/def :structurizr.relationship/vertices (s/coll-of :structurizr/position :min-count 1))
 
 (s/def :structurizr/relationship
   (s/keys :req-un [:structurizr.relationship/source :structurizr.relationship/destination]
