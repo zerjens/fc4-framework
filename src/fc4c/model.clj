@@ -201,6 +201,23 @@
       (update ::tags to-set-of-keywords)
       (update ::tags (partial union tags-from-path))))
 
+(s/def ::simple-strings (s/coll-of ::non-empty-simple-string))
+(s/def ::unqualified-keyword (s/and keyword?
+                                    (complement qualified-keyword?)))
+
+(s/def ::proto-element
+  (s/with-gen
+    (s/map-of ::unqualified-keyword (s/or :single-str ::non-empty-simple-string
+                                          :strings    ::simple-strings))
+    #(gen/hash-map :name  (s/gen ::name)
+                   :repos (s/gen ::simple-strings)
+                   :tags  (s/gen ::simple-strings))))
+
+(s/fdef fixup-element
+  :args (s/cat :tags-from-path ::tags
+               :proto-element  ::proto-element)
+  :ret ::element)
+
 ;; A file might contain a single element (as a map), or an array containing
 ;; multiple elements.
 (defn elements-from-file [file relative-root]
