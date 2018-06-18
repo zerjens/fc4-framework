@@ -76,11 +76,11 @@
 (s/def ::element
   (s/keys
     :req [::name]
-    :opt [::description ::uses]))
+    :opt [::description ::uses ::tags]))
 
 (s/def ::system-map
   (s/merge ::element
-           (s/keys :opt [::containers ::repos ::tags])))
+           (s/keys :opt [::containers ::repos])))
 
 (s/def ::systems
   (s/with-gen (s/map-of ::name ::system-map :min-count 1)
@@ -89,7 +89,9 @@
             (mapcat (juxt ::name identity))
             (apply hash-map)))))
 
-(s/def ::user-map (s/merge ::element (s/keys :req [::uses])))
+(s/def ::user-map
+  (s/merge ::element
+           (s/keys :req [::uses])))
 
 (s/def ::users
   (s/with-gen (s/map-of ::name ::user-map :min-count 1)
@@ -122,6 +124,26 @@
                :keyword   ::keyword-or-simple-string)
   :ret  qualified-keyword?)
 
+(defn- update-all
+  "Given a map and a function of entry (coll of two elems) to entry, applies the
+  function recursively to every entry in the map."
+  {:fork-of 'clojure.walk/stringify-keys}
+  [f m]
+  (postwalk
+    (fn [x]
+      (if (map? x)
+        (into {} (map f x))
+        x))
+    m))
+
+(s/def ::map-entry (s/tuple any? any?))
+
+(s/fdef update-all
+  :args (s/cat :fn (s/fspec :args (s/cat :entry ::map-entry)
+                            :ret  ::map-entry)
+               :map map?)
+  :ret map?)
+
 ; We have to capture this at compile time in order for it to have the value we
 ; want it to; if we referred to *ns* in the body of a function then, because it
 ; is dynamically bound, it would return the namespace at the top of the stack,
@@ -133,15 +155,14 @@
 (defn- qualify-keys
   "Given a nested map with keyword keys, qualifies all keys, recursively, with
   the current namespace."
-  {:fork-of 'clojure.walk/stringify-keys}
   [m]
-  (let [f (fn [[k v]]
-            (if (and (keyword? k)
-                     (not (qualified-keyword? k)))
-                [(add-ns this-ns-name k) v]
-                [k v]))]
-    ;; only apply to maps
-    (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
+  (update-all
+    (fn [[k v]]
+      (if (and (keyword? k)
+               (not (qualified-keyword? k)))
+        [(add-ns this-ns-name k) v]
+        [k v]))
+    m))
 
 (s/fdef qualify-keys
   :args (s/cat :map (s/map-of keyword? any?))
@@ -150,17 +171,20 @@
 ;; This is starting to feel silly… I mean, really ::repos should be a set too.
 ;; Perhaps instead of using YAML we should just use EDN files?
 (defn- fixup-tags
-  "Given a nested map, finds all entries with the key being ::tags and ensures
-  that the value is a set of keywords."
-  {:fork-of 'clojure.walk/stringify-keys}
+  "Given an element, ensures that the value of ::tags is a set of keywords. This
+  is useful because our YAML files can’t specify sets of keywords."
   [m]
-  (let [this-ns (str *ns*)
-        f (fn [[k v]]
-            (if (= k ::tags)
-                [k (->> v (map keyword) set)]
-                [k v]))]
-    ;; only apply to maps
-    (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
+  (update-all
+    (fn [[k v :as entry]]
+      (if (= k ::tags)
+        [k (->> v (map keyword) set)]
+        entry))
+    m)
+
+(s/fdef fixup-tags
+  :args (s/cat :element (s/map-of qualified-keyword? any?))
+  ;; now that ::tags is a set of keywords, the result is a valid ::element
+  :ret  ::element))
 
 (defn- add-tags
   [tags-from-path elem]
