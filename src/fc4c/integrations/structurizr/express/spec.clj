@@ -74,6 +74,7 @@
 (s/def :structurizr.diagram/styles (s/coll-of :structurizr/style :min-count 1))
 
 (s/def :structurizr/diagram
-  (s/keys :req-un [:structurizr.diagram/type :structurizr.diagram/scope :structurizr/description
+  (s/keys :req-un [:structurizr.diagram/type :structurizr.diagram/scope
                    :structurizr.diagram/elements :structurizr.diagram/relationships
-                   :structurizr.diagram/styles :structurizr.diagram/size]))
+                   :structurizr.diagram/styles :structurizr.diagram/size]
+          :opt-un [:structurizr/description]))

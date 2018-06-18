@@ -21,7 +21,7 @@ links:
   tag: Software System
   background: '#1168bd'
 - type: element
-  tag: in-house
+  tag: internal
   background: '#ad42f4'
 - type: relationship
   tag: Relationship
