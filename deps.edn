@@ -2,29 +2,37 @@
  {org.clojure/core.async {:mvn/version "0.4.474"}
   circleci/clj-yaml {:mvn/version "0.5.6"}
   potemkin {:mvn/version "0.4.4"}
+  expound {:mvn/version "0.7.0"}
+  com.cognitect/anomalies {:mvn/version "0.1.12"}
 
-  ;; test.chuck is in the main dependency list, rather than in the test profile, because we’re
-  ;; using one of its generators in a spec in a source file.
+  ;; Normally test.check would only be present in profiles like :dev, :test,
+  ;; etc. That way it wouldn’t need to be included in distributed/built
+  ;; artifacts nor downloaded/used at runtime. Unfortunately we have a few
+  ;; generators that need to use let, which for some reason isn’t included in
+  ;; clojure.spec.gen.alpha. We might be able to make our own lazy-loading alias
+  ;; for let. So TBD I guess.
+  org.clojure/test.check {:mvn/version "0.9.0"}
+
+  ;; test.chuck is in the main dependency list, rather than in the test profile,
+  ;; because we’re using one of its generators in a spec in a source file.
   com.gfredericks/test.chuck {:mvn/version "0.2.8"}}
 
  :aliases {:dev       {:extra-paths ["test"]
-                       :extra-deps  {org.clojure/test.check     {:mvn/version "0.9.0"}
+                       :extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
+                                     inspectable                {:mvn/version "0.2.2"}
                                      com.cognitect/test-runner  {:git/url "https://github.com/cognitect-labs/test-runner"
                                                                  :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}}
            :test      {:extra-paths ["test"]
-                       :extra-deps  {org.clojure/test.check     {:mvn/version "0.9.0"}
-                                     com.cognitect/test-runner  {:git/url "https://github.com/cognitect-labs/test-runner"
+                       :extra-deps  {com.cognitect/test-runner  {:git/url "https://github.com/cognitect-labs/test-runner"
                                                                  :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}}
            :run-tests {:extra-paths ["test"]
-                       :extra-deps  {org.clojure/test.check     {:mvn/version "0.9.0"}
-                                     ;; This fork returns a non-zero status when tests fail; crucial when building in a CI server.
+                       :extra-deps  {;; This fork returns a non-zero status when tests fail; crucial when building in a CI server.
                                      ;; See https://github.com/cognitect-labs/test-runner/pull/12
                                      com.cognitect/test-runner  {:git/url "https://github.com/Olical/test-runner"
                                                                  :sha "7c4f5bd4987ec514889c7cd7e3d13f4ef95f256b"}}
                        :main-opts   ["-m" "cognitect.test-runner"]}
            :coverage {:extra-paths  ["test"]
-                      :extra-deps   {org.clojure/test.check     {:mvn/version "0.9.0"}
-                                     cloverage                  {:mvn/version "1.0.10"}}
+                      :extra-deps   {cloverage                  {:mvn/version "1.0.10"}}
                       :main-opts    ["-m" "cloverage.coverage"
                                      ;; TODO: make this regex exclude fc4c.test-utils
                                      "--ns-regex" "^fc4c.+(?<!test)"
