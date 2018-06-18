@@ -31,7 +31,8 @@
   immediately, aborting the work."
   [dir-path f]
   (doseq [file (yaml-files dir-path)]
-    (println (relativize (str file) dir-path))
+    (binding [*out* *err*]
+      (println (relativize (str file) dir-path)))
     (->> (slurp file)
          (f)
          (spit file))))
