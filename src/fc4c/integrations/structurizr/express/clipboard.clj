@@ -1,6 +1,7 @@
-(ns fc4c.clipboard
+(ns fc4c.integrations.structurizr.express.clipboard
   (:require [clojure.core.async :as ca :refer [<! chan go-loop offer! poll! timeout]]
-            [fc4c.core :as c :refer [probably-diagram-yaml? process-file]])
+            [fc4c.integrations.structurizr.express.edit
+             :refer [probably-diagram-yaml? process-file]])
   (:import [java.awt Toolkit]
            [java.awt.datatransfer DataFlavor StringSelection])
   (:refer-clojure :exclude [slurp spit]))

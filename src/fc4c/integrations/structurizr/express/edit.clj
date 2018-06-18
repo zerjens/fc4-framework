@@ -1,14 +1,15 @@
-#!/usr/local/bin/clojure
-
-(ns fc4c.core
-  (:require [fc4c.spec :as fs]
+(ns fc4c.integrations.structurizr.express.edit
+  "Functions that assist with editing Structurizr Express diagrams, which are
+  serialized as YAML documents."
+  (:require [fc4c.integrations.structurizr.express.spec :as ss]
             [clj-yaml.core :as yaml]
             [clojure.spec.alpha :as s]
-            [clojure.test.check.generators :as gen]
             [com.gfredericks.test.chuck.generators :as gen']
             [flatland.ordered.map :refer [ordered-map]]
             [clojure.string :as str :refer [blank? ends-with? includes? join
                                             split trim]]
+            ;; Can’t use clojure.spec.gen because it doesn’t include let
+            [clojure.test.check.generators :as gen]
             [clojure.walk :as walk :refer [postwalk]]
             [clojure.set :refer [difference intersection]]))
 
@@ -77,8 +78,8 @@
             in))
 
 (s/fdef shrink
-  :args (s/cat :in :fc4c/diagram)
-  :ret :fc4c/diagram
+  :args (s/cat :in :structurizr/diagram)
+  :ret :structurizr/diagram
   :fn (s/and
         (fn [{{in :in} :args, ret :ret}] (= (type in) (type ret)))
         (fn [{{in :in} :args, ret :ret}]
@@ -145,7 +146,7 @@
     diagram
     desired-order))
 
-(def coord-pattern (re-pattern (str "^" fs/coord-pattern-base "$")))
+(def coord-pattern (re-pattern (str "^" ss/coord-pattern-base "$")))
 
 (defn parse-coords [s]
   (some->> s
@@ -154,8 +155,8 @@
            (map #(Integer/parseInt %))))
 
 (s/fdef parse-coords
-  :args (s/cat :s :fc4c/coord-string)
-  :ret (s/coll-of :fc4c/coord-int :count 2)
+  :args (s/cat :s :structurizr/coord-string)
+  :ret (s/coll-of :structurizr/coord-int :count 2)
   :fn (fn [{:keys [ret args]}]
         (= ret
            (->> (split (:s args) #",") 
@@ -173,8 +174,8 @@
 
 (s/fdef round-to-closest
   :args (s/cat :target ::snap-target
-               :n :fc4c/coord-int)
-  :ret :fc4c/coord-int
+               :n :structurizr/coord-int)
+  :ret :structurizr/coord-int
   :fn (fn [{{:keys [target n]} :args
             ret :ret}]
         (if (zero? ret) ;;TODO: need to actually validate that the ret value should actually be 0
@@ -200,7 +201,7 @@
   :args (s/cat :coords (s/coll-of nat-int? :count 2)
                :to-closest nat-int?
                :min-margin nat-int?)
-  :ret :fc4c/coord-string
+  :ret :structurizr/coord-string
   :fn (fn [{:keys [ret args]}]
         (let [parsed-ret (parse-coords ret)
               {:keys [:to-closest :min-margin]} args]
@@ -211,19 +212,19 @@
   component) as a map and snaps its position (coords) to a grid using the
   specified values."
   [elem to-closest min-margin]
-  (let [coords (parse-coords (:fc4c/position elem))
-        offsets (get elem-offsets (:fc4c.element/type elem) (repeat 0))
+  (let [coords (parse-coords (:structurizr/position elem))
+        offsets (get elem-offsets (:structurizr.element/type elem) (repeat 0))
         new-coords (snap-coords coords to-closest min-margin offsets)]
-    (assoc elem :fc4c.element/position new-coords)))
+    (assoc elem :structurizr.element/position new-coords)))
 
 (s/fdef snap-elem-to-grid
-  :args (s/cat :elem :fc4c/element
+  :args (s/cat :elem :structurizr/element
                :to-closest ::snap-target
                :min-margin nat-int?)
-  :ret :fc4c/element
+  :ret :structurizr/element
   :fn (fn [{{:keys [elem to-closest min-margin]} :args, ret :ret}]
-        (= (:fc4c/position ret)
-           (-> (:fc4c/position elem)
+        (= (:structurizr/position ret)
+           (-> (:structurizr/position elem)
                parse-coords
                (snap-coords to-closest min-margin)))))
 
@@ -283,8 +284,8 @@
       shrink)) ; must follow reorder-diagram because that tends to introduce new keys with nil values
 
 (s/fdef process
-  :args (s/cat :in :fc4c/diagram)
-  :ret :fc4c/diagram)
+  :args (s/cat :in :structurizr/diagram)
+  :ret :structurizr/diagram)
 
 (defn stringify
   "Accepts a diagram as a map, converts it to a YAML string."
@@ -320,11 +321,11 @@
                (every? #(contains? parsed %) [:type :scope :description
                                               :elements :relationships :styles
                                               :size]))))
-    #(gen/let [diagram (s/gen :fc4c/diagram)]
+    #(gen/let [diagram (s/gen :structurizr/diagram)]
        (str (sometimes (str default-front-matter "\n---\n"))
             (stringify diagram)))))
 
 (s/fdef process-file
   :args (s/cat :in ::diagram-yaml-str)
-  :ret  (s/cat :main-processed :fc4c/diagram
+  :ret  (s/cat :main-processed :structurizr/diagram
                :str-output ::diagram-yaml-str))
