@@ -20,8 +20,8 @@
         (map str [path parent-path])] ; coerce to strings in case they’re Files
     (when (starts-with? p pp)
       (subs p (if (ends-with? pp "/")
-                  (count pp)
-                  (inc (count pp)))))))
+                (count pp)
+                (inc (count pp)))))))
 
 (defn process-dir
   "Accepts a directory path as a string, finds all the YAML files in that dir or

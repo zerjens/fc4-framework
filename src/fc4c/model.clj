@@ -50,9 +50,9 @@
 
 (s/def ::small-set-of-keywords
   (s/coll-of ::short-simple-keyword
-    :distinct true
-    :kind set?
-    :gen-max 10))
+             :distinct true
+             :kind set?
+             :gen-max 10))
 
 (s/def ::repos ::small-set-of-keywords)
 (s/def ::tags ::small-set-of-keywords)
@@ -73,8 +73,8 @@
     ;; FYI, the generator doesn’t currently respect the `or` below; a fix for
     ;; this has been contributed to core.spec but not yet released:
     ;; https://dev.clojure.org/jira/browse/CLJ-2046
-    :req [(or ::container ::system (and ::system ::container))]
-    :opt [::technology ::description]))
+   :req [(or ::container ::system (and ::system ::container))]
+   :opt [::technology ::description]))
 
 ;;; order doesn’t really matter here, so I guess it should be a set?
 (s/def ::uses
@@ -83,8 +83,8 @@
 
 (s/def ::container-map
   (s/keys
-    :req [::name]
-    :opt [::description ::technology ::uses]))
+   :req [::name]
+   :opt [::description ::technology ::uses]))
 
 ;;; Order doesn’t really matter here, so I guess it should be a set? Or maybe a
 ;;; map of container names to container-maps? That would be consistent with
@@ -93,8 +93,8 @@
 
 (s/def ::element
   (s/keys
-    :req [::name]
-    :opt [::description ::uses ::tags]))
+   :req [::name]
+   :opt [::description ::uses ::tags]))
 
 (s/def ::system-map
   (s/merge ::element
@@ -123,8 +123,8 @@
 (s/def ::dir-path
   (s/with-gen (s/and ::non-blank-simple-str
                      #(ends-with? % "/"))
-              #(gen/let [s (s/gen ::short-non-blank-simple-str)]
-                 (str (->> (repeat 5 s) (join "/")) "/"))))
+    #(gen/let [s (s/gen ::short-non-blank-simple-str)]
+       (str (->> (repeat 5 s) (join "/")) "/"))))
 
 (s/def ::file (partial instance? java.io.File))
 
@@ -133,18 +133,18 @@
 (defn- get-tags-from-path
   [file relative-root]
   (as-> (or (relativize file relative-root) file) v
-        (split v #"/")
-        (map keyword v)
-        (drop-last v)
-        (set v)
-        (conj v (if (includes? (str file) "external")
-                    :external
-                    :in-house))))
+    (split v #"/")
+    (map keyword v)
+    (drop-last v)
+    (set v)
+    (conj v (if (includes? (str file) "external")
+              :external
+              :in-house))))
 
 (s/fdef get-tags-from-path
-  :args (s/cat :file          ::dir-path
-               :relative-root ::dir-path)
-  :ret ::tags)
+        :args (s/cat :file          ::dir-path
+                     :relative-root ::dir-path)
+        :ret ::tags)
 
 (defn- add-ns [namespace keeword]
   (keyword (name namespace) (name keeword)))
@@ -154,9 +154,9 @@
         :string  ::non-blank-simple-str))
 
 (s/fdef add-ns
-  :args (s/cat :namespace ::keyword-or-simple-string
-               :keyword   ::keyword-or-simple-string)
-  :ret  qualified-keyword?)
+        :args (s/cat :namespace ::keyword-or-simple-string
+                     :keyword   ::keyword-or-simple-string)
+        :ret  qualified-keyword?)
 
 (defn- update-all
   "Given a map and a function of entry (coll of two elems) to entry, applies the
@@ -164,19 +164,19 @@
   {:fork-of 'clojure.walk/stringify-keys}
   [f m]
   (postwalk
-    (fn [x]
-      (if (map? x)
-        (into {} (map f x))
-        x))
-    m))
+   (fn [x]
+     (if (map? x)
+       (into {} (map f x))
+       x))
+   m))
 
 (s/def ::map-entry (s/tuple any? any?))
 
 (s/fdef update-all
-  :args (s/cat :fn (s/fspec :args (s/cat :entry ::map-entry)
-                            :ret  ::map-entry)
-               :map map?)
-  :ret map?)
+        :args (s/cat :fn (s/fspec :args (s/cat :entry ::map-entry)
+                                  :ret  ::map-entry)
+                     :map map?)
+        :ret map?)
 
 ; We have to capture this at compile time in order for it to have the value we
 ; want it to; if we referred to *ns* in the body of a function then, because it
@@ -191,26 +191,26 @@
   the current namespace."
   [m]
   (update-all
-    (fn [[k v]]
-      (if (and (keyword? k)
-               (not (qualified-keyword? k)))
-        [(add-ns this-ns-name k) v]
-        [k v]))
-    m))
+   (fn [[k v]]
+     (if (and (keyword? k)
+              (not (qualified-keyword? k)))
+       [(add-ns this-ns-name k) v]
+       [k v]))
+   m))
 
 (s/fdef qualify-keys
-  :args (s/cat :map (s/map-of keyword? any?))
-  :ret  (s/map-of qualified-keyword? any?))
+        :args (s/cat :map (s/map-of keyword? any?))
+        :ret  (s/map-of qualified-keyword? any?))
 
 (defn- to-set-of-keywords
   [xs]
   (-> (map keyword xs) set))
 
 (s/fdef to-set-of-keywords
-  :args (s/cat :xs (s/coll-of string?))
-  :ret  (s/coll-of keyword? :kind set?)
-  :fn (fn [{{:keys [xs]} :args, ret :ret}]
-        (= (count (distinct xs)) (count ret))))
+        :args (s/cat :xs (s/coll-of string?))
+        :ret  (s/coll-of keyword? :kind set?)
+        :fn (fn [{{:keys [xs]} :args, ret :ret}]
+              (= (count (distinct xs)) (count ret))))
 
 (defn- fixup-element
   [tags-from-path elem]
@@ -233,9 +233,9 @@
                    :tags  (s/gen ::simple-strings))))
 
 (s/fdef fixup-element
-  :args (s/cat :tags-from-path ::tags
-               :proto-element  ::proto-element)
-  :ret ::element)
+        :args (s/cat :tags-from-path ::tags
+                     :proto-element  ::proto-element)
+        :ret ::element)
 
 ;; A file might contain a single element (as a map), or an array containing
 ;; multiple elements.
@@ -258,17 +258,17 @@
 (s/def ::elements-yaml-string
   (s/with-gen ::non-blank-str
     #(gen/let [elements (s/gen (s/coll-of ::element))]
-      (yaml/generate-string elements))))
+       (yaml/generate-string elements))))
 
 (s/def ::yaml-file-contents
   (s/with-gen ::non-blank-str
     #(gen/one-of (map s/gen [::element-yaml-string ::elements-yaml-string]))))
 
 (s/fdef elements-from-file
-  :args (s/cat :file-contents ::yaml-file-contents
-               :file-path     ::dir-path
-               :root-path     ::dir-path)
-  :ret  (s/coll-of ::element))
+        :args (s/cat :file-contents ::yaml-file-contents
+                     :file-path     ::dir-path
+                     :root-path     ::dir-path)
+        :ret  (s/coll-of ::element))
 
 ;;;; The below functions do I/O. The function specs are provided as a form of
 ;;;; documentation and for instrumentation during development. They should not
@@ -286,8 +286,8 @@
        (apply hash-map)))
 
 (s/fdef read-elements
-  :args (s/cat :root-path ::dir-path-or-file)
-  :ret  (s/map-of ::name ::element))
+        :args (s/cat :root-path ::dir-path-or-file)
+        :ret  (s/map-of ::name ::element))
 
 (defn read
   "Pass the path of a dir (must have trailing slash) that contains the dirs
@@ -296,13 +296,13 @@
   (let [model {::systems (read-elements (io/file root-path "systems"))
                ::users (read-elements (io/file root-path "users"))}]
     (if (s/valid? ::model model)
-        model
-        {::anom/category ::anom/fault
-         ::anom/message (expound-str ::model model)
-         ::model model})))
+      model
+      {::anom/category ::anom/fault
+       ::anom/message (expound-str ::model model)
+       ::model model})))
 
 (s/fdef read
-  :args (s/cat :root-path ::dir-path-or-file)
-  :ret  (s/or :success ::model
-              :error   (s/merge ::anom/anomaly
-                                (s/keys :req [::model]))))
+        :args (s/cat :root-path ::dir-path-or-file)
+        :ret  (s/or :success ::model
+                    :error   (s/merge ::anom/anomaly
+                                      (s/keys :req [::model]))))
