@@ -13,31 +13,52 @@
             [fc4c.files :refer [yaml-files relativize]]))
 
 ;; Fairly generic stuff:
-(s/def ::non-empty-string (s/and string? (complement blank?)))
+(s/def ::non-blank-str (s/and string? (complement blank?)))
 (s/def ::no-linebreaks  (s/and string? #(not (includes? % "\n"))))
-(s/def ::non-empty-simple-string (s/and ::non-empty-string ::no-linebreaks))
+(s/def ::non-blank-simple-str (s/and ::non-blank-str ::no-linebreaks))
+
+(defn- str-gen
+  [min-length max-length]
+  ;; Technique found here: https://stackoverflow.com/a/35974064/7012
+  (gen/fmap (partial apply str)
+            (gen/vector gen/char-alphanumeric min-length max-length)))
+
+(s/def ::short-non-blank-simple-str
+  (let [min 1 max 50] ;; inclusive
+    (s/with-gen
+      (s/and ::non-blank-simple-str
+             #(<= min (count %) max))
+      #(str-gen min max))))
 
 ;; Less generic stuff:
 (s/def ::name
-  (s/with-gen ::non-empty-simple-string
+  (s/with-gen ::short-non-blank-simple-str
     ;; This needs to generate a small and stable set of names so that the
     ;; generated relationships have a chance of being valid — or at least useful.
     #(gen/elements ["Front" "Middle" "Back" "Internal" "External" "Mobile"])))
 
-(s/def ::description ::non-empty-string)
+(s/def ::description ::non-blank-str) ;; Could reasonably have linebreaks.
 
 ;; Non-generic stuff:
 
-(s/def ::set-of-keywords
-  (s/coll-of (s/and keyword?
-                    (comp (partial s/valid? ::non-empty-simple-string) name))
-             :kind set?))
+(s/def ::short-simple-keyword
+  (s/with-gen
+    (s/and keyword?
+           (comp (partial s/valid? ::short-non-blank-simple-str) name))
+    #(gen/let [s (s/gen ::short-non-blank-simple-str)]
+       (keyword s))))
 
-(s/def ::repos ::set-of-keywords)
-(s/def ::tags ::set-of-keywords)
+(s/def ::small-set-of-keywords
+  (s/coll-of ::short-simple-keyword
+    :distinct true
+    :kind set?
+    :gen-max 10))
+
+(s/def ::repos ::small-set-of-keywords)
+(s/def ::tags ::small-set-of-keywords)
 (s/def ::system ::name)
 (s/def ::container ::name)
-(s/def ::technology ::non-empty-simple-string)
+(s/def ::technology ::non-blank-simple-str)
 
 (s/def ::system-ref
   (s/keys
@@ -100,9 +121,9 @@
 (s/def ::model (s/keys :req [::systems ::users]))
 
 (s/def ::dir-path
-  (s/with-gen (s/and ::non-empty-simple-string
+  (s/with-gen (s/and ::non-blank-simple-str
                      #(ends-with? % "/"))
-              #(gen/let [s (s/gen ::non-empty-simple-string)]
+              #(gen/let [s (s/gen ::short-non-blank-simple-str)]
                  (str (->> (repeat 5 s) (join "/")) "/"))))
 
 (s/def ::file (partial instance? java.io.File))
@@ -130,7 +151,7 @@
 
 (s/def ::keyword-or-simple-string
   (s/or :keyword keyword?
-        :string  ::non-empty-simple-string))
+        :string  ::non-blank-simple-str))
 
 (s/fdef add-ns
   :args (s/cat :namespace ::keyword-or-simple-string
@@ -199,14 +220,14 @@
       (update ::tags to-set-of-keywords)
       (update ::tags (partial union tags-from-path))))
 
-(s/def ::simple-strings (s/coll-of ::non-empty-simple-string))
+(s/def ::simple-strings (s/coll-of ::short-non-blank-simple-str))
 (s/def ::unqualified-keyword (s/and keyword?
                                     (complement qualified-keyword?)))
 
 (s/def ::proto-element
   (s/with-gen
-    (s/map-of ::unqualified-keyword (s/or :single-str ::non-empty-simple-string
-                                          :strings    ::simple-strings))
+    (s/map-of ::unqualified-keyword (s/or :name    ::name
+                                          :strings ::simple-strings))
     #(gen/hash-map :name  (s/gen ::name)
                    :repos (s/gen ::simple-strings)
                    :tags  (s/gen ::simple-strings))))
@@ -230,17 +251,17 @@
          elems)))
 
 (s/def ::element-yaml-string
-  (s/with-gen ::non-empty-string
+  (s/with-gen ::non-blank-str
     #(gen/let [element (s/gen ::element)]
        (yaml/generate-string element))))
 
 (s/def ::elements-yaml-string
-  (s/with-gen ::non-empty-string
+  (s/with-gen ::non-blank-str
     #(gen/let [elements (s/gen (s/coll-of ::element))]
       (yaml/generate-string elements))))
 
 (s/def ::yaml-file-contents
-  (s/with-gen ::non-empty-string
+  (s/with-gen ::non-blank-str
     #(gen/one-of (map s/gen [::element-yaml-string ::elements-yaml-string]))))
 
 (s/fdef elements-from-file
