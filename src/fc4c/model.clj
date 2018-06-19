@@ -219,11 +219,13 @@
 ;; A file might contain a single element (as a map), or an array containing
 ;; multiple elements.
 (defn- elements-from-file
-  [file-contents tags-from-path]
+  "Parses the contents of a YAML file, then processes those contents such that
+  each element conforms to ::element. The file-path and root-path are used to
+  generate tags from the file’s path relative to the root path."
+  [file-contents file-path root-path]
   (let [parsed (yaml/parse-string file-contents)
-        elems (if (associative? parsed)
-                  [parsed]
-                  parsed)]
+        elems (if (associative? parsed) [parsed] parsed)
+        tags-from-path (get-tags-from-path file-path root-path)]
     (map (partial fixup-element tags-from-path)
          elems)))
 
@@ -242,40 +244,27 @@
     #(gen/one-of (map s/gen [::element-yaml-string ::elements-yaml-string]))))
 
 (s/fdef elements-from-file
-  :args (s/cat :file-contents  ::yaml-file-contents
-               :tags-from-path ::tags)
+  :args (s/cat :file-contents ::yaml-file-contents
+               :file-path     ::dir-path
+               :root-path     ::dir-path)
   :ret  (s/coll-of ::element))
 
 ;;;; The below functions do I/O. The function specs are provided as a form of
 ;;;; documentation and for instrumentation during development. They should not
 ;;;; be used for generative testing.
 
-(defn- read-elements-from-file
-  "Does two things, really: reads the elements from a file, but also generates
-  the tags to add to the file and passes them over to elements-from-file. This
-  should probably be refactored to do one thing: read the file and pass its
-  contents over to elements-from-file. And at that point it could probably
-  become a single line in read-all-elements-from-dir-tree which could then have
-  a shorter name."
-  [file-path root-path]
-   (let [file-contents (slurp file-path)
-         tags-from-path (get-tags-from-path file-path root-path)]
-     (elements-from-file file-contents tags-from-path)))
-
-(s/fdef read-elements-from-file
-  :args (s/cat :root-path ::dir-path-or-file)
-  :ret  (s/coll-of ::element))
-
-(defn- read-all-elements-from-dir-tree
+(defn- read-elements
   "Recursively find and read all elements from all YAML files under a directory
   tree."
   [root-path]
   (->> (yaml-files root-path)
-       (mapcat #(read-elements-from-file % root-path))
+       (map (juxt slurp identity))
+       (mapcat (fn [[file-contents file-path]]
+                 (elements-from-file file-contents file-path root-path)))
        (mapcat (juxt ::name identity))
        (apply hash-map)))
 
-(s/fdef read-all-elements-from-dir-tree
+(s/fdef read-elements
   :args (s/cat :root-path ::dir-path-or-file)
   :ret  (s/map-of ::name ::element))
 
@@ -283,10 +272,8 @@
   "Pass the path of a dir (must have trailing slash) that contains the dirs
   \"systems\" and \"users\"."
   [root-path]
-  (let [model {::systems (read-all-elements-from-dir-tree
-                           (io/file root-path "systems"))
-               ::users (read-all-elements-from-dir-tree
-                           (io/file root-path "users"))}]
+  (let [model {::systems (read-elements (io/file root-path "systems"))
+               ::users (read-elements (io/file root-path "users"))}]
     (if (s/valid? ::model model)
         model
         {::anom/category ::anom/fault
