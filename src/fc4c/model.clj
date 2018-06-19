@@ -107,7 +107,7 @@
 
 (s/def ::file (partial instance? java.io.File))
 
-(s/def ::path-or-file (s/or ::dir-path ::file))
+(s/def ::dir-path-or-file (s/or ::dir-path ::file))
 
 (defn- get-tags-from-path
   [file relative-root]
@@ -181,8 +181,6 @@
   :args (s/cat :map (s/map-of keyword? any?))
   :ret  (s/map-of qualified-keyword? any?))
 
-;;;; TODO: the functions below don’t sufficiently separate I/O from computation.
-
 (defn- to-set-of-keywords
   [xs]
   (-> (map keyword xs) set))
@@ -220,39 +218,83 @@
 
 ;; A file might contain a single element (as a map), or an array containing
 ;; multiple elements.
-(defn elements-from-file [file relative-root]
-  (let [parsed (-> file
-                   slurp
-                   yaml/parse-string)
+(defn- elements-from-file
+  [file-contents tags-from-path]
+  (let [parsed (yaml/parse-string file-contents)
         elems (if (associative? parsed)
                   [parsed]
-                  parsed)
-        tags-from-path (get-tags-from-path file relative-root)]
+                  parsed)]
     (map (partial fixup-element tags-from-path)
          elems)))
 
-(defn read-elements [root-path]
+(s/def ::element-yaml-string
+  (s/with-gen ::non-empty-string
+    #(gen/let [element (s/gen ::element)]
+       (yaml/generate-string element))))
+
+(s/def ::elements-yaml-string
+  (s/with-gen ::non-empty-string
+    #(gen/let [elements (s/gen (s/coll-of ::element))]
+      (yaml/generate-string elements))))
+
+(s/def ::yaml-file-contents
+  (s/with-gen ::non-empty-string
+    #(gen/one-of (map s/gen [::element-yaml-string ::elements-yaml-string]))))
+
+(s/fdef elements-from-file
+  :args (s/cat :file-contents  ::yaml-file-contents
+               :tags-from-path ::tags)
+  :ret  (s/coll-of ::element))
+
+;;;; The below functions do I/O. The function specs are provided as a form of
+;;;; documentation and for instrumentation during development. They should not
+;;;; be used for generative testing.
+
+(defn- read-elements-from-file
+  "Does two things, really: reads the elements from a file, but also generates
+  the tags to add to the file and passes them over to elements-from-file. This
+  should probably be refactored to do one thing: read the file and pass its
+  contents over to elements-from-file. And at that point it could probably
+  become a single line in read-all-elements-from-dir-tree which could then have
+  a shorter name."
+  [file-path root-path]
+   (let [file-contents (slurp file-path)
+         tags-from-path (get-tags-from-path file-path root-path)]
+     (elements-from-file file-contents tags-from-path)))
+
+(s/fdef read-elements-from-file
+  :args (s/cat :root-path ::dir-path-or-file)
+  :ret  (s/coll-of ::element))
+
+(defn- read-all-elements-from-dir-tree
+  "Recursively find and read all elements from all YAML files under a directory
+  tree."
+  [root-path]
   (->> (yaml-files root-path)
-       (mapcat #(elements-from-file % root-path))
+       (mapcat #(read-elements-from-file % root-path))
        (mapcat (juxt ::name identity))
        (apply hash-map)))
+
+(s/fdef read-all-elements-from-dir-tree
+  :args (s/cat :root-path ::dir-path-or-file)
+  :ret  (s/map-of ::name ::element))
 
 (defn read
   "Pass the path of a dir (must have trailing slash) that contains the dirs
   \"systems\" and \"users\"."
   [root-path]
-  (let [model {::systems (read-elements (io/file root-path "systems"))
-               ::users (read-elements (io/file root-path "users"))}]
+  (let [model {::systems (read-all-elements-from-dir-tree
+                           (io/file root-path "systems"))
+               ::users (read-all-elements-from-dir-tree
+                           (io/file root-path "users"))}]
     (if (s/valid? ::model model)
         model
         {::anom/category ::anom/fault
          ::anom/message (expound-str ::model model)
          ::model model})))
 
-;; Not useful for generative testing because the function does I/O; see comment
-;; in model_test.clj.
 (s/fdef read
-  :args (s/cat :dir-path ::dir-path)
+  :args (s/cat :root-path ::dir-path-or-file)
   :ret  (s/or :success ::model
               :error   (s/merge ::anom/anomaly
                                 (s/keys :req [::model]))))
