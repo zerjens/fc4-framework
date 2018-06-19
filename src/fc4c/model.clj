@@ -32,7 +32,8 @@
 
 ;; Less generic stuff:
 (s/def ::name
-  (s/with-gen ::short-non-blank-simple-str
+  (s/with-gen
+    ::short-non-blank-simple-str
     ;; This needs to generate a small and stable set of names so that the
     ;; generated relationships have a chance of being valid — or at least useful.
     #(gen/elements ["Front" "Middle" "Back" "Internal" "External" "Mobile"])))
@@ -78,7 +79,8 @@
 
 ;;; order doesn’t really matter here, so I guess it should be a set?
 (s/def ::uses
-  (s/with-gen (s/coll-of ::system-ref :min-count 1)
+  (s/with-gen
+    (s/coll-of ::system-ref :min-count 1)
     #(gen/vector (s/gen ::system-ref) 5 10)))
 
 (s/def ::container-map
@@ -89,7 +91,8 @@
 ;;; Order doesn’t really matter here, so I guess it should be a set? Or maybe a
 ;;; map of container names to container-maps? That would be consistent with
 ;;; ::systems.
-(s/def ::containers (s/coll-of ::container-map))
+(s/def ::containers
+  (s/coll-of ::container-map))
 
 (s/def ::element
   (s/keys
@@ -101,7 +104,8 @@
            (s/keys :opt [::containers ::repos])))
 
 (s/def ::systems
-  (s/with-gen (s/map-of ::name ::system-map :min-count 1)
+  (s/with-gen
+    (s/map-of ::name ::system-map :min-count 1)
     #(gen/let [m (s/gen (s/coll-of ::system-map))]
        (->> m
             (mapcat (juxt ::name identity))
@@ -112,23 +116,27 @@
            (s/keys :req [::uses])))
 
 (s/def ::users
-  (s/with-gen (s/map-of ::name ::user-map :min-count 1)
+  (s/with-gen
+    (s/map-of ::name ::user-map :min-count 1)
     #(gen/let [m (s/gen (s/coll-of ::user-map))]
        (->> m
             (mapcat (juxt ::name identity))
             (apply hash-map)))))
 
-(s/def ::model (s/keys :req [::systems ::users]))
+(s/def ::model
+  (s/keys :req [::systems ::users]))
 
 (s/def ::dir-path
-  (s/with-gen (s/and ::non-blank-simple-str
-                     #(ends-with? % "/"))
+  (s/with-gen
+    (s/and ::non-blank-simple-str #(ends-with? % "/"))
     #(gen/let [s (s/gen ::short-non-blank-simple-str)]
        (str (->> (repeat 5 s) (join "/")) "/"))))
 
-(s/def ::file (partial instance? java.io.File))
+(s/def ::file
+  (partial instance? java.io.File))
 
-(s/def ::dir-path-or-file (s/or ::dir-path ::file))
+(s/def ::dir-path-or-file
+  (s/or ::dir-path ::file))
 
 (defn- get-tags-from-path
   [file relative-root]
@@ -146,7 +154,8 @@
                      :relative-root ::dir-path)
         :ret ::tags)
 
-(defn- add-ns [namespace keeword]
+(defn- add-ns
+  [namespace keeword]
   (keyword (name namespace) (name keeword)))
 
 (s/def ::keyword-or-simple-string
@@ -170,7 +179,8 @@
        x))
    m))
 
-(s/def ::map-entry (s/tuple any? any?))
+(s/def ::map-entry
+  (s/tuple any? any?))
 
 (s/fdef update-all
         :args (s/cat :fn (s/fspec :args (s/cat :entry ::map-entry)
@@ -220,9 +230,11 @@
       (update ::tags to-set-of-keywords)
       (update ::tags (partial union tags-from-path))))
 
-(s/def ::simple-strings (s/coll-of ::short-non-blank-simple-str))
-(s/def ::unqualified-keyword (s/and keyword?
-                                    (complement qualified-keyword?)))
+(s/def ::simple-strings
+  (s/coll-of ::short-non-blank-simple-str))
+
+(s/def ::unqualified-keyword
+  (s/and keyword? (complement qualified-keyword?)))
 
 (s/def ::proto-element
   (s/with-gen
@@ -251,17 +263,20 @@
          elems)))
 
 (s/def ::element-yaml-string
-  (s/with-gen ::non-blank-str
+  (s/with-gen
+    ::non-blank-str
     #(gen/let [element (s/gen ::element)]
        (yaml/generate-string element))))
 
 (s/def ::elements-yaml-string
-  (s/with-gen ::non-blank-str
+  (s/with-gen
+    ::non-blank-str
     #(gen/let [elements (s/gen (s/coll-of ::element))]
        (yaml/generate-string elements))))
 
 (s/def ::yaml-file-contents
-  (s/with-gen ::non-blank-str
+  (s/with-gen
+    ::non-blank-str
     #(gen/one-of (map s/gen [::element-yaml-string ::elements-yaml-string]))))
 
 (s/fdef elements-from-file
