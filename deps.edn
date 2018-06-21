@@ -26,9 +26,10 @@
                        :extra-deps  {com.cognitect/test-runner  {:git/url "https://github.com/cognitect-labs/test-runner"
                                                                  :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}}
            :run-tests {:extra-paths ["test"]
-                       :extra-deps  {;; This fork returns a non-zero status when tests fail; crucial when building in a CI server.
+                       :extra-deps  {;; This is a fork of com.cognitect/test-runner that returns a non-zero status when
+                                     ;; tests fail; this is crucial when building in a CI environment.
                                      ;; See https://github.com/cognitect-labs/test-runner/pull/12
-                                     com.cognitect/test-runner  {:git/url "https://github.com/Olical/test-runner"
+                                     github-Olical/test-runner  {:git/url "https://github.com/Olical/test-runner"
                                                                  :sha "7c4f5bd4987ec514889c7cd7e3d13f4ef95f256b"}}
                        :main-opts   ["-m" "cognitect.test-runner"]}
            :coverage  {:extra-paths  ["test"]
