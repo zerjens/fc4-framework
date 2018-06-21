@@ -19,12 +19,8 @@
 
  :aliases {:dev       {:extra-paths ["test"]
                        :extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
-                                     inspectable                {:mvn/version "0.2.2"}
-                                     com.cognitect/test-runner  {:git/url "https://github.com/cognitect-labs/test-runner"
-                                                                 :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}}
-           :test      {:extra-paths ["test"]
-                       :extra-deps  {com.cognitect/test-runner  {:git/url "https://github.com/cognitect-labs/test-runner"
-                                                                 :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}}
+                                     inspectable                {:mvn/version "0.2.2"}}
+
            :run-tests {:extra-paths ["test"]
                        :extra-deps  {;; This is a fork of com.cognitect/test-runner that returns a non-zero status when
                                      ;; tests fail; this is crucial when building in a CI environment.
