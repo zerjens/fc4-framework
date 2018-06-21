@@ -22,24 +22,30 @@
                                      inspectable                {:mvn/version "0.2.2"}}
 
            :run-tests {:extra-paths ["test"]
-                       :extra-deps  {;; This is a fork of com.cognitect/test-runner that returns a non-zero status when
-                                     ;; tests fail; this is crucial when building in a CI environment.
+                       :extra-deps  {;; This is a fork of com.cognitect/test-runner that returns a
+                                     ;; non-zero status when tests fail; this is crucial when
+                                     ;; building in a CI environment.
                                      ;; See https://github.com/cognitect-labs/test-runner/pull/12
-                                     github-Olical/test-runner  {:git/url "https://github.com/Olical/test-runner"
-                                                                 :sha "7c4f5bd4987ec514889c7cd7e3d13f4ef95f256b"}}
+                                     github-Olical/test-runner
+                                     {:git/url "https://github.com/Olical/test-runner"
+                                      :sha     "7c4f5bd4987ec514889c7cd7e3d13f4ef95f256b"}}
                        :main-opts   ["-m" "cognitect.test-runner"]}
-           :coverage  {:extra-paths  ["test"]
-                       :extra-deps   {cloverage                  {:mvn/version "1.0.10"}}
-                       :main-opts    ["-m" "cloverage.coverage"
-                                      ;; TODO: make this regex exclude fc4c.test-utils
-                                      "--ns-regex" "^fc4c.+(?<!test)"
-                                      "--test-ns-regex" "fc4c.+\\-test$"
-                                      "--fail-threshold" "65"
-                                      "--codecov"]}
-           :lint      {:extra-deps {com.jameslaverack/cljfmt-runner
-                                    {:git/url "https://github.com/JamesLaverack/cljfmt-runner"
-                                     :sha "51f85c9d6cc67107620749ceacd46120647fe107"}}
-                       :main-opts ["-m" "cljfmt-runner.check"]}
-           :lint/fix  {:main-opts ["-m" "cljfmt-runner.fix"]}
-           :wcb ;; wcb = “watch clipboard”
-           {:main-opts ["-m" "fc4c.cli"]}}}
+
+           :coverage  {:extra-paths ["test"]
+                       :extra-deps  {cloverage                  {:mvn/version "1.0.10"}}
+                       :main-opts   ["-m" "cloverage.coverage"
+                                     ;; TODO: make this regex exclude fc4c.test-utils
+                                     "--ns-regex" "^fc4c.+(?<!test)"
+                                     "--test-ns-regex" "fc4c.+\\-test$"
+                                     "--fail-threshold" "65"
+                                     "--codecov"]}
+
+           :lint      {:extra-deps  {com.jameslaverack/cljfmt-runner
+                                     {:git/url "https://github.com/JamesLaverack/cljfmt-runner"
+                                      :sha     "51f85c9d6cc67107620749ceacd46120647fe107"}}
+                       :main-opts   ["-m" "cljfmt-runner.check"]}
+
+           :lint/fix  {:main-opts   ["-m" "cljfmt-runner.fix"]}
+
+           ;; wcb = “watch clipboard”
+           :wcb       {:main-opts   ["-m" "fc4c.cli"]}}}
