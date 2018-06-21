@@ -1,7 +1,7 @@
 {:deps
  {org.clojure/core.async {:mvn/version "0.4.474"}
   circleci/clj-yaml {:mvn/version "0.5.6"}
-  potemkin {:mvn/version "0.4.4"}
+  potemkin {:mvn/version "0.4.5"}
   expound {:mvn/version "0.7.0"}
   com.cognitect/anomalies {:mvn/version "0.1.12"}
 
@@ -15,7 +15,7 @@
 
   ;; test.chuck is in the main dependency list, rather than in the test profile,
   ;; because we’re using one of its generators in a spec in a source file.
-  com.gfredericks/test.chuck {:mvn/version "0.2.8"}}
+  com.gfredericks/test.chuck {:mvn/version "0.2.9"}}
 
  :aliases {:dev       {:extra-paths ["test"]
                        :extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
