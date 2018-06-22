@@ -139,6 +139,17 @@
   (s/or ::dir-path ::file))
 
 (defn- get-tags-from-path
+  "Given a path to a file (as a String) and a path to an ancestor root directory
+  (as a String), extracts a set of tags from set of directories that are
+  descendants of the ancestor root dir. If the file path includes “external”
+  then the tag :external will be added to the returned set; if not then the tag
+  :in-house will be added. (TODO: change this to :internal)
+
+  For example:
+  => (get-tags-from-path
+       \"/docs/fc4/model/systems/uk/compliance/panopticon.yaml\"
+       \"/docs/fc4/model/systems/\")
+  #{:uk :compliance :in-house}"
   [file relative-root]
   (as-> (or (relativize file relative-root) file) v
     (split v #"/")
