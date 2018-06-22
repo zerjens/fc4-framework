@@ -5,7 +5,7 @@
             [clojure.set :refer [union]]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
-            [clojure.string :refer [blank? ends-with? includes? join split]]            
+            [clojure.string :refer [blank? ends-with? includes? join split]]
             [clojure.walk :refer [postwalk]]
             [cognitect.anomalies :as anom]
             [expound.alpha :as expound :refer [expound-str]]
@@ -151,13 +151,13 @@
   ancestor root directory (as a String or a java.io.File), extracts a set of
   tags from set of directories that are descendants of the ancestor root dir. If
   the file path includes “external” then the tag :external will be added to the
-  returned set; if not then the tag :in-house will be added. (TODO: change this to :internal)
+  returned set; if not then the tag :internal will be added.
 
   For example:
   => (get-tags-from-path
        \"/docs/fc4/model/systems/uk/compliance/panopticon.yaml\"
        \"/docs/fc4/model/systems/\")
-  #{:uk :compliance :in-house}"
+  #{:uk :compliance :internal}"
   [file relative-root]
   (as-> (or (relativize file relative-root) (str file)) v
     (split v #"/")
@@ -166,8 +166,11 @@
     (set v)
     (conj v (if (includes? (str file) "external")
               :external
-              :in-house))))
+              :internal))))
 
+;; TODO: for this spec to be truly useful in QA terms, it really needs an fspec
+;; and better generators (the generators will need to create two paths that are
+;; usefully and realistic related).
 (s/fdef get-tags-from-path
         :args (s/cat :file          ::dir-path-or-file
                      :relative-root ::dir-path-or-file)
