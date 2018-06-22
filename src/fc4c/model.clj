@@ -4,9 +4,8 @@
             [clojure.java.io :as io]
             [clojure.set :refer [union]]
             [clojure.spec.alpha :as s]
-            [clojure.string :refer [blank? ends-with? includes? join split]]
-            ;; Can’t use clojure.spec.gen because it doesn’t include let
-            [clojure.test.check.generators :as gen]
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.string :refer [blank? ends-with? includes? join split]]            
             [clojure.walk :refer [postwalk]]
             [cognitect.anomalies :as anom]
             [expound.alpha :as expound :refer [expound-str]]
@@ -21,7 +20,7 @@
   [min-length max-length]
   ;; Technique found here: https://stackoverflow.com/a/35974064/7012
   (gen/fmap (partial apply str)
-            (gen/vector gen/char-alphanumeric min-length max-length)))
+            (gen/vector (gen/char-alphanumeric) min-length max-length)))
 
 (s/def ::short-non-blank-simple-str
   (let [min 1 max 50] ;; inclusive
@@ -46,8 +45,7 @@
   (s/with-gen
     (s/and keyword?
            (comp (partial s/valid? ::short-non-blank-simple-str) name))
-    #(gen/let [s (s/gen ::short-non-blank-simple-str)]
-       (keyword s))))
+    #(gen/fmap keyword (s/gen ::short-non-blank-simple-str))))
 
 (s/def ::small-set-of-keywords
   (s/coll-of ::short-simple-keyword
@@ -103,13 +101,22 @@
   (s/merge ::element
            (s/keys :opt [::containers ::repos])))
 
+(defn- lookup-table-by
+  "Given a function and a seqable, returns a map of (f x) to x.
+
+  For example:
+  => (lookup-table-by :name [{:name :foo} {:name :bar}])
+  {:foo {:name :foo}, :bar {:name :bar}}"
+  [f xs]
+  (zipmap (map f xs) xs))
+
+(def ^:private lookup-table-by-name
+  (partial lookup-table-by ::name))
+
 (s/def ::systems
   (s/with-gen
     (s/map-of ::name ::system-map :min-count 1)
-    #(gen/let [m (s/gen (s/coll-of ::system-map))]
-       (->> m
-            (mapcat (juxt ::name identity))
-            (apply hash-map)))))
+    #(gen/fmap lookup-table-by-name (s/gen (s/coll-of ::system-map)))))
 
 (s/def ::user-map
   (s/merge ::element
@@ -118,10 +125,7 @@
 (s/def ::users
   (s/with-gen
     (s/map-of ::name ::user-map :min-count 1)
-    #(gen/let [m (s/gen (s/coll-of ::user-map))]
-       (->> m
-            (mapcat (juxt ::name identity))
-            (apply hash-map)))))
+    #(gen/fmap lookup-table-by-name (s/gen (s/coll-of ::user-map)))))
 
 (s/def ::model
   (s/keys :req [::systems ::users]))
@@ -129,8 +133,10 @@
 (s/def ::dir-path
   (s/with-gen
     (s/and ::non-blank-simple-str #(ends-with? % "/"))
-    #(gen/let [s (s/gen ::short-non-blank-simple-str)]
-       (str (->> (repeat 5 s) (join "/")) "/"))))
+    #(gen/fmap
+       (fn [s] (str (->> (repeat 5 s) (join "/"))
+                    "/"))
+       (s/gen ::short-non-blank-simple-str))))
 
 (s/def ::dir-file
   (s/with-gen
@@ -278,14 +284,12 @@
 (s/def ::element-yaml-string
   (s/with-gen
     ::non-blank-str
-    #(gen/let [element (s/gen ::element)]
-       (yaml/generate-string element))))
+    #(gen/fmap yaml/generate-string (s/gen ::element))))
 
 (s/def ::elements-yaml-string
   (s/with-gen
     ::non-blank-str
-    #(gen/let [elements (s/gen (s/coll-of ::element))]
-       (yaml/generate-string elements))))
+    #(gen/fmap yaml/generate-string (s/gen (s/coll-of ::element)))))
 
 (s/def ::yaml-file-contents
   (s/with-gen
@@ -310,8 +314,7 @@
        (map (juxt slurp identity))
        (mapcat (fn [[file-contents file-path]]
                  (elements-from-file file-contents file-path root-path)))
-       (mapcat (juxt ::name identity))
-       (apply hash-map)))
+       lookup-table-by-name))
 
 (s/fdef read-elements
         :args (s/cat :root-path ::dir-path-or-file)
