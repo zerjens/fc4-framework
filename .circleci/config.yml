@@ -15,7 +15,7 @@ jobs:
        - run:
           name: Download dependencies (if necessary)
           # Clojure automatically downloads deps if necessary
-          command: "clojure -R:run-tests:coverage -e '(println \"deps are installed!\")'"
+          command: "clojure -R:run-tests:coverage:lint -e '(println \"deps are installed!\")'"
 
        - save_cache:
            key: dependencies-{{ checksum "deps.edn" }}
@@ -45,3 +45,7 @@ jobs:
        - run:
           name: Upload test coverage report to Codecov
           command: bash <(curl -s https://codecov.io/bash)
+
+       - run:
+          name: lint
+          command: "clojure -A:lint"
