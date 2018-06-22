@@ -1,17 +1,15 @@
 (ns fc4c.model
-  (:refer-clojure :exclude [read])
   (:require [clj-yaml.core :as yaml]
-            [clojure.java.io :as io]
             [clojure.set :refer [union]]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [clojure.string :refer [blank? ends-with? includes? join split]]
             [clojure.walk :refer [postwalk]]
-            [cognitect.anomalies :as anom]
-            [expound.alpha :as expound :refer [expound-str]]
-            [fc4c.files :refer [yaml-files relativize]]))
+            [fc4c.files :refer [relativize]]
+            [fc4c.util :refer [lookup-table-by]]))
 
 ;; Fairly generic stuff:
+;; TODO: these are duplicated in src/fc4c/integrations/structurizr/express/spec.clj
 (s/def ::non-blank-str (s/and string? (complement blank?)))
 (s/def ::no-linebreaks  (s/and string? #(not (includes? % "\n"))))
 (s/def ::non-blank-simple-str (s/and ::non-blank-str ::no-linebreaks))
@@ -101,15 +99,6 @@
   (s/merge ::element
            (s/keys :opt [::containers ::repos])))
 
-(defn- lookup-table-by
-  "Given a function and a seqable, returns a map of (f x) to x.
-
-  For example:
-  => (lookup-table-by :name [{:name :foo} {:name :bar}])
-  {:foo {:name :foo}, :bar {:name :bar}}"
-  [f xs]
-  (zipmap (map f xs) xs))
-
 (def ^:private lookup-table-by-name
   (partial lookup-table-by ::name))
 
@@ -130,6 +119,7 @@
 (s/def ::model
   (s/keys :req [::systems ::users]))
 
+;; TODO: this is duplicated in io.clj
 (s/def ::dir-path
   (s/with-gen
     (s/and ::non-blank-simple-str #(ends-with? % "/"))
@@ -138,33 +128,25 @@
                    "/"))
       (s/gen ::short-non-blank-simple-str))))
 
-(s/def ::dir-file
-  (s/with-gen
-    (partial instance? java.io.File)
-    #(gen/fmap io/file (s/gen ::dir-path))))
-
-(s/def ::dir-path-or-file
-  (s/or ::dir-path ::dir-file))
-
 (defn- get-tags-from-path
-  "Given a path to a file (as a String or a java.io.File) and a path to an
-  ancestor root directory (as a String or a java.io.File), extracts a set of
-  tags from set of directories that are descendants of the ancestor root dir. If
-  the file path includes “external” then the tag :external will be added to the
-  returned set; if not then the tag :internal will be added.
+  "Given a path to a file (as a String) and a path to an ancestor root directory
+  (as a String), extracts a set of tags from set of directories that are
+  descendants of the ancestor root dir. If the file path includes “external”
+  then the tag :external will be added to the returned set; if not then the tag
+  :internal will be added.
 
   For example:
   => (get-tags-from-path
        \"/docs/fc4/model/systems/uk/compliance/panopticon.yaml\"
        \"/docs/fc4/model/systems/\")
   #{:uk :compliance :internal}"
-  [file relative-root]
-  (as-> (or (relativize file relative-root) (str file)) v
+  [file-path relative-root]
+  (as-> (or (relativize file-path relative-root) file-path) v
     (split v #"/")
     (map keyword v)
     (drop-last v)
     (set v)
-    (conj v (if (includes? (str file) "external")
+    (conj v (if (includes? file-path "external")
               :external
               :internal))))
 
@@ -172,8 +154,8 @@
 ;; and better generators (the generators will need to create two paths that are
 ;; usefully and realistic related).
 (s/fdef get-tags-from-path
-        :args (s/cat :file          ::dir-path-or-file
-                     :relative-root ::dir-path-or-file)
+        :args (s/cat :file          ::dir-path
+                     :relative-root ::dir-path)
         :ret ::tags)
 
 (defn- add-ns
@@ -273,7 +255,7 @@
 
 ;; A file might contain a single element (as a map), or an array containing
 ;; multiple elements.
-(defn- elements-from-file
+(defn elements-from-file
   "Parses the contents of a YAML file, then processes those contents such that
   each element conforms to ::element. The file-path and root-path are used to
   generate tags from the file’s path relative to the root path."
@@ -304,39 +286,3 @@
                      :file-path     ::dir-path
                      :root-path     ::dir-path)
         :ret  (s/coll-of ::element))
-
-;;;; The below functions do I/O. The function specs are provided as a form of
-;;;; documentation and for instrumentation during development. They should not
-;;;; be used for generative testing.
-
-(defn- read-elements
-  "Recursively find and read all elements from all YAML files under a directory
-  tree."
-  [root-path]
-  (->> (yaml-files root-path)
-       (map (juxt slurp identity))
-       (mapcat (fn [[file-contents file-path]]
-                 (elements-from-file file-contents file-path root-path)))
-       lookup-table-by-name))
-
-(s/fdef read-elements
-        :args (s/cat :root-path ::dir-path-or-file)
-        :ret  (s/map-of ::name ::element))
-
-(defn read
-  "Pass the path of a dir (must have trailing slash) that contains the dirs
-  \"systems\" and \"users\"."
-  [root-path]
-  (let [model {::systems (read-elements (io/file root-path "systems"))
-               ::users (read-elements (io/file root-path "users"))}]
-    (if (s/valid? ::model model)
-      model
-      {::anom/category ::anom/fault
-       ::anom/message (expound-str ::model model)
-       ::model model})))
-
-(s/fdef read
-        :args (s/cat :root-path ::dir-path-or-file)
-        :ret  (s/or :success ::model
-                    :error   (s/merge ::anom/anomaly
-                                      (s/keys :req [::model]))))

@@ -3,9 +3,11 @@
             [clojure.string :as str :refer [blank?]]
             [com.gfredericks.test.chuck.generators :as gen']))
 
+;; TODO: these are duplicated in src/fc4c/model.clj
 (s/def :structurizr/non-blank-string (s/and string? (complement blank?)))
 (s/def :structurizr/name :structurizr/non-blank-string)
 (s/def :structurizr/description :structurizr/non-blank-string)
+
 (s/def :structurizr/tags string?) ;; comma-delimited TODO: use a regex
 
 (def coord-pattern-base "(\\d{1,4}), ?(\\d{1,4})")
