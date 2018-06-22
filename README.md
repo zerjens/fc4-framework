@@ -82,6 +82,21 @@ If you’re old-school and prefer to run tests on bare metal:
 You could just run `clj` but you’re likely to want the test deps and code to be accessible. In that
 case run `clj -Adev`
 
+## Running the Linter
+
+For linting, this project uses [cljfmt](https://github.com/weavejester/cljfmt),
+via [cljfmt-runner](https://github.com/JamesLaverack/cljfmt-runner).
+
+* To lint the entire project, run `clojure -A:lint`
+* To lint the entire project **and automatically fix any problems found** run
+  `clojure -A:lint:lint/fix`
+  * This will change the files on disk but will not commit the changes nor stage
+    them into the git index. This way you can review the changes that were
+    applied and decide which to keep and which to discard.
+
+We’ll soon be integrating a lint run into our CI builds so they’ll fail if any
+source code is formatted incorrectly. Coming soon!
+
 ## Contributors
 
 * @99-not-out
