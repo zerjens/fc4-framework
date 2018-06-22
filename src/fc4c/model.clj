@@ -132,18 +132,20 @@
     #(gen/let [s (s/gen ::short-non-blank-simple-str)]
        (str (->> (repeat 5 s) (join "/")) "/"))))
 
-(s/def ::file
-  (partial instance? java.io.File))
+(s/def ::dir-file
+  (s/with-gen
+    (partial instance? java.io.File)
+    #(gen/fmap io/file (s/gen ::dir-path))))
 
 (s/def ::dir-path-or-file
-  (s/or ::dir-path ::file))
+  (s/or ::dir-path ::dir-file))
 
 (defn- get-tags-from-path
-  "Given a path to a file (as a String) and a path to an ancestor root directory
-  (as a String), extracts a set of tags from set of directories that are
-  descendants of the ancestor root dir. If the file path includes “external”
-  then the tag :external will be added to the returned set; if not then the tag
-  :in-house will be added. (TODO: change this to :internal)
+  "Given a path to a file (as a String or a java.io.File) and a path to an
+  ancestor root directory (as a String or a java.io.File), extracts a set of
+  tags from set of directories that are descendants of the ancestor root dir. If
+  the file path includes “external” then the tag :external will be added to the
+  returned set; if not then the tag :in-house will be added. (TODO: change this to :internal)
 
   For example:
   => (get-tags-from-path
@@ -151,7 +153,7 @@
        \"/docs/fc4/model/systems/\")
   #{:uk :compliance :in-house}"
   [file relative-root]
-  (as-> (or (relativize file relative-root) file) v
+  (as-> (or (relativize file relative-root) (str file)) v
     (split v #"/")
     (map keyword v)
     (drop-last v)
@@ -161,8 +163,8 @@
               :in-house))))
 
 (s/fdef get-tags-from-path
-        :args (s/cat :file          ::dir-path
-                     :relative-root ::dir-path)
+        :args (s/cat :file          ::dir-path-or-file
+                     :relative-root ::dir-path-or-file)
         :ret ::tags)
 
 (defn- add-ns
