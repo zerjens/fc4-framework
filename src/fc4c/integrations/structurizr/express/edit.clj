@@ -39,27 +39,27 @@
            (blank? v))))
 
 (s/fdef blank-nil-or-empty?
-  :args (s/cat :v (s/or :nil nil?                        
-                        :coll (s/coll-of any?
+        :args (s/cat :v (s/or :nil nil?
+                              :coll (s/coll-of any?
                                          ; for this fn it matters only if the coll is empty or not
-                                         :gen-max 1)
-                        :string string?))
-  :ret boolean?
-  :fn (fn [{:keys [args ret]}]
-        (let [[which v] (:v args)]
-          (case which
-            :nil
-            (= ret true)
-            
-            :coll
-            (if (empty? v)
-                (= ret true)
-                (= ret false))
+                                               :gen-max 1)
+                              :string string?))
+        :ret boolean?
+        :fn (fn [{:keys [args ret]}]
+              (let [[which v] (:v args)]
+                (case which
+                  :nil
+                  (= ret true)
 
-            :string
-            (if (blank? v)
-                (= ret true)
-                (= ret false))))))
+                  :coll
+                  (if (empty? v)
+                    (= ret true)
+                    (= ret false))
+
+                  :string
+                  (if (blank? v)
+                    (= ret true)
+                    (= ret false))))))
 
 (defn shrink
   "Remove key-value pairs wherein the value is blank, nil, or empty from a
@@ -70,27 +70,27 @@
   [in]
   (postwalk (fn [el]
               (if (map? el)
-                  (let [m (into (empty el) ; using empty to preserve ordered maps 
-                            (remove (comp blank-nil-or-empty? second) el))]
-                    (when (seq m) m))
-                  el))
+                (let [m (into (empty el) ; using empty to preserve ordered maps 
+                              (remove (comp blank-nil-or-empty? second) el))]
+                  (when (seq m) m))
+                el))
             in))
 
 (s/fdef shrink
-  :args (s/cat :in :structurizr/diagram)
-  :ret :structurizr/diagram
-  :fn (s/and
-        (fn [{{in :in} :args, ret :ret}] (= (type in) (type ret)))
-        (fn [{{in :in} :args, ret :ret}]
-          (let [all-vals #(if (map? %) (vals %) %) ; works on maps or sequences
-                leaf-vals #(->> (tree-seq coll? all-vals %)
-                                (filter (complement coll?))
-                                flatten)
-                in-vals (->> (leaf-vals in) (filter (complement blank-nil-or-empty?)) set)
-                ret-vals (->> (leaf-vals ret) set)]
-            (if (seq in)
-                (= in-vals ret-vals)
-                (nil? ret))))))
+        :args (s/cat :in :structurizr/diagram)
+        :ret :structurizr/diagram
+        :fn (s/and
+             (fn [{{in :in} :args, ret :ret}] (= (type in) (type ret)))
+             (fn [{{in :in} :args, ret :ret}]
+               (let [all-vals #(if (map? %) (vals %) %) ; works on maps or sequences
+                     leaf-vals #(->> (tree-seq coll? all-vals %)
+                                     (filter (complement coll?))
+                                     flatten)
+                     in-vals (->> (leaf-vals in) (filter (complement blank-nil-or-empty?)) set)
+                     ret-vals (->> (leaf-vals ret) set)]
+                 (if (seq in)
+                   (= in-vals ret-vals)
+                   (nil? ret))))))
 
 (defn reorder
   "Reorder a map as per a seq of keys.
@@ -136,14 +136,14 @@
   pairs as per desired-order."
   [diagram]
   (reduce
-    (fn [d [key {:keys [sort-keys key-order]}]]
-      (if (= key :root)
-          (reorder key-order d)
-          (update-in d [key]
-            #(->> (sort-by (comp join (apply juxt sort-keys)) %)
-                  (map (partial reorder key-order))))))
-    diagram
-    desired-order))
+   (fn [d [key {:keys [sort-keys key-order]}]]
+     (if (= key :root)
+       (reorder key-order d)
+       (update-in d [key]
+                  #(->> (sort-by (comp join (apply juxt sort-keys)) %)
+                        (map (partial reorder key-order))))))
+   diagram
+   desired-order))
 
 (def coord-pattern (re-pattern (str "^" ss/coord-pattern-base "$")))
 
@@ -154,32 +154,32 @@
            (map #(Integer/parseInt %))))
 
 (s/fdef parse-coords
-  :args (s/cat :s :structurizr/coord-string)
-  :ret (s/coll-of :structurizr/coord-int :count 2)
-  :fn (fn [{:keys [ret args]}]
-        (= ret
-           (->> (split (:s args) #",") 
-                (map trim)
-                (map #(Integer/parseInt %))))))
+        :args (s/cat :s :structurizr/coord-string)
+        :ret (s/coll-of :structurizr/coord-int :count 2)
+        :fn (fn [{:keys [ret args]}]
+              (= ret
+                 (->> (split (:s args) #",")
+                      (map trim)
+                      (map #(Integer/parseInt %))))))
 
 (defn round-to-closest [target n]
   (if (zero? n)
-      0
-      (-> (/ n (float target))
-          Math/round
-          (* target))))
+    0
+    (-> (/ n (float target))
+        Math/round
+        (* target))))
 
 (s/def ::snap-target #{10 25 50 75 100})
 
 (s/fdef round-to-closest
-  :args (s/cat :target ::snap-target
-               :n :structurizr/coord-int)
-  :ret :structurizr/coord-int
-  :fn (fn [{{:keys [target n]} :args
-            ret :ret}]
-        (if (zero? ret) ;;TODO: need to actually validate that the ret value should actually be 0
-            true
-            (zero? (rem ret target)))))
+        :args (s/cat :target ::snap-target
+                     :n :structurizr/coord-int)
+        :ret :structurizr/coord-int
+        :fn (fn [{{:keys [target n]} :args
+                  ret :ret}]
+              (if (zero? ret) ;;TODO: need to actually validate that the ret value should actually be 0
+                true
+                (zero? (rem ret target)))))
 
 (def elem-offsets
   {"Person" [25, -50]})
@@ -197,14 +197,14 @@
         (join ","))))
 
 (s/fdef snap-coords
-  :args (s/cat :coords (s/coll-of nat-int? :count 2)
-               :to-closest nat-int?
-               :min-margin nat-int?)
-  :ret :structurizr/coord-string
-  :fn (fn [{:keys [ret args]}]
-        (let [parsed-ret (parse-coords ret)
-              {:keys [:to-closest :min-margin]} args]
-         (every? #(>= % min-margin) parsed-ret))))
+        :args (s/cat :coords (s/coll-of nat-int? :count 2)
+                     :to-closest nat-int?
+                     :min-margin nat-int?)
+        :ret :structurizr/coord-string
+        :fn (fn [{:keys [ret args]}]
+              (let [parsed-ret (parse-coords ret)
+                    {:keys [:to-closest :min-margin]} args]
+                (every? #(>= % min-margin) parsed-ret))))
 
 (defn snap-elem-to-grid
   "Accepts an element (a software system, person, container, or
@@ -217,23 +217,23 @@
     (assoc elem :structurizr.element/position new-coords)))
 
 (s/fdef snap-elem-to-grid
-  :args (s/cat :elem :structurizr/element
-               :to-closest ::snap-target
-               :min-margin nat-int?)
-  :ret :structurizr/element
-  :fn (fn [{{:keys [elem to-closest min-margin]} :args, ret :ret}]
-        (= (:structurizr/position ret)
-           (-> (:structurizr/position elem)
-               parse-coords
-               (snap-coords to-closest min-margin)))))
+        :args (s/cat :elem :structurizr/element
+                     :to-closest ::snap-target
+                     :min-margin nat-int?)
+        :ret :structurizr/element
+        :fn (fn [{{:keys [elem to-closest min-margin]} :args, ret :ret}]
+              (= (:structurizr/position ret)
+                 (-> (:structurizr/position elem)
+                     parse-coords
+                     (snap-coords to-closest min-margin)))))
 
 (defn snap-vertices-to-grid
   "Accepts an ordered-map representing a relationship, and snaps its vertices, if any, to a grid
   using the specified values."
   [e to-closest min-margin]
   (assoc e :vertices
-    (map #(snap-coords (parse-coords %) to-closest min-margin)
-         (:vertices e))))
+         (map #(snap-coords (parse-coords %) to-closest min-margin)
+              (:vertices e))))
 
 (def elem-types
   #{"Person" "Software System" "Container" "Component"})
@@ -247,19 +247,19 @@
   from other elements in order to align properly with them."
   [d to-closest min-margin]
   (postwalk
-    #(cond
-       (and (contains? elem-types (:type %))
+   #(cond
+      (and (contains? elem-types (:type %))
              ; Checking for :position alone wouldn’t be sufficient; relationships can also have it
              ; and it means something different for them.
-            (:position %))
-       (snap-elem-to-grid % to-closest min-margin)
- 
-       (:vertices %)
-       (snap-vertices-to-grid % (/ to-closest 2) min-margin)
- 
-       :else
-       %)
-    d))
+           (:position %))
+      (snap-elem-to-grid % to-closest min-margin)
+
+      (:vertices %)
+      (snap-vertices-to-grid % (/ to-closest 2) min-margin)
+
+      :else
+      %)
+   d))
 
 (defn probably-diagram-yaml? [v]
   (and (string? v)
@@ -270,9 +270,9 @@
   "Accepts a diagram as a YAML string and applies some custom formatting rules."
   [s]
   (-> s
-    (str/replace #"(\d+,\d+)" "'$1'")
-    (str/replace #"(elements|relationships|styles|size):" "\n$1:")
-    (str/replace #"(description): Uses\n" "$1: uses\n")))
+      (str/replace #"(\d+,\d+)" "'$1'")
+      (str/replace #"(elements|relationships|styles|size):" "\n$1:")
+      (str/replace #"(description): Uses\n" "$1: uses\n")))
 
 (defn process
   "Accepts a diagram as a map; reorders everything, snaps all coordinates to a
@@ -283,8 +283,8 @@
       shrink)) ; must follow reorder-diagram because that tends to introduce new keys with nil values
 
 (s/fdef process
-  :args (s/cat :in :structurizr/diagram)
-  :ret :structurizr/diagram)
+        :args (s/cat :in :structurizr/diagram)
+        :ret :structurizr/diagram)
 
 (defn stringify
   "Accepts a diagram as a map, converts it to a YAML string."
@@ -321,12 +321,12 @@
                                               :elements :relationships :styles
                                               :size]))))
     #(gen/fmap
-       (fn [diagram]
-         (str (sometimes (str default-front-matter "\n---\n"))
-              (stringify diagram)))
-       (s/gen :structurizr/diagram))))
+      (fn [diagram]
+        (str (sometimes (str default-front-matter "\n---\n"))
+             (stringify diagram)))
+      (s/gen :structurizr/diagram))))
 
 (s/fdef process-file
-  :args (s/cat :in ::diagram-yaml-str)
-  :ret  (s/cat :main-processed :structurizr/diagram
-               :str-output ::diagram-yaml-str))
+        :args (s/cat :in ::diagram-yaml-str)
+        :ret  (s/cat :main-processed :structurizr/diagram
+                     :str-output ::diagram-yaml-str))

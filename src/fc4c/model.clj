@@ -134,9 +134,9 @@
   (s/with-gen
     (s/and ::non-blank-simple-str #(ends-with? % "/"))
     #(gen/fmap
-       (fn [s] (str (->> (repeat 5 s) (join "/"))
-                    "/"))
-       (s/gen ::short-non-blank-simple-str))))
+      (fn [s] (str (->> (repeat 5 s) (join "/"))
+                   "/"))
+      (s/gen ::short-non-blank-simple-str))))
 
 (s/def ::dir-file
   (s/with-gen

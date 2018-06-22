@@ -53,18 +53,18 @@
 
 (defn ^:private try-process [contents]
   (try
-     (let [[main str-result] (process-file contents)
-           _ (spit str-result)
-           {:keys [:type :scope]} main]
-       (println (current-local-time-str) "-> processed" type "for" scope "with great success!")
-       (flush)
-       str-result)
-     (catch Exception err
+    (let [[main str-result] (process-file contents)
+          _ (spit str-result)
+          {:keys [:type :scope]} main]
+      (println (current-local-time-str) "-> processed" type "for" scope "with great success!")
+      (flush)
+      str-result)
+    (catch Exception err
        ; toString _should_ suffice but some of the SnakeYAML exception classes seem to have a bug in
        ; their toString implementations wherein they don’t print their names.
-       (println (-> err class .getSimpleName) "->" (.getMessage err))
-       (flush)
-       nil)))
+      (println (-> err class .getSimpleName) "->" (.getMessage err))
+      (flush)
+      nil)))
 
 (def ^:private stop-chan (chan 1))
 
@@ -88,7 +88,7 @@
           process? (and (not= contents prior-contents)
                         (probably-diagram-yaml? contents))
           output (when process?
-                   (try-process contents))]          
+                   (try-process contents))]
       (if (poll! stop-chan)
         (do (println "Stopped!")
             (flush)

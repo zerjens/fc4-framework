@@ -29,8 +29,7 @@
 (def int-pattern #"\d{1,6}")
 (s/def :structurizr/int-in-string
   (s/with-gen (s/and string? (partial re-matches int-pattern))
-              #(gen'/string-from-regex int-pattern)))
-
+    #(gen'/string-from-regex int-pattern)))
 
 ;;;; Elements
 
@@ -48,7 +47,6 @@
   (s/keys :req-un [:structurizr/name :structurizr/position :structurizr.element/type]
           :opt-un [:structurizr/description :structurizr/tags :structurizr.element/containers]))
 
-
 ;;;; Relationships
 
 (s/def :structurizr.relationship/source :structurizr/name)
@@ -61,7 +59,6 @@
           :opt-un [:structurizr/description :structurizr/tags :structurizr.relationship/vertices
                    :structurizr.relationship/order]))
 
-
 ;;;; Styles
 
 (s/def :structurizr.style/type #{"element" "relationship"})
@@ -70,7 +67,7 @@
 (s/def :structurizr.style/height :structurizr/coord-int)
 (s/def :structurizr.style/color :structurizr/non-blank-string) ;;; TODO: Make this more specific
 (s/def :structurizr.style/shape #{"Box" "RoundedBox" "Circle" "Ellipse" "Hexagon"
-                           "Person" "Folder" "Cylinder" "Pipe"})
+                                  "Person" "Folder" "Cylinder" "Pipe"})
 (s/def :structurizr.style/background :structurizr/non-blank-string) ;;; TODO: Make this more specific
 (s/def :structurizr.style/dashed #{"true" "false"})
 (s/def :structurizr.style/border #{"Dashed" "Solid"})
@@ -80,7 +77,6 @@
           :opt-un [:structurizr.style/color :structurizr.style/shape :structurizr.style/background
                    :structurizr.style/dashed :structurizr.style/border :structurizr.style/width
                    :structurizr.style/height]))
-
 
 ;;;; Diagrams
 
