@@ -2,15 +2,15 @@
   "Provides all I/O facilities so that the other namespaces can be pure. The
   function specs are provided as a form of documentation and for instrumentation
   during development. They should not be used for generative testing."
-  (:require [clojure.java.io :as io]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
-            [clojure.string :as str :refer [ends-with?]]
-            [cognitect.anomalies :as anom]
-            [expound.alpha :as expound :refer [expound-str]]
-            [fc4c.files :as files :refer [relativize]]
-            [fc4c.model :as m :refer [elements-from-file]]
-            [fc4c.util :refer [lookup-table-by]]))
+  (:require [clojure.java.io         :as io]
+            [clojure.spec.alpha      :as s]
+            [clojure.spec.gen.alpha  :as gen]
+            [clojure.string          :as str :refer [ends-with?]]
+            [cognitect.anomalies     :as anom]
+            [expound.alpha           :as expound :refer [expound-str]]
+            [fc4c.files              :as files :refer [relativize]]
+            [fc4c.model              :as m :refer [elements-from-file]]
+            [fc4c.util               :as u :refer [lookup-table-by]]))
 
 ;; TODO: I think it’s kinda confusing for :dir-path to be in fc4c.model and :dir-file to be here.
 (s/def ::dir-path-file

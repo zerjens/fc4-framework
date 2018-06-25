@@ -1,12 +1,12 @@
 (ns fc4c.model
-  (:require [clj-yaml.core :as yaml]
-            [clojure.set :refer [union]]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
-            [clojure.string :refer [blank? ends-with? includes? join split]]
-            [clojure.walk :refer [postwalk]]
-            [fc4c.files :refer [relativize]]
-            [fc4c.util :refer [lookup-table-by]]))
+  (:require [clj-yaml.core           :as yaml]
+            [clojure.set                       :refer [union]]
+            [clojure.spec.alpha      :as s]
+            [clojure.spec.gen.alpha  :as gen]
+            [clojure.string                    :refer [blank? ends-with? includes? join split]]
+            [clojure.walk                      :refer [postwalk]]
+            [fc4c.files                        :refer [relativize]]
+            [fc4c.util                         :refer [lookup-table-by]]))
 
 ;; Fairly generic stuff:
 ;; TODO: these are duplicated in src/fc4c/integrations/structurizr/express/spec.clj
