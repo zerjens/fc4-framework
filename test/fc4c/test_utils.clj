@@ -22,4 +22,4 @@
   ([sym] (check sym 1000))
   ([sym num-tests]
    (check'
-     (st/check sym (opts num-tests)))))
+    (st/check sym (opts num-tests)))))
