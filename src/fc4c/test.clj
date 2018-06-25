@@ -10,6 +10,7 @@
 ;;    see: https://github.com/weavejester/eftest/issues/50
 
 (def test-dir "test")
+
 (def output-path
   "This is optimized for CircleCI: https://circleci.com/docs/2.0/configuration-reference/#store_test_results"
   "target/test-results/eftest/results.xml")
@@ -24,11 +25,19 @@
     (doseq [f fs]
       (f event))))
 
+(def opts
+  (let [report-to-file-fn (report-to-file ju/report output-path)
+        report-fn (multi-report progress/report report-to-file-fn)]
+    {:report report-fn
+     ;; Specifying a constraint on the multithreading behavior because without
+     ;; this the XML output of the JUnit reporter is malformed, as per this bug:
+     ;; https://github.com/weavejester/eftest/issues/47
+     ;; I tested the other supported value (:namespaces) and it was
+     ;; significantly slower.
+     :multithread? :vars}))
+
 (defn -main []
   (let [tests (find-tests test-dir)
-        report-to-file-fn (report-to-file ju/report output-path)
-        report-fn (multi-report progress/report report-to-file-fn)
-        opts {:report report-fn}
         results (run-tests tests opts)
         exit-code (->> (select-keys results [:fail :error])
                        vals
