@@ -119,14 +119,20 @@
 (s/def ::model
   (s/keys :req [::systems ::users]))
 
-;; TODO: this is duplicated in io.clj
-(s/def ::dir-path
+(s/def ::file-path-str
   (s/with-gen
-    (s/and ::non-blank-simple-str #(ends-with? % "/"))
+    (s/and ::non-blank-simple-str #(includes? % "/"))
     #(gen/fmap
-      (fn [s] (str (->> (repeat 5 s) (join "/"))
-                   "/"))
+      (fn [s] (str (->> (repeat 5 s) (join "/"))))
       (s/gen ::short-non-blank-simple-str))))
+
+;; TODO: a version of this is also in io.clj, and they’ve drifted…
+(s/def ::dir-path-str
+  (s/with-gen
+    (s/and ::file-path-str #(ends-with? % "/"))
+    #(gen/fmap
+      (fn [file-path] (str file-path "/"))
+      (s/gen ::file-path-str))))
 
 (defn- get-tags-from-path
   "Given a path to a file (as a String) and a path to an ancestor root directory
@@ -154,9 +160,9 @@
 ;; and better generators (the generators will need to create two paths that are
 ;; usefully and realistic related).
 (s/fdef get-tags-from-path
-        :args (s/cat :file          ::dir-path
-                     :relative-root ::dir-path)
-        :ret ::tags)
+        :args (s/cat :file-path     ::file-path-str
+                     :relative-root ::dir-path-str)
+        :ret  ::tags)
 
 (defn- add-ns
   [namespace keeword]
@@ -283,6 +289,6 @@
 
 (s/fdef elements-from-file
         :args (s/cat :file-contents ::yaml-file-contents
-                     :file-path     ::dir-path
-                     :root-path     ::dir-path)
+                     :file-path     ::dir-path-str
+                     :root-path     ::dir-path-str)
         :ret  (s/coll-of ::element))
