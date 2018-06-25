@@ -15,4 +15,4 @@ COPY . ./
 
 # The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8 defaults to
 # setting the max heap to ¼ of the total RAM, and containers frequently have <= 4GB RAM.)
-ENTRYPOINT clojure -J-Xmx2g -A:run-tests
+ENTRYPOINT clojure -J-Xmx2g -A:test:test/run
