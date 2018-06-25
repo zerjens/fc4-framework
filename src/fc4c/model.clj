@@ -3,47 +3,29 @@
             [clojure.set                       :refer [union]]
             [clojure.spec.alpha      :as s]
             [clojure.spec.gen.alpha  :as gen]
-            [clojure.string                    :refer [blank? ends-with? includes? join split]]
+            [clojure.string                    :refer [includes? split]]
             [clojure.walk                      :refer [postwalk]]
             [fc4c.files                        :refer [relativize]]
+            [fc4c.spec               :as fs]
             [fc4c.util                         :refer [lookup-table-by]]))
-
-;; Fairly generic stuff:
-;; TODO: these are duplicated in src/fc4c/integrations/structurizr/express/spec.clj
-(s/def ::non-blank-str (s/and string? (complement blank?)))
-(s/def ::no-linebreaks  (s/and string? #(not (includes? % "\n"))))
-(s/def ::non-blank-simple-str (s/and ::non-blank-str ::no-linebreaks))
-
-(defn- str-gen
-  [min-length max-length]
-  ;; Technique found here: https://stackoverflow.com/a/35974064/7012
-  (gen/fmap (partial apply str)
-            (gen/vector (gen/char-alphanumeric) min-length max-length)))
-
-(s/def ::short-non-blank-simple-str
-  (let [min 1 max 50] ;; inclusive
-    (s/with-gen
-      (s/and ::non-blank-simple-str
-             #(<= min (count %) max))
-      #(str-gen min max))))
 
 ;; Less generic stuff:
 (s/def ::name
   (s/with-gen
-    ::short-non-blank-simple-str
+    ::fs/short-non-blank-simple-str
     ;; This needs to generate a small and stable set of names so that the
     ;; generated relationships have a chance of being valid — or at least useful.
     #(gen/elements ["Front" "Middle" "Back" "Internal" "External" "Mobile"])))
 
-(s/def ::description ::non-blank-str) ;; Could reasonably have linebreaks.
+(s/def ::description ::fs/non-blank-str) ;; Could reasonably have linebreaks.
 
 ;; Non-generic stuff:
 
 (s/def ::short-simple-keyword
   (s/with-gen
     (s/and keyword?
-           (comp (partial s/valid? ::short-non-blank-simple-str) name))
-    #(gen/fmap keyword (s/gen ::short-non-blank-simple-str))))
+           (comp (partial s/valid? ::fs/short-non-blank-simple-str) name))
+    #(gen/fmap keyword (s/gen ::fs/short-non-blank-simple-str))))
 
 (s/def ::small-set-of-keywords
   (s/coll-of ::short-simple-keyword
@@ -55,7 +37,7 @@
 (s/def ::tags ::small-set-of-keywords)
 (s/def ::system ::name)
 (s/def ::container ::name)
-(s/def ::technology ::non-blank-simple-str)
+(s/def ::technology ::fs/non-blank-simple-str)
 
 (s/def ::system-ref
   (s/keys
@@ -119,21 +101,6 @@
 (s/def ::model
   (s/keys :req [::systems ::users]))
 
-(s/def ::file-path-str
-  (s/with-gen
-    (s/and ::non-blank-simple-str #(includes? % "/"))
-    #(gen/fmap
-      (fn [s] (str (->> (repeat 5 s) (join "/"))))
-      (s/gen ::short-non-blank-simple-str))))
-
-;; TODO: a version of this is also in io.clj, and they’ve drifted…
-(s/def ::dir-path-str
-  (s/with-gen
-    (s/and ::file-path-str #(ends-with? % "/"))
-    #(gen/fmap
-      (fn [file-path] (str file-path "/"))
-      (s/gen ::file-path-str))))
-
 (defn- get-tags-from-path
   "Given a path to a file (as a String) and a path to an ancestor root directory
   (as a String), extracts a set of tags from set of directories that are
@@ -160,8 +127,8 @@
 ;; and better generators (the generators will need to create two paths that are
 ;; usefully and realistic related).
 (s/fdef get-tags-from-path
-        :args (s/cat :file-path     ::file-path-str
-                     :relative-root ::dir-path-str)
+        :args (s/cat :file-path     ::fs/file-path-str
+                     :relative-root ::fs/dir-path-str)
         :ret  ::tags)
 
 (defn- add-ns
@@ -170,7 +137,7 @@
 
 (s/def ::keyword-or-simple-string
   (s/or :keyword keyword?
-        :string  ::non-blank-simple-str))
+        :string  ::fs/non-blank-simple-str))
 
 (s/fdef add-ns
         :args (s/cat :namespace ::keyword-or-simple-string
@@ -241,7 +208,7 @@
       (update ::tags (partial union tags-from-path))))
 
 (s/def ::simple-strings
-  (s/coll-of ::short-non-blank-simple-str))
+  (s/coll-of ::fs/short-non-blank-simple-str))
 
 (s/def ::unqualified-keyword
   (s/and keyword? (complement qualified-keyword?)))
@@ -274,21 +241,21 @@
 
 (s/def ::element-yaml-string
   (s/with-gen
-    ::non-blank-str
+    ::fs/non-blank-str
     #(gen/fmap yaml/generate-string (s/gen ::element))))
 
 (s/def ::elements-yaml-string
   (s/with-gen
-    ::non-blank-str
+    ::fs/non-blank-str
     #(gen/fmap yaml/generate-string (s/gen (s/coll-of ::element)))))
 
 (s/def ::yaml-file-contents
   (s/with-gen
-    ::non-blank-str
+    ::fs/non-blank-str
     #(gen/one-of (map s/gen [::element-yaml-string ::elements-yaml-string]))))
 
 (s/fdef elements-from-file
         :args (s/cat :file-contents ::yaml-file-contents
-                     :file-path     ::dir-path-str
-                     :root-path     ::dir-path-str)
+                     :file-path     ::fs/dir-path-str
+                     :root-path     ::fs/dir-path-str)
         :ret  (s/coll-of ::element))

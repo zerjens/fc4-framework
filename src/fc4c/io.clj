@@ -10,16 +10,8 @@
             [expound.alpha           :as expound :refer [expound-str]]
             [fc4c.files              :as files :refer [relativize]]
             [fc4c.model              :as m :refer [elements-from-file]]
+            [fc4c.spec               :as fs]
             [fc4c.util               :as u :refer [lookup-table-by]]))
-
-;; TODO: I think it’s kinda confusing for :dir-path to be in fc4c.model and :dir-file to be here.
-(s/def ::dir-path-file
-  (s/with-gen
-    (partial instance? java.io.File)
-    #(gen/fmap io/file (s/gen ::m/dir-path-str))))
-
-(s/def ::dir-path
-  (s/or ::m/dir-path-str ::dir-path-file))
 
 (defn yaml-files
   "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
@@ -31,7 +23,7 @@
                     (ends-with? % ".yml")))))
 
 (s/fdef yaml-files
-        :args (s/cat :dir ::dir-path)
+        :args (s/cat :dir ::fs/dir-path)
         :ret  (s/coll-of (partial instance? java.io.File)))
 
 (defn process-dir
@@ -49,7 +41,7 @@
          (spit file))))
 
 (s/fdef process-dir
-        :args (s/cat :dir-path ::dir-path
+        :args (s/cat :dir-path ::fs/dir-path
                      :f        (s/fspec :args (s/cat :file-contents string?)
                                         :ret  string?))
         :ret  nil?)
@@ -65,7 +57,7 @@
        ((partial lookup-table-by ::m/name))))
 
 (s/fdef read-model-elements
-        :args (s/cat :root-path ::m/dir-path-or-file)
+        :args (s/cat :root-path ::fs/dir-path-or-file)
         :ret  (s/map-of ::m/name ::m/element))
 
 (defn read-model
@@ -81,7 +73,7 @@
        ::m/model model})))
 
 (s/fdef read-model
-        :args (s/cat :root-path ::dir-path)
+        :args (s/cat :root-path ::fs/dir-path)
         :ret  (s/or :success ::m/model
                     :error   (s/merge ::anom/anomaly
                                       (s/keys :req [::m/model]))))
