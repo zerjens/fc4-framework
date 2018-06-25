@@ -4,12 +4,11 @@
   (:require [fc4c.integrations.structurizr.express.spec :as ss]
             [clj-yaml.core :as yaml]
             [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
             [com.gfredericks.test.chuck.generators :as gen']
             [flatland.ordered.map :refer [ordered-map]]
             [clojure.string :as str :refer [blank? ends-with? includes? join
                                             split trim]]
-            ;; Can’t use clojure.spec.gen because it doesn’t include let
-            [clojure.test.check.generators :as gen]
             [clojure.walk :as walk :refer [postwalk]]
             [clojure.set :refer [difference intersection]]))
 
@@ -321,9 +320,11 @@
                (every? #(contains? parsed %) [:type :scope :description
                                               :elements :relationships :styles
                                               :size]))))
-    #(gen/let [diagram (s/gen :structurizr/diagram)]
-       (str (sometimes (str default-front-matter "\n---\n"))
-            (stringify diagram)))))
+    #(gen/fmap
+       (fn [diagram]
+         (str (sometimes (str default-front-matter "\n---\n"))
+              (stringify diagram)))
+       (s/gen :structurizr/diagram))))
 
 (s/fdef process-file
   :args (s/cat :in ::diagram-yaml-str)
