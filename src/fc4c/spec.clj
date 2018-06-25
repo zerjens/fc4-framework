@@ -5,7 +5,6 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.string :refer [blank? ends-with? includes? join]]))
 
-;; TODO: these are duplicated in src/fc4c/integrations/structurizr/express/spec.clj
 (s/def ::non-blank-str (s/and string? (complement blank?)))
 (s/def ::no-linebreaks  (s/and string? #(not (includes? % "\n"))))
 (s/def ::non-blank-simple-str (s/and ::non-blank-str ::no-linebreaks))
