@@ -20,10 +20,17 @@
   them all for their side effects and return nil. I tried to just use juxt but
   it didn’t work. Maybe because some of the reporting functions provided by
   eftest are multimethods, I don’t know."
-  [& fs]
+  [first-fn & rest-fns]
   (fn [event]
-    (doseq [f fs]
-      (f event))))
+    ;; Run the first reporting function normally
+    (first-fn event)
+
+    ;; Now bind the clojure.test/*report-counters* to nil and then run the rest
+    ;; of the functions, so as to avoid double-counting of the assertions,
+    ;; errors, and failures as per https://github.com/weavejester/eftest/issues/23
+    (binding [clojure.test/*report-counters* nil]
+      (doseq [report rest-fns]
+        (report event)))))
 
 (def opts
   (let [report-to-file-fn (report-to-file ju/report output-path)
