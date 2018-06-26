@@ -11,6 +11,7 @@
             [fc4c.files              :as files :refer [relativize]]
             [fc4c.model              :as m :refer [elements-from-file]]
             [fc4c.spec               :as fs]
+            [fc4c.styles             :as st]
             [fc4c.util               :as u :refer [lookup-table-by]]
             [fc4c.view               :as v :refer [view-from-file]]))
 
@@ -93,3 +94,18 @@
         :ret  (s/or :success ::v/view
                     :error   (s/merge ::anom/anomaly
                                       (s/keys :req [::v/view]))))
+
+(defn read-styles
+  [file-path]
+  (let [styles (st/styles-from-file (slurp file-path))]
+    (if (s/valid? ::st/styles styles)
+      styles
+      {::anom/category ::anom/fault
+       ::anom/message (expound-str ::st/styles styles)
+       ::st/styles styles})))
+
+(s/fdef read-styles
+        :args (s/cat :file-path ::fs/file-path-str)
+        :ret  (s/or :success ::st/styles
+                    :error   (s/merge ::anom/anomaly
+                                      (s/keys :req [::st/styles]))))
