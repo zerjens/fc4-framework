@@ -8,7 +8,7 @@
 
 ;; Make convenience functions readily accessible.
 (import-vars [fc4c.integrations.structurizr.express.clipboard pcb wcb stop]
-             [fc4c.files process-dir])
+             [fc4c.io process-dir])
 
 ;; Print docs for the most handy-dandy funcs
 (doseq [s ['pcb 'wcb 'stop 'process-dir]]

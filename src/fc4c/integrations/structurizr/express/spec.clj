@@ -1,12 +1,13 @@
 (ns fc4c.integrations.structurizr.express.spec
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str :refer [blank?]]
-            [com.gfredericks.test.chuck.generators :as gen']))
+            [com.gfredericks.test.chuck.generators :as gen']
+            [fc4c.spec :as fs]))
 
-(s/def :structurizr/non-blank-string (s/and string? (complement blank?)))
-(s/def :structurizr/name :structurizr/non-blank-string)
-(s/def :structurizr/description :structurizr/non-blank-string)
-(s/def :structurizr/tags string?) ;; comma-delimited TODO: use a regex
+(s/def :structurizr/name ::fs/non-blank-simple-str)
+(s/def :structurizr/description ::fs/non-blank-simple-str)
+
+(s/def :structurizr/tags ::fs/non-blank-simple-str) ;; comma-delimited TODO: use a regex
 
 (def coord-pattern-base "(\\d{1,4}), ?(\\d{1,4})")
 
@@ -62,13 +63,13 @@
 ;;;; Styles
 
 (s/def :structurizr.style/type #{"element" "relationship"})
-(s/def :structurizr.style/tag :structurizr/non-blank-string)
+(s/def :structurizr.style/tag ::fs/non-blank-simple-str)
 (s/def :structurizr.style/width :structurizr/coord-int)
 (s/def :structurizr.style/height :structurizr/coord-int)
-(s/def :structurizr.style/color :structurizr/non-blank-string) ;;; TODO: Make this more specific
+(s/def :structurizr.style/color ::fs/non-blank-simple-str) ;;; TODO: Make this more specific
 (s/def :structurizr.style/shape #{"Box" "RoundedBox" "Circle" "Ellipse" "Hexagon"
                                   "Person" "Folder" "Cylinder" "Pipe"})
-(s/def :structurizr.style/background :structurizr/non-blank-string) ;;; TODO: Make this more specific
+(s/def :structurizr.style/background ::fs/non-blank-simple-str) ;;; TODO: Make this more specific
 (s/def :structurizr.style/dashed #{"true" "false"})
 (s/def :structurizr.style/border #{"Dashed" "Solid"})
 
@@ -81,7 +82,7 @@
 ;;;; Diagrams
 
 (s/def :structurizr.diagram/type #{"System Landscape" "System Context" "Container"})
-(s/def :structurizr.diagram/scope :structurizr/non-blank-string)
+(s/def :structurizr.diagram/scope :structurizr/name)
 (s/def :structurizr.diagram/size #{"A2_Landscape" "A3_Landscape"}) ;;; TODO: Add the rest of the options
 (s/def :structurizr.diagram/elements (s/coll-of :structurizr/element :min-count 1))
 (s/def :structurizr.diagram/relationships (s/coll-of :structurizr/relationship :min-count 1))

@@ -1,51 +1,31 @@
 (ns fc4c.model
-  (:refer-clojure :exclude [read])
-  (:require [clj-yaml.core :as yaml]
-            [clojure.java.io :as io]
-            [clojure.set :refer [union]]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
-            [clojure.string :refer [blank? ends-with? includes? join split]]
-            [clojure.walk :refer [postwalk]]
-            [cognitect.anomalies :as anom]
-            [expound.alpha :as expound :refer [expound-str]]
-            [fc4c.files :refer [yaml-files relativize]]))
-
-;; Fairly generic stuff:
-(s/def ::non-blank-str (s/and string? (complement blank?)))
-(s/def ::no-linebreaks  (s/and string? #(not (includes? % "\n"))))
-(s/def ::non-blank-simple-str (s/and ::non-blank-str ::no-linebreaks))
-
-(defn- str-gen
-  [min-length max-length]
-  ;; Technique found here: https://stackoverflow.com/a/35974064/7012
-  (gen/fmap (partial apply str)
-            (gen/vector (gen/char-alphanumeric) min-length max-length)))
-
-(s/def ::short-non-blank-simple-str
-  (let [min 1 max 50] ;; inclusive
-    (s/with-gen
-      (s/and ::non-blank-simple-str
-             #(<= min (count %) max))
-      #(str-gen min max))))
+  (:require [clj-yaml.core           :as yaml]
+            [clojure.set                       :refer [union]]
+            [clojure.spec.alpha      :as s]
+            [clojure.spec.gen.alpha  :as gen]
+            [clojure.string                    :refer [includes? split]]
+            [clojure.walk                      :refer [postwalk]]
+            [fc4c.files                        :refer [relativize]]
+            [fc4c.spec               :as fs]
+            [fc4c.util                         :refer [lookup-table-by]]))
 
 ;; Less generic stuff:
 (s/def ::name
   (s/with-gen
-    ::short-non-blank-simple-str
+    ::fs/short-non-blank-simple-str
     ;; This needs to generate a small and stable set of names so that the
     ;; generated relationships have a chance of being valid — or at least useful.
     #(gen/elements ["Front" "Middle" "Back" "Internal" "External" "Mobile"])))
 
-(s/def ::description ::non-blank-str) ;; Could reasonably have linebreaks.
+(s/def ::description ::fs/non-blank-str) ;; Could reasonably have linebreaks.
 
 ;; Non-generic stuff:
 
 (s/def ::short-simple-keyword
   (s/with-gen
     (s/and keyword?
-           (comp (partial s/valid? ::short-non-blank-simple-str) name))
-    #(gen/fmap keyword (s/gen ::short-non-blank-simple-str))))
+           (comp (partial s/valid? ::fs/short-non-blank-simple-str) name))
+    #(gen/fmap keyword (s/gen ::fs/short-non-blank-simple-str))))
 
 (s/def ::small-set-of-keywords
   (s/coll-of ::short-simple-keyword
@@ -57,7 +37,7 @@
 (s/def ::tags ::small-set-of-keywords)
 (s/def ::system ::name)
 (s/def ::container ::name)
-(s/def ::technology ::non-blank-simple-str)
+(s/def ::technology ::fs/non-blank-simple-str)
 
 (s/def ::system-ref
   (s/keys
@@ -101,15 +81,6 @@
   (s/merge ::element
            (s/keys :opt [::containers ::repos])))
 
-(defn- lookup-table-by
-  "Given a function and a seqable, returns a map of (f x) to x.
-
-  For example:
-  => (lookup-table-by :name [{:name :foo} {:name :bar}])
-  {:foo {:name :foo}, :bar {:name :bar}}"
-  [f xs]
-  (zipmap (map f xs) xs))
-
 (def ^:private lookup-table-by-name
   (partial lookup-table-by ::name))
 
@@ -130,41 +101,25 @@
 (s/def ::model
   (s/keys :req [::systems ::users]))
 
-(s/def ::dir-path
-  (s/with-gen
-    (s/and ::non-blank-simple-str #(ends-with? % "/"))
-    #(gen/fmap
-      (fn [s] (str (->> (repeat 5 s) (join "/"))
-                   "/"))
-      (s/gen ::short-non-blank-simple-str))))
-
-(s/def ::dir-file
-  (s/with-gen
-    (partial instance? java.io.File)
-    #(gen/fmap io/file (s/gen ::dir-path))))
-
-(s/def ::dir-path-or-file
-  (s/or ::dir-path ::dir-file))
-
 (defn- get-tags-from-path
-  "Given a path to a file (as a String or a java.io.File) and a path to an
-  ancestor root directory (as a String or a java.io.File), extracts a set of
-  tags from set of directories that are descendants of the ancestor root dir. If
-  the file path includes “external” then the tag :external will be added to the
-  returned set; if not then the tag :internal will be added.
+  "Given a path to a file (as a String) and a path to an ancestor root directory
+  (as a String), extracts a set of tags from set of directories that are
+  descendants of the ancestor root dir. If the file path includes “external”
+  then the tag :external will be added to the returned set; if not then the tag
+  :internal will be added.
 
   For example:
   => (get-tags-from-path
        \"/docs/fc4/model/systems/uk/compliance/panopticon.yaml\"
        \"/docs/fc4/model/systems/\")
   #{:uk :compliance :internal}"
-  [file relative-root]
-  (as-> (or (relativize file relative-root) (str file)) v
+  [file-path relative-root]
+  (as-> (or (relativize file-path relative-root) file-path) v
     (split v #"/")
     (map keyword v)
     (drop-last v)
     (set v)
-    (conj v (if (includes? (str file) "external")
+    (conj v (if (includes? file-path "external")
               :external
               :internal))))
 
@@ -172,9 +127,9 @@
 ;; and better generators (the generators will need to create two paths that are
 ;; usefully and realistic related).
 (s/fdef get-tags-from-path
-        :args (s/cat :file          ::dir-path-or-file
-                     :relative-root ::dir-path-or-file)
-        :ret ::tags)
+        :args (s/cat :file-path     ::fs/file-path-str
+                     :relative-root ::fs/dir-path-str)
+        :ret  ::tags)
 
 (defn- add-ns
   [namespace keeword]
@@ -182,7 +137,7 @@
 
 (s/def ::keyword-or-simple-string
   (s/or :keyword keyword?
-        :string  ::non-blank-simple-str))
+        :string  ::fs/non-blank-simple-str))
 
 (s/fdef add-ns
         :args (s/cat :namespace ::keyword-or-simple-string
@@ -253,7 +208,7 @@
       (update ::tags (partial union tags-from-path))))
 
 (s/def ::simple-strings
-  (s/coll-of ::short-non-blank-simple-str))
+  (s/coll-of ::fs/short-non-blank-simple-str))
 
 (s/def ::unqualified-keyword
   (s/and keyword? (complement qualified-keyword?)))
@@ -273,7 +228,7 @@
 
 ;; A file might contain a single element (as a map), or an array containing
 ;; multiple elements.
-(defn- elements-from-file
+(defn elements-from-file
   "Parses the contents of a YAML file, then processes those contents such that
   each element conforms to ::element. The file-path and root-path are used to
   generate tags from the file’s path relative to the root path."
@@ -286,57 +241,21 @@
 
 (s/def ::element-yaml-string
   (s/with-gen
-    ::non-blank-str
+    ::fs/non-blank-str
     #(gen/fmap yaml/generate-string (s/gen ::element))))
 
 (s/def ::elements-yaml-string
   (s/with-gen
-    ::non-blank-str
+    ::fs/non-blank-str
     #(gen/fmap yaml/generate-string (s/gen (s/coll-of ::element)))))
 
 (s/def ::yaml-file-contents
   (s/with-gen
-    ::non-blank-str
+    ::fs/non-blank-str
     #(gen/one-of (map s/gen [::element-yaml-string ::elements-yaml-string]))))
 
 (s/fdef elements-from-file
         :args (s/cat :file-contents ::yaml-file-contents
-                     :file-path     ::dir-path
-                     :root-path     ::dir-path)
+                     :file-path     ::fs/dir-path-str
+                     :root-path     ::fs/dir-path-str)
         :ret  (s/coll-of ::element))
-
-;;;; The below functions do I/O. The function specs are provided as a form of
-;;;; documentation and for instrumentation during development. They should not
-;;;; be used for generative testing.
-
-(defn- read-elements
-  "Recursively find and read all elements from all YAML files under a directory
-  tree."
-  [root-path]
-  (->> (yaml-files root-path)
-       (map (juxt slurp identity))
-       (mapcat (fn [[file-contents file-path]]
-                 (elements-from-file file-contents file-path root-path)))
-       lookup-table-by-name))
-
-(s/fdef read-elements
-        :args (s/cat :root-path ::dir-path-or-file)
-        :ret  (s/map-of ::name ::element))
-
-(defn read
-  "Pass the path of a dir (must have trailing slash) that contains the dirs
-  \"systems\" and \"users\"."
-  [root-path]
-  (let [model {::systems (read-elements (io/file root-path "systems"))
-               ::users (read-elements (io/file root-path "users"))}]
-    (if (s/valid? ::model model)
-      model
-      {::anom/category ::anom/fault
-       ::anom/message (expound-str ::model model)
-       ::model model})))
-
-(s/fdef read
-        :args (s/cat :root-path ::dir-path-or-file)
-        :ret  (s/or :success ::model
-                    :error   (s/merge ::anom/anomaly
-                                      (s/keys :req [::model]))))
