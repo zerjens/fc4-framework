@@ -39,8 +39,9 @@
 (defn -main []
   (let [tests (find-tests test-dir)
         results (run-tests tests opts)
-        exit-code (->> (select-keys results [:fail :error])
-                       vals
-                       (reduce +))]
+        unsuccessful-tests (->> (select-keys results [:fail :error])
+                                (vals)
+                                (reduce +))
+        exit-code (if (zero? unsuccessful-tests) 0 1)]
     (shutdown-agents)
     (System/exit exit-code)))
