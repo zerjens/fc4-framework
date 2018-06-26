@@ -16,7 +16,7 @@
                        :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
                                      eftest                     {:mvn/version "0.5.2"}}}
 
-           :test/run  {:main-opts   ["-m" "fc4c.test"]}
+           :test/run  {:main-opts   ["-m" "fc4c.test-runner.runner"]}
 
            :dev       {:extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
                                      inspectable                {:mvn/version "0.2.2"}}}

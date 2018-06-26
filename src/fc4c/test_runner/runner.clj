@@ -1,12 +1,12 @@
-(ns fc4c.test
+(ns fc4c.test-runner.runner
   "This works just fine for local dev/test use cases but is also fine-tuned to
   serve our needs when run in this project’s CI service (CircleCI)."
   (:require [eftest.report          :as report :refer [report-to-file]]
             [eftest.report.progress :as progress]
             [eftest.report.junit    :as ju]
-            [eftest.runner          :as runner :refer [find-tests run-tests]]))
+            [eftest.runner          :as runner :refer [find-tests]]))
 
-;; TODO add an option to measure coverage with Cloverage.
+;; TODO add a way to to measure coverage with Cloverage.
 ;;    see: https://github.com/weavejester/eftest/issues/50
 
 (def test-dir "test")
@@ -43,11 +43,14 @@
      ;; significantly slower.
      :multithread? :vars}))
 
+(defn run-tests
+  []
+  (runner/run-tests (find-tests test-dir) opts))
+
 (defn -main []
-  (let [tests (find-tests test-dir)
-        results (run-tests tests opts)
-        unsuccessful-tests (->> (select-keys results [:fail :error])
-                                (vals)
+  (let [results (run-tests)
+        unsuccessful-tests (->> results
+                                ((juxt :error :fail))
                                 (reduce +))
         exit-code (if (zero? unsuccessful-tests) 0 1)]
     (shutdown-agents)
