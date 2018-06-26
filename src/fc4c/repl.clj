@@ -2,8 +2,9 @@
   "Import some useful funcs for using FC4C from the REPL into this single
   namespace, for convenience."
   (:require [clojure.repl :as cr]
-            [fc4c.integrations.structurizr.express.clipboard :as cb]
             [fc4c.files :as rf]
+            [fc4c.integrations.structurizr.express.clipboard :as cb]
+            [fc4c.io :as fio]
             [potemkin :refer [import-vars]]))
 
 ;; Make convenience functions readily accessible.
