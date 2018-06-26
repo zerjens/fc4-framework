@@ -2,6 +2,7 @@
   "Functions that assist with editing Structurizr Express diagrams, which are
   serialized as YAML documents."
   (:require [fc4c.integrations.structurizr.express.spec :as ss]
+            [fc4c.spec :as fs]
             [clj-yaml.core :as yaml]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
@@ -145,7 +146,7 @@
    diagram
    desired-order))
 
-(def coord-pattern (re-pattern (str "^" ss/coord-pattern-base "$")))
+(def coord-pattern (re-pattern (str "^" fs/coord-pattern-base "$")))
 
 (defn parse-coords [s]
   (some->> s
@@ -154,7 +155,7 @@
            (map #(Integer/parseInt %))))
 
 (s/fdef parse-coords
-        :args (s/cat :s :structurizr/coord-string)
+        :args (s/cat :s ::fs/coord-string)
         :ret (s/coll-of :structurizr/coord-int :count 2)
         :fn (fn [{:keys [ret args]}]
               (= ret
@@ -200,7 +201,7 @@
         :args (s/cat :coords (s/coll-of nat-int? :count 2)
                      :to-closest nat-int?
                      :min-margin nat-int?)
-        :ret :structurizr/coord-string
+        :ret ::fs/coord-string
         :fn (fn [{:keys [ret args]}]
               (let [parsed-ret (parse-coords ret)
                     {:keys [:to-closest :min-margin]} args]

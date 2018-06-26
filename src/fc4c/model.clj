@@ -4,10 +4,9 @@
             [clojure.spec.alpha      :as s]
             [clojure.spec.gen.alpha  :as gen]
             [clojure.string                    :refer [includes? split]]
-            [clojure.walk                      :refer [postwalk]]
             [fc4c.files                        :refer [relativize]]
             [fc4c.spec               :as fs]
-            [fc4c.util                         :refer [lookup-table-by]]))
+            [fc4c.util               :as util  :refer [lookup-table-by]]))
 
 ;; Less generic stuff:
 (s/def ::name
@@ -131,64 +130,6 @@
                      :relative-root ::fs/dir-path-str)
         :ret  ::tags)
 
-(defn- add-ns
-  [namespace keeword]
-  (keyword (name namespace) (name keeword)))
-
-(s/def ::keyword-or-simple-string
-  (s/or :keyword keyword?
-        :string  ::fs/non-blank-simple-str))
-
-(s/fdef add-ns
-        :args (s/cat :namespace ::keyword-or-simple-string
-                     :keyword   ::keyword-or-simple-string)
-        :ret  qualified-keyword?)
-
-(defn- update-all
-  "Given a map and a function of entry (coll of two elems) to entry, applies the
-  function recursively to every entry in the map."
-  {:fork-of 'clojure.walk/stringify-keys}
-  [f m]
-  (postwalk
-   (fn [x]
-     (if (map? x)
-       (into {} (map f x))
-       x))
-   m))
-
-(s/def ::map-entry
-  (s/tuple any? any?))
-
-(s/fdef update-all
-        :args (s/cat :fn (s/fspec :args (s/cat :entry ::map-entry)
-                                  :ret  ::map-entry)
-                     :map map?)
-        :ret map?)
-
-; We have to capture this at compile time in order for it to have the value we
-; want it to; if we referred to *ns* in the body of a function then, because it
-; is dynamically bound, it would return the namespace at the top of the stack,
-; the “currently active namespace” rather than what we want, which is the
-; namespace of this file, because that’s the namespace all our keywords are
-; qualified with.
-(def ^:private this-ns-name (str *ns*))
-
-(defn- qualify-keys
-  "Given a nested map with keyword keys, qualifies all keys, recursively, with
-  the current namespace."
-  [m]
-  (update-all
-   (fn [[k v]]
-     (if (and (keyword? k)
-              (not (qualified-keyword? k)))
-       [(add-ns this-ns-name k) v]
-       [k v]))
-   m))
-
-(s/fdef qualify-keys
-        :args (s/cat :map (s/map-of keyword? any?))
-        :ret  (s/map-of qualified-keyword? any?))
-
 (defn- to-set-of-keywords
   [xs]
   (-> (map keyword xs) set))
@@ -199,10 +140,18 @@
         :fn (fn [{{:keys [xs]} :args, ret :ret}]
               (= (count (distinct xs)) (count ret))))
 
+; We have to capture this at compile time in order for it to have the value we
+; want it to; if we referred to *ns* in the body of a function then, because it
+; is dynamically bound, it would return the namespace at the top of the stack,
+; the “currently active namespace” rather than what we want, which is the
+; namespace of this file, because that’s the namespace all our keywords are
+; qualified with.
+(def ^:private this-ns-name (str *ns*))
+
 (defn- fixup-element
   [tags-from-path elem]
   (-> elem
-      qualify-keys
+      (util/qualify-keys this-ns-name)
       (update ::repos to-set-of-keywords)
       (update ::tags to-set-of-keywords)
       (update ::tags (partial union tags-from-path))))
@@ -210,13 +159,10 @@
 (s/def ::simple-strings
   (s/coll-of ::fs/short-non-blank-simple-str))
 
-(s/def ::unqualified-keyword
-  (s/and keyword? (complement qualified-keyword?)))
-
 (s/def ::proto-element
   (s/with-gen
-    (s/map-of ::unqualified-keyword (s/or :name    ::name
-                                          :strings ::simple-strings))
+    (s/map-of ::fs/unqualified-keyword (s/or :name    ::name
+                                             :strings ::simple-strings))
     #(gen/hash-map :name  (s/gen ::name)
                    :repos (s/gen ::simple-strings)
                    :tags  (s/gen ::simple-strings))))

@@ -3,7 +3,8 @@
   (:require [clojure.java.io :as io] ; used to generate File "values" not do IO
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
-            [clojure.string :refer [blank? ends-with? includes? join]]))
+            [clojure.string :refer [blank? ends-with? includes? join]]
+            [com.gfredericks.test.chuck.generators :as gen']))
 
 (s/def ::non-blank-str (s/and string? (complement blank?)))
 (s/def ::no-linebreaks  (s/and string? #(not (includes? % "\n"))))
@@ -21,6 +22,17 @@
       (s/and ::non-blank-simple-str
              #(<= min (count %) max))
       #(str-gen min max))))
+
+(s/def ::unqualified-keyword
+  (s/with-gen
+    (s/and keyword? (complement qualified-keyword?))
+    #(gen/fmap keyword (s/gen ::non-blank-simple-str))))
+
+(def coord-pattern-base "(\\d{1,4}), ?(\\d{1,4})")
+
+(s/def ::coord-string
+  (s/with-gen string?
+    #(gen'/string-from-regex (re-pattern coord-pattern-base))))
 
 (s/def ::file-path-str
   (s/with-gen
