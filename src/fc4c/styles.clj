@@ -49,5 +49,15 @@
         :args (s/cat :file-contents ::yaml-file-contents)
         :ret  ::styles
         :fn   (fn [{{:keys [file-contents]} :args, ret :ret}]
-                (= file-contents
-                   (yaml/generate-string ret))))
+                ;; Unlike the similar function fc4c.view/view-from-file, this
+                ;; needs to parse the strings back from the YAML back into (in
+                ;; this case) seqs of ordered maps because otherwise the YAML
+                ;; string serializations of the data structures were using
+                ;; different orders for their keys, and thus as strings they
+                ;; were not equal. When comparing maps, entries are not ordered
+                ;; and thus order is irrelevant. It is actually surprising that
+                ;; two ordered maps with different orders would be considered
+                ;; equivalent but I’ll give the developers (of flatland/ordered)
+                ;; the benefit of the doubt that they’ve good reasons for this.
+                (= (yaml/parse-string file-contents)
+                   (yaml/parse-string (yaml/generate-string ret)))))
