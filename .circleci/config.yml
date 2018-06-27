@@ -24,23 +24,14 @@ jobs:
            - ~/.gitlibs
 
        - run:
-          name: Run tests
+          name: Run tests and measure test coverage
           # The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8
           # defaults to setting the max heap to ¼ of the total RAM, and CI containers frequently have
           # <= 4GB RAM.)
-          command: "clojure -J-Xmx2g -A:test:test/run"
+          command: "clojure -J-Xmx2g -A:test:coverage"
 
        - store_test_results:
           path: target/test-results
-
-       - run:
-          name: Measure test coverage
-          # The || true is at the end there because one of the tests, which passes when run with the
-          # regular test-runner above, fails when run by the coverage tool (Cloverage). I don’t like
-          # this, but it doesn’t actually matter, so for now we just suppress it. The real problem
-          # with this is that it prevents the build from failing if the coverage is below the minimum
-          # threshold (as specified in the coverage profile in deps.edn).
-          command: "clojure -J-Xmx2g -A:test:coverage || true"
 
        - store_artifacts:
           path: target/coverage
