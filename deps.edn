@@ -25,6 +25,7 @@
                        :main-opts   ["-m" "cloverage.coverage"
                                      "--src-ns-path" "src"
                                      "--test-ns-path" "test"
+                                     "--runner" ":fc4c.test-runner"
                                      "--fail-threshold" "65"
                                      "--codecov"]}
 
