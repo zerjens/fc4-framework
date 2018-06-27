@@ -1,7 +1,8 @@
 (ns fc4c.integrations.structurizr.express.spec
   (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
             [clojure.string :as str :refer [blank?]]
-            [com.gfredericks.test.chuck.generators :as gen']
+            [com.gfredericks.test.chuck.generators :refer [string-from-regex]]
             [fc4c.spec :as fs]))
 
 (s/def :structurizr/name ::fs/non-blank-simple-str)
@@ -9,20 +10,12 @@
 
 (s/def :structurizr/tags ::fs/non-blank-simple-str) ;; comma-delimited TODO: use a regex
 
-(s/def :structurizr/coord-int
-  ;; The upper bound here was semi-randomly chosen; we just need a reasonable number that a real
-  ;; diagram is unlikely to ever need but that won’t cause integer overflows when multiplied.
-  ;; In other words, we’re using int-in rather than nat-int? because sometimes the generator for
-  ;; nat-int? returns very very large integers, and those can sometimes blow up the functions
-  ;; during generative testing.
-  (s/int-in 0 50001))
-
 (s/def :structurizr/position ::fs/coord-string)
 
-(def int-pattern #"\d{1,6}")
+(def int-pattern #"\d{1,4}")
 (s/def :structurizr/int-in-string
   (s/with-gen (s/and string? (partial re-matches int-pattern))
-    #(gen'/string-from-regex int-pattern)))
+    #(string-from-regex int-pattern)))
 
 ;;;; Elements
 
@@ -56,8 +49,8 @@
 
 (s/def :structurizr.style/type #{"element" "relationship"})
 (s/def :structurizr.style/tag ::fs/non-blank-simple-str)
-(s/def :structurizr.style/width :structurizr/coord-int)
-(s/def :structurizr.style/height :structurizr/coord-int)
+(s/def :structurizr.style/width ::fs/coord-int)
+(s/def :structurizr.style/height ::fs/coord-int)
 (s/def :structurizr.style/color ::fs/non-blank-simple-str) ;;; TODO: Make this more specific
 (s/def :structurizr.style/shape #{"Box" "RoundedBox" "Circle" "Ellipse" "Hexagon"
                                   "Person" "Folder" "Cylinder" "Pipe"})
