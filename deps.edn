@@ -1,5 +1,6 @@
 {:deps
  {org.clojure/core.async {:mvn/version "0.4.474"}
+  org.clojure/spec.alpha {:mvn/version "0.2.168"}
   circleci/clj-yaml {:mvn/version "0.5.6"}
   potemkin {:mvn/version "0.4.5"}
   expound {:mvn/version "0.7.0"}

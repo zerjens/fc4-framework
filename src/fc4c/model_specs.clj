@@ -44,10 +44,6 @@
     ;;   specifying the container
     ;; * a container might use a different container of the same/current system,
     ;;   in which case the system is implicit
-    ;;
-    ;; FYI, the generator doesn’t currently respect the `or` below; a fix for
-    ;; this has been contributed to core.spec but not yet released:
-    ;; https://dev.clojure.org/jira/browse/CLJ-2046
    :req [(or ::container ::system (and ::system ::container))]
    :opt [::technology ::description]))
 
