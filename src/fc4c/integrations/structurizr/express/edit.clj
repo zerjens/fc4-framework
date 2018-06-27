@@ -164,7 +164,7 @@
                       (map #(Integer/parseInt %))))))
 
 (defn round-to-closest [target n]
-  (if (zero? n)
+  (if (or (zero? target) (zero? n))
     0
     (-> (/ n (float target))
         Math/round
