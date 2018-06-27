@@ -21,11 +21,10 @@
            :dev       {:extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
                                      inspectable                {:mvn/version "0.2.2"}}}
 
-           :coverage  {:extra-deps  {cloverage                  {:mvn/version "1.0.10"}}
+           :coverage  {:extra-deps  {cloverage                  {:mvn/version "1.0.11-SNAPSHOT"}}
                        :main-opts   ["-m" "cloverage.coverage"
-                                     ;; TODO: make this regex exclude fc4c.test-utils
-                                     "--ns-regex" "^fc4c.+(?<!test)"
-                                     "--test-ns-regex" "fc4c.+\\-test$"
+                                     "--src-ns-path" "src"
+                                     "--test-ns-path" "test"
                                      "--fail-threshold" "65"
                                      "--codecov"]}
 
