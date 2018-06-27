@@ -13,7 +13,8 @@
             [fc4c.spec               :as fs]
             [fc4c.styles             :as st]
             [fc4c.util               :as u :refer [lookup-table-by]]
-            [fc4c.view               :as v :refer [view-from-file]]))
+            [fc4c.view               :as v :refer [view-from-file]])
+  (:import [java.io FileNotFoundException]))
 
 (defn yaml-files
   "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
@@ -62,50 +63,60 @@
         :args (s/cat :root-path ::fs/dir-path-or-file)
         :ret  (s/map-of ::m/name ::m/element))
 
-(defn read-model
-  "Pass the path of a dir (must have trailing slash) that contains the dirs
-  \"systems\" and \"users\"."
+(s/def ::invalid-result any?)
+
+(s/def ::error
+  (s/merge ::anom/anomaly (s/keys :req [::invalid-result])))
+
+(defn- validate-model-dirs
+  "Validates that the root dir and the required child dirs exist and are
+  actually dirs. If anything is invalid, throws a FileNotFoundException or a
+  RuntimeException. Otherwise returns nil."
   [root-path]
+  (let [d (partial io/file root-path)]
+    (doseq [dir [(d) (d "systems") (d "users")]]
+      (when-not (.exists dir)
+        (throw (FileNotFoundException.
+                (str "The directory " dir " does not exist."))))
+      (when-not (.isDirectory dir)
+        (throw (RuntimeException.
+                (str "The path " dir " is not a directory.")))))))
+
+(defn- val-or-error
+  [v spec]
+  (if (s/valid? spec v)
+    v
+    {::anom/category ::anom/fault
+     ::anom/message (expound-str spec v)
+     ::invalid-result v}))
+
+(defn read-model
+  "Pass the path of a dir that contains the dirs \"systems\" and \"users\"."
+  [root-path]
+  (validate-model-dirs root-path)
   (let [model {::m/systems (read-model-elements (io/file root-path "systems"))
                ::m/users (read-model-elements (io/file root-path "users"))}]
-    (if (s/valid? ::m/model model)
-      model
-      {::anom/category ::anom/fault
-       ::anom/message (expound-str ::m/model model)
-       ::m/model model})))
+    (val-or-error model ::m/model)))
 
 (s/fdef read-model
         :args (s/cat :root-path ::fs/dir-path)
         :ret  (s/or :success ::m/model
-                    :error   (s/merge ::anom/anomaly
-                                      (s/keys :req [::m/model]))))
+                    :error   ::error))
 
 (defn read-view
   [file-path]
-  (let [view (view-from-file (slurp file-path))]
-    (if (s/valid? ::v/view view)
-      view
-      {::anom/category ::anom/fault
-       ::anom/message (expound-str ::v/view view)
-       ::v/view view})))
+  (val-or-error (view-from-file (slurp file-path)) ::v/view))
 
 (s/fdef read-view
         :args (s/cat :file-path ::fs/file-path-str)
         :ret  (s/or :success ::v/view
-                    :error   (s/merge ::anom/anomaly
-                                      (s/keys :req [::v/view]))))
+                    :error   ::error))
 
 (defn read-styles
   [file-path]
-  (let [styles (st/styles-from-file (slurp file-path))]
-    (if (s/valid? ::st/styles styles)
-      styles
-      {::anom/category ::anom/fault
-       ::anom/message (expound-str ::st/styles styles)
-       ::st/styles styles})))
+  (val-or-error (st/styles-from-file (slurp file-path)) ::st/styles))
 
 (s/fdef read-styles
         :args (s/cat :file-path ::fs/file-path-str)
         :ret  (s/or :success ::st/styles
-                    :error   (s/merge ::anom/anomaly
-                                      (s/keys :req [::st/styles]))))
+                    :error   ::error))
