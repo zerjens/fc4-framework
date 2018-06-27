@@ -1,5 +1,8 @@
 (ns fc4c.view
   (:require [clojure.spec.alpha  :as s]
+            ; This ns is required solely for the side fx of loading the file:
+            ; registering the desired specs in the spec registry.
+            [fc4c.integrations.structurizr.express.spec]
             [fc4c.model          :as m]
             [fc4c.spec           :as fs]))
 
