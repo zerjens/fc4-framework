@@ -1,5 +1,8 @@
 (ns fc4c.yaml
-  (:require [clojure.spec.alpha  :as s]))
+  (:require [clojure.spec.alpha      :as s]
+            [clojure.spec.gen.alpha  :as gen]
+            [clojure.string          :as string :refer [includes? join]]
+            [fc4c.spec               :as fs]))
 
 (defn split-file
   "Accepts a string containing either a single YAML document, or a YAML document
@@ -15,9 +18,24 @@
     {::front front
      ::main  main}))
 
+(def ^:private doc-separator "\n---\n")
+
+(s/def ::yaml-file-string
+  (let [sg (s/gen ::fs/non-blank-str)
+        dsg (gen/return doc-separator)]
+    (s/with-gen
+      ::fs/non-blank-str
+      #(gen/one-of [sg
+                    (gen/fmap join (gen/tuple sg dsg sg))]))))
+
 (s/def ::front (s/nilable string?))
 (s/def ::main string?)
 
 (s/fdef split-file
-  :args (s/cat :file-contents string?)
-  :ret  (s/keys :req [::front ::main]))
+        :args (s/cat :file-contents ::yaml-file-string)
+        :ret  (s/keys :req [::front ::main])
+        :fn (fn [{{:keys [file-contents]} :args, ret :ret}]
+              (and (not (nil? (::main ret)))
+                   (if (includes? file-contents doc-separator)
+                     (not (nil? (::front ret)))
+                     (nil? (::front ret))))))
