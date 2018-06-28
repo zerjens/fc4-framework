@@ -291,11 +291,11 @@
   processed main document as an ordered-map, and in the second a string containing first some front
   matter, the front matter separator, and then the fully processed main document."
   [s]
-  (let [[front? main] (split-file s)
+  (let [{:keys [::fy/front ::fy/main]} (split-file s)
         main-processed (-> main
                            yaml/parse-string
                            process)
-        str-output (str (trim (or front? default-front-matter))
+        str-output (str (trim (or front default-front-matter))
                         "\n---\n"
                         (stringify main-processed))]
     [main-processed str-output]))
@@ -309,7 +309,7 @@
     (s/and string?
            #(not (re-seq #"\n\n---\n" %)) ; prevent extra blank line
            (fn [s]
-             (let [parsed (-> s split-file second yaml/parse-string)]
+             (let [parsed (-> s split-file ::fy/main yaml/parse-string)]
                (every? #(contains? parsed %) [:type :scope :description
                                               :elements :relationships :styles
                                               :size]))))
