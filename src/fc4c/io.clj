@@ -11,8 +11,9 @@
             [fc4c.files              :as files :refer [relativize]]
             [fc4c.model              :as m :refer [elements-from-file]]
             [fc4c.spec               :as fs]
-            [fc4c.styles             :as st]
+            [fc4c.styles             :as st :refer [styles-from-file]]
             [fc4c.util               :as u :refer [lookup-table-by]]
+            [fc4c.yaml               :as fy :refer [split-file]]
             [fc4c.view               :as v :refer [view-from-file]])
   (:import [java.io FileNotFoundException]))
 
@@ -56,7 +57,9 @@
   (->> (yaml-files root-path)
        (map (juxt slurp identity))
        (mapcat (fn [[file-contents file-path]]
-                 (elements-from-file file-contents file-path root-path)))
+                 (-> (split-file file-contents)
+                     (get ::fy/main)
+                     (elements-from-file file-path root-path))))
        ((partial lookup-table-by ::m/name))))
 
 (s/fdef read-model-elements
@@ -105,7 +108,11 @@
 
 (defn read-view
   [file-path]
-  (val-or-error (view-from-file (slurp file-path)) ::v/view))
+  (-> (slurp file-path)
+      (split-file)
+      (get ::fy/main)
+      (view-from-file)
+      (val-or-error ::v/view)))
 
 (s/fdef read-view
         :args (s/cat :file-path ::fs/file-path-str)
@@ -114,7 +121,11 @@
 
 (defn read-styles
   [file-path]
-  (val-or-error (st/styles-from-file (slurp file-path)) ::st/styles))
+  (-> (slurp file-path)
+      (split-file)
+      (get ::fy/main)
+      (st/styles-from-file)
+      (val-or-error ::st/styles)))
 
 (s/fdef read-styles
         :args (s/cat :file-path ::fs/file-path-str)
