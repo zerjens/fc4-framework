@@ -3,6 +3,7 @@
   serialized as YAML documents."
   (:require [fc4c.integrations.structurizr.express.spec :as ss]
             [fc4c.spec :as fs]
+            [fc4c.yaml :as fy :refer [split-file]]
             [clj-yaml.core :as yaml]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
@@ -17,20 +18,6 @@
   (str "links:\n"
        "  The FC4 Framework: https://fundingcircle.github.io/fc4-framework/\n"
        "  Structurizr Express: https://structurizr.com/express"))
-
-(defn split-file
-  "Accepts a string containing either a single YAML document, or a YAML document
-  and front matter (which itself is a YAML document). Returns a seq like
-  [front? main] wherein front? may be nil if the input string does not contain
-  front matter, or does not contain a valid separator. In that case main may or
-  may not be a valid YAML document, depending on how mangled the document
-  separator was."
-  [s]
-  (let [matcher (re-matcher #"(?ms)((?<front>.+)\n---\n)?(?<main>.+)\Z" s)
-        _ (.find matcher)
-        front (.group matcher "front")
-        main (.group matcher "main")]
-    [front main]))
 
 (defn blank-nil-or-empty? [v]
   (or (nil? v)
