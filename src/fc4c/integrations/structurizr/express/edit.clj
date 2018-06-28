@@ -287,18 +287,18 @@
 
 (defn process-file
   "Accepts a string containing either a single YAML document, or a YAML document and front matter
-  (which itself is a YAML document). Returns a seq containing in the first position the fully
-  processed main document as an ordered-map, and in the second a string containing first some front
-  matter, the front matter separator, and then the fully processed main document."
+  (which itself is a YAML document). Returns a map containing:
+
+  * ::main-processed: the fully processed main document as an ordered-map
+  * ::str-processed: a string containing first some front matter, then the front
+                     matter separator, then the fully processed main document"
   [s]
   (let [{:keys [::fy/front ::fy/main]} (split-file s)
-        main-processed (-> main
-                           yaml/parse-string
-                           process)
-        str-output (str (trim (or front default-front-matter))
-                        "\n---\n"
-                        (stringify main-processed))]
-    [main-processed str-output]))
+        main-processed (process (yaml/parse-string main))]
+    {::main-processed main-processed
+     ::str-processed (str (trim (or front default-front-matter))
+                          "\n---\n"
+                          (stringify main-processed))}))
 
 (defmacro sometimes [body]
   `(when (< (rand) 0.5)
@@ -319,7 +319,9 @@
              (stringify diagram)))
       (s/gen :structurizr/diagram))))
 
+(s/def ::main-processed :structurizr/diagram)
+(s/def ::str-processed ::diagram-yaml-str)
+
 (s/fdef process-file
         :args (s/cat :in ::diagram-yaml-str)
-        :ret  (s/cat :main-processed :structurizr/diagram
-                     :str-output ::diagram-yaml-str))
+        :ret  (s/keys :req [::main-processed ::str-processed]))
