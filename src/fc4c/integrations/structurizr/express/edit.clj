@@ -156,31 +156,36 @@
 
 (s/fdef parse-coords
         :args (s/cat :s ::fs/coord-string)
-        :ret (s/coll-of :structurizr/coord-int :count 2)
+        :ret (s/coll-of ::fs/coord-int :count 2)
         :fn (fn [{:keys [ret args]}]
               (= ret
                  (->> (split (:s args) #",")
                       (map trim)
                       (map #(Integer/parseInt %))))))
 
-(defn round-to-closest [target n]
-  (if (zero? n)
+(defn round-to-closest
+  "Accepts any natural int n and rounds it to the closest target. If the rounded
+  value exceeds the max coord value of fs/max-coord-int then the max value will
+  be returned."
+  [target n]
+  (if (or (zero? target) (zero? n))
     0
-    (-> (/ n (float target))
-        Math/round
-        (* target))))
+    (min fs/max-coord-int
+         (-> (/ n (float target))
+             (Math/round)
+             (* target)))))
 
 (s/def ::snap-target #{10 25 50 75 100})
 
 (s/fdef round-to-closest
         :args (s/cat :target ::snap-target
-                     :n :structurizr/coord-int)
-        :ret :structurizr/coord-int
+                     :n      ::fs/coord-int)
+        :ret ::fs/coord-int
         :fn (fn [{{:keys [target n]} :args
                   ret :ret}]
-              (if (zero? ret) ;;TODO: need to actually validate that the ret value should actually be 0
-                true
-                (zero? (rem ret target)))))
+              (or (zero? ret)
+                  (zero? (rem ret target))
+                  (= ret fs/max-coord-int))))
 
 (def elem-offsets
   {"Person" [25, -50]})
@@ -198,9 +203,9 @@
         (join ","))))
 
 (s/fdef snap-coords
-        :args (s/cat :coords (s/coll-of nat-int? :count 2)
-                     :to-closest nat-int?
-                     :min-margin nat-int?)
+        :args (s/cat :coords     (s/coll-of ::fs/coord-int :count 2)
+                     :to-closest ::fs/coord-int
+                     :min-margin ::fs/coord-int)
         :ret ::fs/coord-string
         :fn (fn [{:keys [ret args]}]
               (let [parsed-ret (parse-coords ret)

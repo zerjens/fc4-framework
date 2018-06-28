@@ -28,6 +28,14 @@
     (s/and keyword? (complement qualified-keyword?))
     #(gen/fmap keyword (s/gen ::non-blank-simple-str))))
 
+(def max-coord-int 9999) ;; inclusive
+
+(s/def ::coord-int
+  ;; The upper-bound arg of int-in is *exclusive* and we want the max value
+  ;; specified in max-coord-int to be *inclusive*.
+  (s/int-in 0 (inc max-coord-int)))
+
+;; The number of digits specified herein needs to be in sync with max-coord-int.
 (def coord-pattern-base "(\\d{1,4}), ?(\\d{1,4})")
 
 (s/def ::coord-string
