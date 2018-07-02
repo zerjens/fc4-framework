@@ -23,7 +23,7 @@
 
 (def required-opts #{:view :model :styles})
 
-(def missing? #(cu/missing? required-opts %))
+(def missing-required? #(cu/missing? required-opts %))
 
 (defn- read-or-exit
   "Reads the value at the specified path using the supplied read-fn. If the
@@ -66,8 +66,11 @@
 
 (defn -main
   [& args]
-  (let [{:keys [options arguments summary errors]} (parse-opts args opts)
-        {:keys [view model styles debug help]} options]
-    (when errors (exit 1 (join "\n" (conj errors summary))))
-    (when (or help (missing? options)) (exit 0 summary))
+  (let [{:keys [options summary errors]}       (parse-opts args opts)
+        {:keys [view model styles debug help]} options
+        missing                                (missing-required? options)]
+    (cond
+      missing (exit 1 summary)
+      errors  (exit 1 (join "\n" (conj errors summary)))
+      help    (exit 0 summary))
     (export-or-exit view model styles debug)))
