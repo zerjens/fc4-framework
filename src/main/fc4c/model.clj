@@ -88,6 +88,6 @@
 
 (s/fdef elements-from-file
         :args (s/cat :file-contents ::yaml-file-contents
-                     :file-path     ::fs/dir-path-str
-                     :root-path     ::fs/dir-path-str)
+                     :file-path     ::fs/dir-path
+                     :root-path     ::fs/dir-path)
         :ret  (s/coll-of ::element))

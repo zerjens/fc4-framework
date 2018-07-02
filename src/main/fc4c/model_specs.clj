@@ -105,14 +105,14 @@
     (s/map-of ::name ::system-map :min-count 1)
     #(gen/fmap lookup-table-by-name (s/gen (s/coll-of ::system-map)))))
 
-(s/def ::user-map
+(s/def ::user
   (s/merge ::element
            (s/keys :req [::uses])))
 
 (s/def ::users
   (s/with-gen
-    (s/map-of ::name ::user-map :min-count 1)
-    #(gen/fmap lookup-table-by-name (s/gen (s/coll-of ::user-map)))))
+    (s/map-of ::name ::user :min-count 1)
+    #(gen/fmap lookup-table-by-name (s/gen (s/coll-of ::user)))))
 
 (s/def ::model
   (s/keys :req [::systems ::users]))

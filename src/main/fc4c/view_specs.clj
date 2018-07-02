@@ -33,14 +33,15 @@
     :opt [::users ::containers ::other-systems])
    #(some (partial contains? %) [::users ::containers ::other-systems])))
 
+(s/def ::control-point-seqs
+  (s/coll-of (s/coll-of ::coord-string :min-count 1 :gen-max 3)
+             :min-count 1
+             :gen-max 3))
+
 (s/def ::control-point-group
-  (s/map-of
-   ::name
-   (s/coll-of (s/coll-of ::coord-string :min-count 1 :gen-max 3)
-              :min-count 1
-              :gen-max 3)
-   :min-count 1
-   :gen-max 3))
+  (s/map-of ::name ::control-point-seqs
+            :min-count 1
+            :gen-max 3))
 
 (s/def ::system-context ::control-point-group)
 (s/def ::container (s/map-of ::name ::control-point-group))

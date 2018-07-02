@@ -8,6 +8,7 @@
             [fc4c.integrations.structurizr.express.spec] ;; for side fx
             [fc4c.io              :as io]
             [fc4c.model           :as m]
+            [fc4c.spec            :as fs]
             [fc4c.styles          :as st]
             [fc4c.util            :as u :refer [update-all]]
             [fc4c.view            :as v]
@@ -19,13 +20,13 @@
                   [::v/positions ::v/subject]
                   [::v/positions ::v/other-systems sys-name])))
 
-(defn- maybe-add-in-house-tag
+(defn- add-in-house-tag
   [tags]
   (if (contains? tags :external)
     tags
     (conj tags :in-house)))
 
-(s/fdef maybe-add-in-house-tag
+(s/fdef add-in-house-tag
         :args (s/cat :tags ::m/tags)
         :ret  ::m/tags)
 
@@ -51,7 +52,7 @@
   [elem]
   (->> (::m/tags elem)
        (replace-internal-tag)
-       (maybe-add-in-house-tag)
+       (add-in-house-tag)
        (map name) ; converts set to a seq but in this case that’s OK as we then convert it to a str
        (join ",")))
 
@@ -103,25 +104,38 @@
                        (filter (fn [dep] (= (::m/system dep) subject-name)))))))))
 
 (defn- dep->relationship
-  ;; TODO: maybe should be merged with user->relationship?
   ;; TODO: this should handle the case of a system that the subject uses >1 ways
   [dep subject-name]
   (merge (select-keys dep [::m/description ::m/technology])
          {:source subject-name
           :destination (get-in dep [::m/system ::m/name])}))
 
+(s/fdef dep->relationship
+  :args (s/cat :dep ::m/system-ref
+               :subject-name ::m/name)
+  :ret  (s/coll-of :structurizr/relationship))
+
 (defn- user->relationships
   "User here means a system, person, or user that uses the subject system."
-  ;; TODO: maybe should be merged with dep->relationship?
   [{user-name ::m/name :as user} subject-name]
   (let [rel {:source user-name, :destination subject-name}]
     (->> (::m/uses user)
          (map (fn [use]
                 (merge rel (select-keys use [::m/description ::m/technology])))))))
 
+(s/fdef user->relationships
+  :args (s/cat :user ::m/user
+               :subject-name ::m/name)
+  :ret  (s/coll-of :structurizr/relationship))
+
 (defn- get-subject
   [{subject-name ::v/system :as view} model]
   (get-in model [::m/systems subject-name]))
+
+(s/fdef get-subject
+  :args (s/cat :view ::v/view
+               :model ::m/model)
+  :ret  ::m/system)
 
 (defn- elements
   [view model]
@@ -133,6 +147,11 @@
         user-names (-> view ::v/positions ::v/users keys)
         user-elems (map #(user-elem % view model) user-names)]
     (concat user-elems sys-elems)))
+
+(s/fdef elements
+  :args (s/cat :view ::v/view
+               :model ::m/model)
+  :ret  (s/coll-of :structurizr/element))
 
 (defn- relationship-with
   "Given a relationship and the subject name, returns the name of the other side
@@ -146,6 +165,11 @@
                     {:relationship rel
                      :subject-name subject-name}))))
 
+(s/fdef relationship-with
+  :args (s/cat :subject-name ::v/name
+               :rel :structurizr/relationship)
+  :ret  ::v/name)
+
 (defn- inject-control-points
   "Given the set of relationships with a single system, and potentially a set of
   point-groups (might be nil) for those relationships, injects those control
@@ -157,6 +181,11 @@
                         (assoc rel :vertices points)
                         rel)))))
 
+(s/fdef inject-control-points
+  :args (s/cat :rels :structurizr.diagram/relationships
+               :point-groups (s/nilable ::v/control-point-seqs))
+  :ret  :structurizr.diagram/relationships)
+
 (defn- add-control-points
   "Add control points to relationships, when they’re specified in the view."
   [rels
@@ -166,8 +195,14 @@
   (->> rels
        (group-by (partial relationship-with subject-name))
        (mapcat (fn [[other-side-name these-rels]]
-                 (->> (get point-groups other-side-name)
-                      (inject-control-points these-rels))))))
+                 (if-let [pgs (get point-groups other-side-name)]
+                   (inject-control-points these-rels pgs)
+                   these-rels)))))
+
+(s/fdef add-control-points
+  :args (s/cat :rels :structurizr.diagram/relationships
+               :view ::v/view)
+  :ret  :structurizr.diagram/relationships)
 
 (defn- relationships
   [view model]
@@ -193,6 +228,11 @@
         ;; concatenating the descriptions if they differ — TBD.
         (distinct))))
 
+(s/fdef relationships
+  :args (s/cat :view ::v/view
+               :model ::m/model)
+  :ret  :structurizr.diagram/relationships)
+
 (defn dequalify-keys
   "Given a nested map, removes the namespaces from any keys that are qualified
   keywords."
@@ -204,6 +244,10 @@
        [(keyword (name k)) v]
        [k v]))
    m))
+
+(s/fdef dequalify-keys
+  :args (s/cat :m (s/map-of qualified-keyword? any?))
+  :ret  (s/map-of ::fs/unqualified-keyword any?))
 
 (defn- rename-internal-tag
   "Please see docstring of replace-internal-tag."

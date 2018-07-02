@@ -63,7 +63,7 @@
        ((partial lookup-table-by ::m/name))))
 
 (s/fdef read-model-elements
-        :args (s/cat :root-path ::fs/dir-path-or-file)
+        :args (s/cat :root-path ::fs/dir-path)
         :ret  (s/map-of ::m/name ::m/element))
 
 (s/def ::invalid-result any?)

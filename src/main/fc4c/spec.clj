@@ -62,4 +62,5 @@
     #(gen/fmap io/file (s/gen ::dir-path-str))))
 
 (s/def ::dir-path
-  (s/or ::dir-path-str ::dir-path-file))
+  (s/or :str  ::dir-path-str
+        :file ::dir-path-file))
