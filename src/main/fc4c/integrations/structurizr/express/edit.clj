@@ -4,6 +4,7 @@
   (:require [fc4c.integrations.structurizr.express.spec :as ss]
             [fc4c.integrations.structurizr.express.yaml :as sy :refer [stringify]]
             [fc4c.spec :as fs]
+            [fc4c.util :as fu]
             [fc4c.yaml :as fy :refer [split-file]]
             [clj-yaml.core :as yaml]
             [clojure.spec.alpha :as s]
@@ -14,6 +15,8 @@
                                             split trim]]
             [clojure.walk :as walk :refer [postwalk]]
             [clojure.set :refer [difference intersection]]))
+
+(fu/ns-with-alias 'structurizr 'st)
 
 (def default-front-matter
   (str "links:\n"
@@ -66,8 +69,8 @@
             in))
 
 (s/fdef shrink
-        :args (s/cat :in :structurizr/diagram)
-        :ret :structurizr/diagram
+        :args (s/cat :in ::st/diagram)
+        :ret  ::st/diagram
         :fn (s/and
              (fn [{{in :in} :args, ret :ret}] (= (type in) (type ret)))
              (fn [{{in :in} :args, ret :ret}]
@@ -205,19 +208,19 @@
   component) as a map and snaps its position (coords) to a grid using the
   specified values."
   [elem to-closest min-margin]
-  (let [coords (parse-coords (:structurizr/position elem))
+  (let [coords (parse-coords (::st/position elem))
         offsets (get elem-offsets (:structurizr.element/type elem) (repeat 0))
         new-coords (snap-coords coords to-closest min-margin offsets)]
     (assoc elem :structurizr.element/position new-coords)))
 
 (s/fdef snap-elem-to-grid
-        :args (s/cat :elem :structurizr/element
+        :args (s/cat :elem ::st/element
                      :to-closest ::snap-target
                      :min-margin nat-int?)
-        :ret :structurizr/element
+        :ret ::st/element
         :fn (fn [{{:keys [elem to-closest min-margin]} :args, ret :ret}]
-              (= (:structurizr/position ret)
-                 (-> (:structurizr/position elem)
+              (= (::st/position ret)
+                 (-> (::st/position elem)
                      parse-coords
                      (snap-coords to-closest min-margin)))))
 
@@ -269,8 +272,8 @@
       shrink)) ; must follow reorder-diagram because that tends to introduce new keys with nil values
 
 (s/fdef process
-        :args (s/cat :in :structurizr/diagram)
-        :ret :structurizr/diagram)
+        :args (s/cat :in ::st/diagram)
+        :ret  ::st/diagram)
 
 (defn process-file
   "Accepts a string containing either a single YAML document, or a YAML document and front matter
@@ -304,9 +307,9 @@
       (fn [diagram]
         (str (sometimes (str default-front-matter "\n---\n"))
              (stringify diagram)))
-      (s/gen :structurizr/diagram))))
+      (s/gen ::st/diagram))))
 
-(s/def ::main-processed :structurizr/diagram)
+(s/def ::main-processed ::st/diagram)
 (s/def ::str-processed ::diagram-yaml-str)
 
 (s/fdef process-file

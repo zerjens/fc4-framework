@@ -3,12 +3,8 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.string :as str :refer [blank?]]
             [com.gfredericks.test.chuck.generators :refer [string-from-regex]]
-            [fc4c.spec :as fs]))
-
-(defn- ns-with-alias
-  [ns-sym alias-sym]
-  (create-ns ns-sym)
-  (alias alias-sym ns-sym))
+            [fc4c.spec :as fs]
+            [fc4c.util :as fu]))
 
 (def ^:private aliases-to-namespaces
   {'st 'structurizr
@@ -19,7 +15,7 @@
    'sd 'structurizr.diagram})
 
 (doseq [[alias-sym ns-sym] aliases-to-namespaces]
-  (ns-with-alias ns-sym alias-sym))
+  (fu/ns-with-alias ns-sym alias-sym))
 
 (s/def ::st/name ::fs/non-blank-simple-str)
 (s/def ::st/description ::fs/non-blank-simple-str)
