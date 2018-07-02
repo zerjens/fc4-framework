@@ -36,5 +36,7 @@
 
            :lint/fix  {:main-opts   ["-m" "cljfmt-runner.fix"]}
 
+           :clj/next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha5"}}}
+
            ;; wcb = “watch clipboard”
            :wcb       {:main-opts   ["-m" "fc4c.cli"]}}}
