@@ -1,6 +1,7 @@
 {:deps
  {org.clojure/core.async {:mvn/version "0.4.474"}
   org.clojure/spec.alpha {:mvn/version "0.2.168"}
+  org.clojure/tools.cli  {:mvn/version "0.3.7"}
   circleci/clj-yaml {:mvn/version "0.5.6"}
   potemkin {:mvn/version "0.4.5"}
   expound {:mvn/version "0.7.0"}
@@ -36,7 +37,4 @@
 
            :lint/fix  {:main-opts   ["-m" "cljfmt-runner.fix"]}
 
-           :clj/next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha5"}}}
-
-           ;; wcb = “watch clipboard”
-           :wcb       {:main-opts   ["-m" "fc4c.cli"]}}}
+           :clj/next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha5"}}}}}
