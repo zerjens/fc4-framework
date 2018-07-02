@@ -12,7 +12,7 @@
   ;; but worth it.
   com.gfredericks/test.chuck {:mvn/version "0.2.9"}}
 
- :aliases {:test      {:extra-paths ["test"]
+ :aliases {:test      {:extra-paths ["test" "test_runner"]
                        :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
                                      eftest                     {:mvn/version "0.5.2"}}}
 

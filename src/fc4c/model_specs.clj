@@ -50,7 +50,7 @@
 ;;; order doesn’t really matter here, so I guess it should be a set?
 (s/def ::uses
   (s/with-gen
-    (s/coll-of ::system-ref :min-count 1)
+    (s/coll-of ::system-ref)
     #(gen/vector (s/gen ::system-ref) 5 10)))
 
 (s/def ::container-map

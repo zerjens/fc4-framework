@@ -3,6 +3,7 @@
   serialized as YAML documents."
   (:require [fc4c.integrations.structurizr.express.spec :as ss]
             [fc4c.spec :as fs]
+            [fc4c.yaml :as fy :refer [split-file]]
             [clj-yaml.core :as yaml]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
@@ -17,20 +18,6 @@
   (str "links:\n"
        "  The FC4 Framework: https://fundingcircle.github.io/fc4-framework/\n"
        "  Structurizr Express: https://structurizr.com/express"))
-
-(defn split-file
-  "Accepts a string containing either a single YAML document, or a YAML document
-  and front matter (which itself is a YAML document). Returns a seq like
-  [front? main] wherein front? may be nil if the input string does not contain
-  front matter, or does not contain a valid separator. In that case main may or
-  may not be a valid YAML document, depending on how mangled the document
-  separator was."
-  [s]
-  (let [matcher (re-matcher #"(?ms)((?<front>.+)\n---\n)?(?<main>.+)\Z" s)
-        _ (.find matcher)
-        front (.group matcher "front")
-        main (.group matcher "main")]
-    [front main]))
 
 (defn blank-nil-or-empty? [v]
   (or (nil? v)
@@ -300,18 +287,18 @@
 
 (defn process-file
   "Accepts a string containing either a single YAML document, or a YAML document and front matter
-  (which itself is a YAML document). Returns a seq containing in the first position the fully
-  processed main document as an ordered-map, and in the second a string containing first some front
-  matter, the front matter separator, and then the fully processed main document."
+  (which itself is a YAML document). Returns a map containing:
+
+  * ::main-processed: the fully processed main document as an ordered-map
+  * ::str-processed: a string containing first some front matter, then the front
+                     matter separator, then the fully processed main document"
   [s]
-  (let [[front? main] (split-file s)
-        main-processed (-> main
-                           yaml/parse-string
-                           process)
-        str-output (str (trim (or front? default-front-matter))
-                        "\n---\n"
-                        (stringify main-processed))]
-    [main-processed str-output]))
+  (let [{:keys [::fy/front ::fy/main]} (split-file s)
+        main-processed (process (yaml/parse-string main))]
+    {::main-processed main-processed
+     ::str-processed (str (trim (or front default-front-matter))
+                          "\n---\n"
+                          (stringify main-processed))}))
 
 (defmacro sometimes [body]
   `(when (< (rand) 0.5)
@@ -322,7 +309,7 @@
     (s/and string?
            #(not (re-seq #"\n\n---\n" %)) ; prevent extra blank line
            (fn [s]
-             (let [parsed (-> s split-file second yaml/parse-string)]
+             (let [parsed (-> s split-file ::fy/main yaml/parse-string)]
                (every? #(contains? parsed %) [:type :scope :description
                                               :elements :relationships :styles
                                               :size]))))
@@ -332,7 +319,9 @@
              (stringify diagram)))
       (s/gen :structurizr/diagram))))
 
+(s/def ::main-processed :structurizr/diagram)
+(s/def ::str-processed ::diagram-yaml-str)
+
 (s/fdef process-file
         :args (s/cat :in ::diagram-yaml-str)
-        :ret  (s/cat :main-processed :structurizr/diagram
-                     :str-output ::diagram-yaml-str))
+        :ret  (s/keys :req [::main-processed ::str-processed]))

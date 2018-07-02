@@ -63,7 +63,10 @@
       (util/qualify-keys this-ns-name)
       (update ::repos to-set-of-keywords)
       (update ::tags to-set-of-keywords)
-      (update ::tags (partial union tags-from-path))))
+      (update ::tags (partial union tags-from-path))
+      (update ::containers (fn [containers]
+                             (map #(update % ::tags to-set-of-keywords)
+                                  containers)))))
 
 (s/fdef fixup-element
         :args (s/cat :tags-from-path ::tags

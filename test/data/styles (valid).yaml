@@ -1,3 +1,9 @@
+what is this: A set of styles for our FC4 diagrams. The syntax and semantics are defined by Structurizr Express.
+links:
+  The FC4 Framework: https://fundingcircle.github.io/fc4-framework/
+  Structurizr Express: https://structurizr.com/express
+  Structurizr Express Documentation: https://structurizr.com/help/express
+---
 - type: element
   tag: Container
   background: '#438dd5'

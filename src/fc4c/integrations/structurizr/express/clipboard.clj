@@ -1,6 +1,7 @@
 (ns fc4c.integrations.structurizr.express.clipboard
   (:require [clojure.core.async :as ca :refer [<! chan go-loop offer! poll! timeout]]
             [fc4c.integrations.structurizr.express.edit
+             :as ed
              :refer [probably-diagram-yaml? process-file]])
   (:import [java.awt Toolkit]
            [java.awt.datatransfer DataFlavor StringSelection])
@@ -41,7 +42,7 @@
     (if (probably-diagram-yaml? contents)
       (-> contents
           process-file
-          second
+          ::ed/main-processed
           spit)
       (throw (RuntimeException. "Not a FC4 diagram.")))))
 

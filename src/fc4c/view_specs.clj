@@ -43,7 +43,7 @@
    :gen-max 3))
 
 (s/def ::system-context ::control-point-group)
-(s/def ::container ::control-point-group)
+(s/def ::container (s/map-of ::name ::control-point-group))
 
 (s/def ::control-points
   (s/keys
@@ -54,4 +54,5 @@
 
 (s/def ::view
   (s/keys
-   :req [::system ::description ::positions ::control-points ::size]))
+   :req [::system ::positions ::control-points ::size]
+   :opt [::description]))
