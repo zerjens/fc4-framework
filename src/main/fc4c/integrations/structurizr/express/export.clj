@@ -235,17 +235,3 @@
                      :model ::m/model
                      :styles ::st/styles)
         :ret :structurizr/diagram)
-
-;; TEMP TEMP
-(defn fca []
-  (let [model (io/read-model "/Users/avi.flax/dev/docs/fc4/model/")
-        view (io/read-view "/Users/avi.flax/dev/docs/fc4/views/uk/funding_circle_app/funding_circle_app.yaml")
-        styles (io/read-styles "/Users/avi.flax/dev/docs/fc4/styles.yaml")
-        _ (doseq [[n v] {"model" model "view" view "styles" styles}]
-            (when (and (map? v) (contains? v ::anom/category))
-              (throw (ex-info (str "invalid " n) v))))
-        system-context-diagram (view->system-context view model styles)]
-    {:diagrams {:system-context system-context-diagram}
-     :model model
-     :view view
-     :styles styles}))

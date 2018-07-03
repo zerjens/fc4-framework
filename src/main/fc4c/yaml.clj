@@ -1,5 +1,6 @@
 (ns fc4c.yaml
-  (:require [clojure.spec.alpha      :as s]
+  (:require [clj-yaml.core           :as yaml :refer [generate-string]]
+            [clojure.spec.alpha      :as s]
             [clojure.spec.gen.alpha  :as gen]
             [clojure.string          :as string :refer [includes? join]]
             [fc4c.spec               :as fs]))
@@ -39,3 +40,8 @@
                    (if (includes? file-contents doc-separator)
                      (not (nil? (::front ret)))
                      (nil? (::front ret))))))
+
+(defn stringify
+  "Accepts a map, converts it to a YAML string with a certain flow-style."
+  [m]
+  (generate-string m :dumper-options {:flow-style :block}))

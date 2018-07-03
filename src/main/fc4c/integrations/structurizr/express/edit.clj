@@ -2,6 +2,7 @@
   "Functions that assist with editing Structurizr Express diagrams, which are
   serialized as YAML documents."
   (:require [fc4c.integrations.structurizr.express.spec :as ss]
+            [fc4c.integrations.structurizr.express.yaml :as sy :refer [stringify]]
             [fc4c.spec :as fs]
             [fc4c.yaml :as fy :refer [split-file]]
             [clj-yaml.core :as yaml]
@@ -259,14 +260,6 @@
        (includes? v "type")
        (includes? v "scope")))
 
-(defn fixup-yaml
-  "Accepts a diagram as a YAML string and applies some custom formatting rules."
-  [s]
-  (-> s
-      (str/replace #"(\d+,\d+)" "'$1'")
-      (str/replace #"(elements|relationships|styles|size):" "\n$1:")
-      (str/replace #"(description): Uses\n" "$1: uses\n")))
-
 (defn process
   "Accepts a diagram as a map; reorders everything, snaps all coordinates to a
   virtual grid, and removes all empty/blank nodes."
@@ -278,12 +271,6 @@
 (s/fdef process
         :args (s/cat :in :structurizr/diagram)
         :ret :structurizr/diagram)
-
-(defn stringify
-  "Accepts a diagram as a map, converts it to a YAML string."
-  [d]
-  (-> (yaml/generate-string d :dumper-options {:flow-style :block})
-      fixup-yaml))
 
 (defn process-file
   "Accepts a string containing either a single YAML document, or a YAML document and front matter
