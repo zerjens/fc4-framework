@@ -5,7 +5,6 @@
   (:require [clojure.test             :as t :refer [is]]
             [clojure.spec.alpha       :as s]
             [clojure.spec.test.alpha  :as st]
-            [clojure.pprint           :as pprint]
             [expound.alpha            :as expound]))
 
 (defn make-opts

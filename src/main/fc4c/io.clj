@@ -53,13 +53,13 @@
 (defn- read-model-elements
   "Recursively find and read all elements from all YAML files under a directory
   tree."
-  [root-path]
+  [elem-type root-path]
   (->> (yaml-files root-path)
        (map (juxt slurp identity))
        (mapcat (fn [[file-contents file-path]]
                  (-> (split-file file-contents)
                      (get ::fy/main)
-                     (elements-from-file file-path root-path))))
+                     (elements-from-file elem-type file-path root-path))))
        ((partial lookup-table-by ::m/name))))
 
 (s/fdef read-model-elements
@@ -97,8 +97,10 @@
   "Pass the path of a dir that contains the dirs \"systems\" and \"users\"."
   [root-path]
   (validate-model-dirs root-path)
-  (let [model {::m/systems (read-model-elements (io/file root-path "systems"))
-               ::m/users (read-model-elements (io/file root-path "users"))}]
+  (let [model {::m/systems (read-model-elements :system
+                                                (io/file root-path "systems"))
+               ::m/users   (read-model-elements :user
+                                                (io/file root-path "users"))}]
     (val-or-error model ::m/model)))
 
 (s/fdef read-model

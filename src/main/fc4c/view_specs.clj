@@ -21,7 +21,7 @@
 (s/def ::coord-string ::fs/coord-string)
 
 (s/def ::subject ::coord-string)
-(s/def ::position-map (s/map-of ::name ::coord-string :min-count 1))
+(s/def ::position-map (s/map-of ::name ::coord-string :gen-max 2))
 (s/def ::users ::position-map)
 (s/def ::containers ::position-map)
 (s/def ::other-systems ::position-map)

@@ -112,6 +112,5 @@
 (s/def ::sd/styles (s/coll-of ::st/style))
 
 (s/def ::st/diagram
-  (s/keys :req-un [::sd/type ::sd/scope ::sd/elements ::sd/relationships
-                   ::sd/styles ::sd/size]
-          :opt-un [::st/description]))
+  (s/keys :req-un [::sd/type ::sd/scope ::sd/elements ::sd/size]
+          :opt-un [::st/description ::sd/relationships ::sd/styles]))

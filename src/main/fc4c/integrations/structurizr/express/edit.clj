@@ -301,8 +301,7 @@
            (fn [s]
              (let [parsed (-> s split-file ::fy/main yaml/parse-string)]
                (every? #(contains? parsed %) [:type :scope :description
-                                              :elements :relationships :styles
-                                              :size]))))
+                                              :elements :size]))))
     #(gen/fmap
       (fn [diagram]
         (str (sometimes (str default-front-matter "\n---\n"))

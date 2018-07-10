@@ -9,21 +9,24 @@
             [fc4c.io              :as io]
             [fc4c.model           :as m]
             [fc4c.spec            :as fs]
-            [fc4c.styles          :as st]
+            [fc4c.styles          :as ss]
             [fc4c.util            :as fu :refer [update-all]]
             [fc4c.view            :as v]
             [fc4c.yaml            :as fy :refer [split-file]]))
 
-(fu/ns-with-alias 'structurizr 'sz)
+(fu/ns-with-alias 'structurizr 'st)
 
-(defn- position
-  "Returns the position of the named system in the view."
+(defn- sys-position
+  "Returns the position of the named system in the view. If the named system is not
+  present in the view, returns '0,0'."
   [sys-name view]
-  (get-in view  (if (= sys-name (::v/system view))
-                  [::v/positions ::v/subject]
-                  [::v/positions ::v/other-systems sys-name])))
+  (get-in view
+          (if (= sys-name (::v/system view))
+            [::v/positions ::v/subject]
+            [::v/positions ::v/other-systems sys-name])
+          "0,0"))
 
-(s/fdef position
+(s/fdef sys-position
         :args (s/cat :sys-name ::m/name
                      :view     ::v/view)
         :ret  ::v/coord-string)
@@ -77,7 +80,7 @@
 
 (s/fdef tags
         :args (s/cat :elem ::m/element)
-        :ret  ::sz/tags
+        :ret  ::st/tags
         :fn   (fn [{{{in-tags ::m/tags} :elem} :args, out-tags :ret}]
                 (every? (fn [in-tag]
                           (condp = in-tag
@@ -115,27 +118,47 @@
         :ret  (s/map-of ::fs/unqualified-keyword any?))
 
 (defn- sys-elem
-  ;; TODO: this should *maybe* be combined with user-elem
+  ;; TODO: this should probably be combined with user-elem.
   "Constructs a Structurizr Express \"Software System\" element for the named
-  system for the given view and model. For now, excludes containers."
+  system for the given view and model. For now, excludes containers. If the named
+  system is not present in the ::m/systems coll of the model, returns nil. If the
+  named system is not present in the view under ::v/positions then the returned
+  element will have the position '0,0'."
   [sys-name view model]
-  (let [system (get-in model [::m/systems sys-name])]
-    (merge (select-keys system [::m/name ::m/description ::m/tags])
-           {:type "Software System"
-            :position (position sys-name view)
-            :tags (tags system)})))
+  (if-let [system (get-in model [::m/systems sys-name]
+                          {::m/name (str sys-name " (undefined)")})]
+    (-> (select-keys system [::m/name ::m/description ::m/tags])
+        (dequalify-keys)
+        (merge {:type "Software System"
+                :position (sys-position sys-name view)
+                :tags (tags system)}))))
+
+(s/fdef sys-elem
+  :args (s/cat :sys-name ::m/name
+               :view     ::v/view
+               :model    ::m/model)
+  :ret  (s/nilable ::st/sys-elem)
+  :fn   (fn [{{:keys [sys-name view model]} :args, ret :ret}]
+          (cond
+            (get-in model [::m/system sys-name]) ; the named system is in the model
+            (= (:name ret) sys-name)
+
+            :sys-not-in-model
+            (and (includes? (:name ret) sys-name)
+                 (includes? (:name ret) "undefined")))))
 
 (defn- user-elem
-  ;; TODO: this should *maybe* be combined with sys-elem
+  ;; TODO: this should probably be combined with sys-elem.
   "Constructs a Structurizr Express \"Person\" element for the named
   user for the given view and model. If the named user is not present in the
   ::m/users coll of the model, returns nil. If the named user is not present in the
   view under [::v/positions ::v/users] then the returned element will have the
   position '0,0'."
   [user-name view model]
-  (if-let [user (get-in model [::m/users user-name])]
+  (if-let [user (get-in model [::m/users user-name]
+                        {::m/name (str user-name " (undefined)")})]
     (-> (select-keys user [::m/name ::m/description ::m/tags])
-        dequalify-keys
+        (dequalify-keys)
         (merge {:type "Person"
                 :position (get-in view [::v/positions ::v/users user-name] "0,0")
                 :tags (tags user)}))))
@@ -144,27 +167,34 @@
   :args (s/cat :user-name ::m/name
                :view      ::v/view
                :model     ::m/model)
-  :ret  (s/nilable ::sz/user-elem)
+  :ret  (s/nilable ::st/user-elem)
   :fn   (fn [{{:keys [user-name view model]} :args, ret :ret}]
           (cond
             (get-in model [::m/users user-name]) ; the named user is in the model
             (= (:name ret) user-name)
 
             :user-not-in-model
-            (nil? ret))))
+            (and (includes? (:name ret) user-name)
+                 (includes? (:name ret) "undefined")))))
 
 (defn- deps-of
   "Returns the systems that the subject system uses — its dependencies."
+  ;; TODO: I think maybe we also need the
   ;; TODO: maybe should be merged with users-of?
   ;; TODO: this should handle the case of a system that the subject uses >1 ways
-  [system model]
+  [system {systems ::m/systems}]
   (some->>
-   (::m/containers system)
-   (mapcat ::m/uses)
-   (filter ::m/system)
-   (map (fn [{sys-name ::m/system :as dep}]
-          (assoc dep ::m/system ; “overwrite” the value of :system with the system
-                 (get-in model [::m/systems sys-name] {:missing sys-name})))))) ;; TODO: maybe return an anomaly instead?
+   ; start with the systems that this system uses directly
+   (::m/uses system)
+   ; add the systems that the containers of this system use
+   (concat (mapcat ::m/uses (::m/containers system)))
+   ; We only want those references that are to a *different* system.
+   (remove #(= (::m/system %) (::m/name system)))))
+
+(s/fdef deps-of
+  :args (s/cat :system ::m/system-map
+               :model  ::m/model)
+  :ret  (s/coll-of :sys-ref))
 
 (defn- users-of
   "Returns the systems that use the subject system."
@@ -187,9 +217,9 @@
                            (::m/container dep))}))
 
 (s/fdef dep->relationship
-        :args (s/cat :dep          ::m/system-ref
+        :args (s/cat :dep          ::m/sys-ref
                      :subject-name ::m/name)
-        :ret  ::sz/relationship
+        :ret  ::st/relationship
         :fn   (fn [{{:keys [dep subject-name]} :args, ret :ret}]
                 (and (or (= (:destination ret) (::m/system dep))
                          (= (:destination ret) (::m/container dep)))
@@ -197,16 +227,25 @@
 
 (defn- user->relationships
   "User here means a system, person, or user that uses the subject system."
-  [{user-name ::m/name :as user} subject-name]
-  (let [rel {:source user-name, :destination subject-name}]
-    (->> (::m/uses user)
-         (map (fn [use]
-                (merge rel (select-keys use [::m/description ::m/technology])))))))
+  [{user-name ::m/name
+    sys-refs  ::m/uses}
+   subject-name]
+  (map (fn [sys-ref]
+         (merge {:source      user-name
+                 :destination (::m/system sys-ref)}
+                (select-keys sys-ref [::m/description ::m/technology])))
+       sys-refs))
 
 (s/fdef user->relationships
         :args (s/cat :user ::m/user
                      :subject-name ::m/name)
-        :ret  (s/coll-of ::sz/relationship))
+        :ret  (s/coll-of ::st/relationship)
+        :fn   (fn [{{:keys [user subject-name]} :args, ret :ret}]
+                (every?
+                  (fn [rel]
+                    (= (:source rel)
+                       (::m/name user)))
+                  ret)))
 
 (defn- get-subject
   [{subject-name ::v/system :as view} model]
@@ -231,7 +270,7 @@
 (s/fdef elements
         :args (s/cat :view  ::v/view
                      :model ::m/model)
-        :ret  (s/coll-of ::sz/element))
+        :ret  (s/coll-of ::st/element))
 
 (defn- relationship-with
   "Given a relationship and the subject name, returns the name of the other side
@@ -246,7 +285,7 @@
 
 (s/fdef relationship-with
         :args (s/cat :subject-name ::v/name
-                     :rel          ::sz/relationship)
+                     :rel          ::st/relationship)
         :ret  (s/nilable ::v/name)
         :fn   (fn [{{:keys [subject-name rel]} :args, ret-name :ret}]
                 (or (= ret-name (:source rel))
@@ -271,7 +310,7 @@
    rels))
 
 (s/def ::relationships-without-vertices
-  (s/coll-of ::sz/relationship-without-vertices
+  (s/coll-of ::st/relationship-without-vertices
              :min-count 1))
 
 (s/fdef inject-control-points
@@ -317,9 +356,11 @@
   [view model]
   (let [{subject-name ::m/name :as subject} (get-subject view model)
         deps (deps-of subject model)
-        users (users-of subject-name model)]
-    (-> (map #(dep->relationship % subject-name) deps)
-        (concat (mapcat #(user->relationships % subject-name) users))
+        ;; TODO: also need to get those systems that *use* the subject
+        sys-rels (map #(dep->relationship % subject-name) deps)
+        users (users-of subject-name model)
+        user-rels (mapcat #(user->relationships % subject-name) users)]
+    (-> (concat sys-rels user-rels)
         (add-control-points view)
         ;; In the model, two different containers of the same system can have
         ;; relationships to the same *other* system. In a container diagram
@@ -340,27 +381,39 @@
 (s/fdef relationships
         :args (s/cat :view ::v/view
                      :model ::m/model)
-        :ret  :structurizr.diagram/relationships)
+        :ret  :structurizr.diagram/relationships
+        :fn   (fn [{{:keys [view model]} :args
+                    ret                  :ret}]
+                (let [subject (get-subject view model)
+                      sub-name (::m/name subject)
+                      direct-deps (::m/uses subject)]
+                  ;; TODO: also verify control points
+                  (every? (fn [dep]
+                            (filter (fn [{:keys [source destination]}]
+                                      (or (= source sub-name)
+                                          (= destination sub-name)))
+                                    ret))
+                          direct-deps))))
 
 (defn- rename-internal-tag
   "Please see docstring of replace-internal-tag."
   [styles]
   (map
    (fn [style]
-     (if-not (= (::st/tag style) "internal")
+     (if-not (= (::ss/tag style) "internal")
        style
-       (update style ::st/tag (constantly "in-house"))))
+       (update style ::ss/tag (constantly "in-house"))))
    styles))
 
 (s/fdef rename-internal-tag
-        :args (s/cat :styles ::st/styles)
-        :ret  ::st/styles
+        :args (s/cat :styles ::ss/styles)
+        :ret  ::ss/styles
         :fn (fn [{{in-styles :styles} :args, out-styles :ret}]
               (every? true?
                       (map (fn [in-style out-style]
-                             (if (= (::st/tag in-style) "internal")
-                               (= (::st/tag out-style) "in-house")
-                               (= (::st/tag in-style) (::st/tag out-style))))
+                             (if (= (::ss/tag in-style) "internal")
+                               (= (::ss/tag out-style) "in-house")
+                               (= (::ss/tag in-style) (::ss/tag out-style))))
                            in-styles out-styles))))
 
 (defn view->system-context
@@ -376,6 +429,16 @@
 
 (s/fdef view->system-context
         :args (s/cat :view ::v/view
+                     ; TODO: rather than just a model that is merely *valid*
+                     ; as in it conforms with its spec, we should probably
+                     ; ensure that what gets passed in *makes sense*. I mean...
+                     ; functions should do only one thing, so I wouldn’t want
+                     ; this function to do (invoke) such second-order
+                     ; validation, but it could probably be documented such that
+                     ; that’s what it expects, and therefore it can just throw
+                     ; an exception (or return an anomaly) if something in it
+                     ; does NOT make sense.
                      :model ::m/model
-                     :styles ::st/styles)
-        :ret ::sz/diagram)
+                     :styles ::ss/styles)
+        :ret  (s/or :success ::st/diagram
+                    :error   ::anom/anomaly))

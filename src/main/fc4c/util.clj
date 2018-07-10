@@ -3,10 +3,14 @@
             [clojure.spec.alpha  :as s]
             [fc4c.spec           :as fs]))
 
+;; TODO: consider making this a macro, so the ns-symbols won’t have to be quoted
+;; when calling them. Also consider making each thing a tuple of [ns :as alias]
+;; for consistency with require (and :require in ns).
 (defn ns-with-alias
-  [ns-sym alias-sym]
-  (create-ns ns-sym)
-  (alias alias-sym ns-sym))
+  [& sym-pairs]
+  (doseq [[ns-sym alias-sym] (partition 2 sym-pairs)]
+    (create-ns ns-sym)
+    (alias alias-sym ns-sym)))
 
 (defn lookup-table-by
   "Given a function and a seqable, returns a map of (f x) to x.
