@@ -108,8 +108,8 @@
 (s/def ::sd/scope ::st/name)
 (s/def ::sd/size #{"A2_Landscape" "A3_Landscape"}) ;;; TODO: Add the rest of the options
 (s/def ::sd/elements (s/coll-of ::st/element :min-count 1))
-(s/def ::sd/relationships (s/coll-of ::st/relationship :min-count 1))
-(s/def ::sd/styles (s/coll-of ::st/style :min-count 1))
+(s/def ::sd/relationships (s/coll-of ::st/relationship))
+(s/def ::sd/styles (s/coll-of ::st/style))
 
 (s/def ::st/diagram
   (s/keys :req-un [::sd/type ::sd/scope ::sd/elements ::sd/relationships
