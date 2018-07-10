@@ -142,16 +142,18 @@
 (defn- dep->relationship
   ;; TODO: this should handle the case of a system that the subject uses >1 ways
   [dep subject-name]
-  (merge (select-keys dep [::m/description ::m/technology])
+  (merge (select-keys dep [::m/description ::m/technology]) ;; <- might return an empty map
          {:source subject-name
-          :destination (get-in dep [::m/system ::m/name])}))
+          :destination (or (::m/system dep)
+                           (::m/container dep))}))
 
 (s/fdef dep->relationship
-        :args (s/cat :dep ::m/system-ref
+        :args (s/cat :dep          ::m/system-ref
                      :subject-name ::m/name)
         :ret  ::sz/relationship
         :fn   (fn [{{:keys [dep subject-name]} :args, ret :ret}]
-                (and (every? #(not (nil? (get ret %))) [:source :destination ::m/description ::m/technology])
+                (and (or (= (:destination ret) (::m/system dep))
+                         (= (:destination ret) (::m/container dep)))
                      (= (:source ret) subject-name))))
 
 (defn- user->relationships
