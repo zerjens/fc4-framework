@@ -27,11 +27,17 @@
 (s/def ::other-systems ::position-map)
 
 (s/def ::positions
-  (s/and
-   (s/keys
-    :req [::subject]
-    :opt [::users ::containers ::other-systems])
-   #(some (partial contains? %) [::users ::containers ::other-systems])))
+ (s/keys
+  ; You might look at this and think that the keys in the `or` are mutually
+  ; exclusive — that a valid value may contain only *one* of those keys. I tested
+  ; this though, and that’s not the case. This merely states that in order to
+  ; be considered valid, a value must contain at least one of the keys specified
+  ; in the `or` — containing more than one, or all of them, is also valid. (I
+  ; suppose it might be handy if s/keys supported `not` but in this case that’s
+  ; not needed.) (Another possible useful feature for s/keys could be something
+  ; like `one-of` as in “only one of”.)
+  :req [(and ::subject (or ::users ::containers ::other-systems))]
+  :opt [::users ::containers ::other-systems]))
 
 (s/def ::control-point-seqs
   (s/coll-of (s/coll-of ::coord-string :min-count 1 :gen-max 3)
