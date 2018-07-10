@@ -128,13 +128,30 @@
 (defn- user-elem
   ;; TODO: this should *maybe* be combined with sys-elem
   "Constructs a Structurizr Express \"Person\" element for the named
-  user for the given view and model."
+  user for the given view and model. If the named user is not present in the
+  ::m/users coll of the model, returns nil. If the named user is not present in the
+  view under [::v/positions ::v/users] then the returned element will have the
+  position '0,0'."
   [user-name view model]
-  (let [user (get-in model [::m/users user-name])]
-    (merge (select-keys user [::m/name ::m/description ::m/tags])
-           {:type "Person"
-            :position (get-in view [::v/positions ::v/users user-name])
-            :tags (tags user)})))
+  (if-let [user (get-in model [::m/users user-name])]
+    (-> (select-keys user [::m/name ::m/description ::m/tags])
+        dequalify-keys
+        (merge {:type "Person"
+                :position (get-in view [::v/positions ::v/users user-name] "0,0")
+                :tags (tags user)}))))
+
+(s/fdef user-elem
+  :args (s/cat :user-name ::m/name
+               :view      ::v/view
+               :model     ::m/model)
+  :ret  (s/nilable ::sz/user-elem)
+  :fn   (fn [{{:keys [user-name view model]} :args, ret :ret}]
+          (cond
+            (get-in model [::m/users user-name]) ; the named user is in the model
+            (= (:name ret) user-name)
+
+            :user-not-in-model
+            (nil? ret))))
 
 (defn- deps-of
   "Returns the systems that the subject system uses — its dependencies."

@@ -54,6 +54,14 @@
   (s/keys :req-un [::st/name ::st/position ::se/type]
           :opt-un [::st/description ::st/tags ::se/containers]))
 
+(s/def ::st/system-elem
+  (s/and ::st/element
+         #(= (:type %) "Software System")))
+
+(s/def ::st/user-elem
+  (s/and ::st/element
+         #(= (:type %) "Person")))
+
 ;;;; Relationships
 
 (s/def ::sr/source ::st/name)

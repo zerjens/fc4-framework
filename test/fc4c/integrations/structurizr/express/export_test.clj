@@ -7,7 +7,8 @@
             [expound.alpha           :as expound]
             [fc4c.integrations.structurizr.express.export :as e]
             [fc4c.io                 :as io]
-            [fc4c.test-utils         :as tu :refer [check]]))
+            [fc4c.test-utils         :as tu :refer [check]]
+            [fc4c.view               :as v]))
 
 (deftest add-control-points (check `e/add-control-points))
 (deftest add-in-house-tag (check `e/add-in-house-tag))
@@ -17,6 +18,12 @@
 (deftest rename-internal-tag (check `e/rename-internal-tag))
 (deftest replace-internal-tag (check `e/replace-internal-tag))
 (deftest tags (check `e/tags))
+
+(deftest user-elem
+  (check `e/user-elem
+         300
+         {::v/positions #(s/gen (s/merge ::v/positions
+                                         (s/keys :req [::v/users])))}))
 
 (deftest view->system-context
   (testing "generative"
