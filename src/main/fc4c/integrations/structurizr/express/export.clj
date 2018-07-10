@@ -86,8 +86,14 @@
                                  (not (includes? out-tags "internal")))
 
                             :external
-                            (and (includes? out-tags "external")
-                                 (not (includes? out-tags "in-house")))
+                            ; You might think we’d want to ensure that out-tags
+                            ; does *not* include "in-house". But! What if
+                            ; in-tags contains both :internal *and* :external!?
+                            ; So yeah... the input is nonsensical, but this fn
+                            ; still has to handle it somehow. I decided to go
+                            ; with GIGO — data validation is not the job of this
+                            ; fn, nor is linting.
+                            (includes? out-tags "external")
 
                             (includes? out-tags (name in-tag))))
                         in-tags)))
