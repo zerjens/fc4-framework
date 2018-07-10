@@ -31,16 +31,19 @@
 
 (s/def ::repos ::small-set-of-keywords)
 
+(s/def ::tag
+  (s/with-gen ::short-simple-keyword
+    #(gen/one-of [(s/gen ::short-simple-keyword)
+                  ; The below tags have special meaning so it’s important that
+                  ; they’re sometimes generated.
+                  (gen/return :external)
+                  (gen/return :internal)])))
+
 (s/def ::tags
-  (s/with-gen ::small-set-of-keywords
-    #(gen/set (gen/one-of [(s/gen ::short-simple-keyword)
-                           ;; the below tags have special meaning so it’s
-                           ;; important that they’re sometimes present in the
-                           ;; generated set
-                           (gen/return :external)
-                           (gen/return :internal)])
-              {:min-elements 1
-               :max-elements 12})))
+  (s/coll-of ::tag
+             :distinct true
+             :kind set?
+             :gen-max 10))
 
 (s/def ::system ::name)
 (s/def ::container ::name)
