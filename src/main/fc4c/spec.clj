@@ -37,10 +37,11 @@
 
 ;; The number of digits specified herein needs to be in sync with max-coord-int.
 (def coord-pattern-base "(\\d{1,4}), ?(\\d{1,4})")
+(def coord-pattern (re-pattern coord-pattern-base))
 
 (s/def ::coord-string
-  (s/with-gen string?
-    #(gen'/string-from-regex (re-pattern coord-pattern-base))))
+  (s/with-gen (s/and string? (partial re-matches coord-pattern))
+    #(gen'/string-from-regex coord-pattern)))
 
 (s/def ::file-path-str
   (s/with-gen
@@ -48,6 +49,15 @@
     #(gen/fmap
       (fn [s] (str (->> (repeat 5 s) (join "/"))))
       (s/gen ::short-non-blank-simple-str))))
+
+(s/def ::file-path-file
+  (s/with-gen
+    (partial instance? java.io.File)
+    #(gen/fmap io/file (s/gen ::file-path-str))))
+
+(s/def ::file-path
+  (s/or :str  ::file-path-str
+        :file ::file-path-file))
 
 (s/def ::dir-path-str
   (s/with-gen

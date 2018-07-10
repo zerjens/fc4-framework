@@ -20,13 +20,20 @@
 (s/def ::st/name ::fs/non-blank-simple-str)
 (s/def ::st/description ::fs/non-blank-simple-str)
 
-(s/def ::st/tags ::fs/non-blank-simple-str) ;; comma-delimited TODO: use a regex
+(def ^:private comma-delimited-simple-strs-pattern #"[A-Za-z\-,0-9]+")
+
+(s/def :st/comma-delimited-simple-strings
+  (s/with-gen
+    (s/and string? (partial re-matches comma-delimited-simple-strs-pattern))
+    #(string-from-regex comma-delimited-simple-strs-pattern)))
+
+(s/def ::st/tags :st/comma-delimited-simple-strings)
 
 (s/def ::st/position ::fs/coord-string)
 
 (s/def ::st/foo string?)
 
-(def int-pattern #"\d{1,4}")
+(def ^:private int-pattern #"\d{1,4}")
 (s/def ::st/int-in-string
   (s/with-gen (s/and string? (partial re-matches int-pattern))
     #(string-from-regex int-pattern)))
@@ -54,14 +61,25 @@
 (s/def ::sr/order ::st/int-in-string)
 (s/def ::sr/vertices (s/coll-of ::st/position :min-count 1))
 
-(s/def ::st/relationship
+;; This is useful for an interim stage in the export process
+(s/def ::st/relationship-without-vertices
   (s/keys :req-un [::sr/source ::sr/destination]
-          :opt-un [::st/description ::st/tags ::sr/vertices ::sr/order]))
+          :opt-un [::st/description ::st/tags ::sr/order]))
+
+(s/def ::st/relationship
+  (s/merge ::st/relationship-without-vertices
+           (s/keys :opt-un [::sr/vertices])))
 
 ;;;; Styles
 
 (s/def ::ss/type #{"element" "relationship"})
-(s/def ::ss/tag ::fs/non-blank-simple-str)
+
+(s/def ::ss/tag
+  (s/with-gen ::fs/non-blank-simple-str
+              ;; This generator helps test ...express.export/rename-internal-tag
+    #(gen/one-of [(s/gen ::fs/non-blank-simple-str)
+                  (gen/return "internal")])))
+
 (s/def ::ss/width ::fs/coord-int)
 (s/def ::ss/height ::fs/coord-int)
 (s/def ::ss/color ::fs/non-blank-simple-str) ;;; TODO: Make this more specific

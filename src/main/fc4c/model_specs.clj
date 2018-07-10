@@ -30,7 +30,18 @@
              :gen-max 10))
 
 (s/def ::repos ::small-set-of-keywords)
-(s/def ::tags ::small-set-of-keywords)
+
+(s/def ::tags
+  (s/with-gen ::small-set-of-keywords
+    #(gen/set (gen/one-of [(s/gen ::short-simple-keyword)
+                           ;; the below tags have special meaning so it’s
+                           ;; important that they’re sometimes present in the
+                           ;; generated set
+                           (gen/return :external)
+                           (gen/return :internal)])
+              {:min-elements 1
+               :max-elements 12})))
+
 (s/def ::system ::name)
 (s/def ::container ::name)
 (s/def ::technology ::fs/non-blank-simple-str)

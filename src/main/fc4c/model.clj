@@ -22,7 +22,8 @@
        \"/docs/fc4/model/systems/\")
   #{:uk :compliance :internal}"
   [file-path relative-root]
-  (as-> (or (relativize file-path relative-root) file-path) v
+  (as-> (or (relativize file-path relative-root)
+            (str file-path)) v
     (split v #"/")
     (map keyword v)
     (drop-last v)
@@ -35,8 +36,8 @@
 ;; and better generators (the generators will need to create two paths that are
 ;; usefully and realistic related).
 (s/fdef get-tags-from-path
-        :args (s/cat :file-path     ::fs/file-path-str
-                     :relative-root ::fs/dir-path-str)
+        :args (s/cat :file-path     ::fs/file-path
+                     :relative-root ::fs/dir-path)
         :ret  ::tags)
 
 (defn- to-set-of-keywords
@@ -88,6 +89,6 @@
 
 (s/fdef elements-from-file
         :args (s/cat :file-contents ::yaml-file-contents
-                     :file-path     ::fs/dir-path
+                     :file-path     ::fs/file-path
                      :root-path     ::fs/dir-path)
         :ret  (s/coll-of ::element))

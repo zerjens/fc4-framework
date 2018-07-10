@@ -10,6 +10,15 @@
             [fc4c.io                 :as io]
             [fc4c.test-utils :refer [opts]]))
 
+(deftest add-control-points (st/check `e/add-control-points))
+(deftest add-in-house-tag (st/check `e/add-in-house-tag))
+(deftest dep->relationship (st/check `e/dep->relationship))
+(deftest inject-control-points (st/check `e/inject-control-points))
+(deftest relationship-with (st/check `e/relationship-with))
+(deftest rename-internal-tag (st/check `e/rename-internal-tag))
+(deftest replace-internal-tag (st/check `e/replace-internal-tag))
+(deftest tags (st/check `e/tags))
+
 (deftest view->system-context
   (testing "generative"
     (st/check `e/view->system-context (opts 100)))

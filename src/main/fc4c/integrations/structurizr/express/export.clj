@@ -10,15 +10,23 @@
             [fc4c.model           :as m]
             [fc4c.spec            :as fs]
             [fc4c.styles          :as st]
-            [fc4c.util            :as u :refer [update-all]]
+            [fc4c.util            :as fu :refer [update-all]]
             [fc4c.view            :as v]
             [fc4c.yaml            :as fy :refer [split-file]]))
 
+(fu/ns-with-alias 'structurizr 'sz)
+
 (defn- position
+  "Returns the position of the named system in the view."
   [sys-name view]
   (get-in view  (if (= sys-name (::v/system view))
                   [::v/positions ::v/subject]
                   [::v/positions ::v/other-systems sys-name])))
+
+(s/fdef position
+        :args (s/cat :sys-name ::m/name
+                     :view     ::v/view)
+        :ret  ::v/coord-string)
 
 (defn- add-in-house-tag
   [tags]
@@ -28,7 +36,12 @@
 
 (s/fdef add-in-house-tag
         :args (s/cat :tags ::m/tags)
-        :ret  ::m/tags)
+        :ret  ::m/tags
+        :fn   (fn [{{in-tags :tags} :args, out-tags :ret}]
+                (if (:external in-tags)
+                  (= in-tags out-tags)
+                  (and (contains? out-tags :in-house)
+                       (= in-tags (disj out-tags :in-house))))))
 
 (defn- replace-internal-tag
   "The tag “internal” is a special reserved tag for Structurizr Express; for
@@ -46,7 +59,13 @@
 
 (s/fdef replace-internal-tag
         :args (s/cat :tags ::m/tags)
-        :ret  ::m/tags)
+        :ret  ::m/tags
+        :fn   (fn [{{in-tags :tags} :args, out-tags :ret}]
+                (if (:internal in-tags)
+                  (and (contains? out-tags :in-house)
+                       (not (contains? out-tags :internal))
+                       (= (count in-tags) (count out-tags)))
+                  (= in-tags out-tags))))
 
 (defn- tags
   [elem]
@@ -55,6 +74,23 @@
        (add-in-house-tag)
        (map name) ; converts set to a seq but in this case that’s OK as we then convert it to a str
        (join ",")))
+
+(s/fdef tags
+        :args (s/cat :elem ::m/element)
+        :ret  ::sz/tags
+        :fn   (fn [{{{in-tags ::m/tags} :elem} :args, out-tags :ret}]
+                (every? (fn [in-tag]
+                          (condp = in-tag
+                            :internal
+                            (and (includes? out-tags "in-house")
+                                 (not (includes? out-tags "internal")))
+
+                            :external
+                            (and (includes? out-tags "external")
+                                 (not (includes? out-tags "in-house")))
+
+                            (includes? out-tags (name in-tag))))
+                        in-tags)))
 
 (defn- sys-elem
   ;; TODO: this should *maybe* be combined with user-elem
@@ -111,9 +147,12 @@
           :destination (get-in dep [::m/system ::m/name])}))
 
 (s/fdef dep->relationship
-  :args (s/cat :dep ::m/system-ref
-               :subject-name ::m/name)
-  :ret  (s/coll-of :structurizr/relationship))
+        :args (s/cat :dep ::m/system-ref
+                     :subject-name ::m/name)
+        :ret  ::sz/relationship
+        :fn   (fn [{{:keys [dep subject-name]} :args, ret :ret}]
+                (and (every? #(not (nil? (get ret %))) [:source :destination ::m/description ::m/technology])
+                     (= (:source ret) subject-name))))
 
 (defn- user->relationships
   "User here means a system, person, or user that uses the subject system."
@@ -124,18 +163,18 @@
                 (merge rel (select-keys use [::m/description ::m/technology])))))))
 
 (s/fdef user->relationships
-  :args (s/cat :user ::m/user
-               :subject-name ::m/name)
-  :ret  (s/coll-of :structurizr/relationship))
+        :args (s/cat :user ::m/user
+                     :subject-name ::m/name)
+        :ret  (s/coll-of ::sz/relationship))
 
 (defn- get-subject
   [{subject-name ::v/system :as view} model]
   (get-in model [::m/systems subject-name]))
 
 (s/fdef get-subject
-  :args (s/cat :view ::v/view
-               :model ::m/model)
-  :ret  ::m/system)
+        :args (s/cat :view ::v/view
+                     :model ::m/model)
+        :ret  ::m/system)
 
 (defn- elements
   [view model]
@@ -149,49 +188,68 @@
     (concat user-elems sys-elems)))
 
 (s/fdef elements
-  :args (s/cat :view ::v/view
-               :model ::m/model)
-  :ret  (s/coll-of :structurizr/element))
+        :args (s/cat :view  ::v/view
+                     :model ::m/model)
+        :ret  (s/coll-of ::sz/element))
 
 (defn- relationship-with
   "Given a relationship and the subject name, returns the name of the other side
-  of the relationship, regardless of the directionality of the relationship."
+  of the relationship, regardless of the directionality of the relationship. If
+  the subject is not found on either side of the relationship, returns nil."
   [subject-name
-   {:keys [source destination] :as rel}]
+   {:keys [source destination]}]
   (condp = subject-name
     source destination
     destination source
-    (throw (ex-info "Relationship does not include subject!"
-                    {:relationship rel
-                     :subject-name subject-name}))))
+    nil))
 
 (s/fdef relationship-with
-  :args (s/cat :subject-name ::v/name
-               :rel :structurizr/relationship)
-  :ret  ::v/name)
+        :args (s/cat :subject-name ::v/name
+                     :rel          ::sz/relationship)
+        :ret  (s/nilable ::v/name)
+        :fn   (fn [{{:keys [subject-name rel]} :args, ret-name :ret}]
+                (or (= ret-name (:source rel))
+                    (= ret-name (:destination rel))
+                    (nil? ret-name))))
 
 (defn- inject-control-points
   "Given the set of relationships with a single system, and potentially a set of
   point-groups (might be nil) for those relationships, injects those control
   points into the relationships."
   [rels point-groups]
-  (->> rels
-       (map-indexed (fn [i rel]
-                      (if-let [points (nth point-groups i nil)]
-                        (assoc rel :vertices points)
-                        rel)))))
+  ;; You might wonder: why use map-indexed and nth instead of just mapping over
+  ;; both collections with plain old map? It’s because plain old map will just
+  ;; skip/drop elements if the colls are of different sizes. In this scenario
+  ;; there may be fewered point-groups than relationships, as not all
+  ;; relationships will have point-groups. Hence this convoluted approach.
+  (map-indexed
+   (fn [i rel]
+     (if-let [points (nth point-groups i nil)]
+       (assoc rel :vertices points)
+       rel))
+   rels))
+
+(s/def ::relationships-without-vertices
+  (s/coll-of ::sz/relationship-without-vertices
+             :min-count 1))
 
 (s/fdef inject-control-points
-  :args (s/cat :rels :structurizr.diagram/relationships
-               :point-groups (s/nilable ::v/control-point-seqs))
-  :ret  :structurizr.diagram/relationships)
+        :args (s/cat :rels         ::relationships-without-vertices
+                     :point-groups (s/nilable ::v/control-point-seqs))
+        :ret  :structurizr.diagram/relationships
+        :fn   (fn [{{in-rels      :rels
+                     point-groups :point-groups} :args
+                    out-rels                     :ret}]
+                (and (= (count in-rels) (count out-rels))
+                     (= (count (filter :vertices out-rels))
+                        (min (count point-groups)
+                             (count in-rels))))))
 
 (defn- add-control-points
   "Add control points to relationships, when they’re specified in the view."
   [rels
-   {subject-name ::v/system
-    {point-groups ::v/system-context} ::v/control-points
-    :as view}]
+   {subject-name                      ::v/system
+    {point-groups ::v/system-context} ::v/control-points}]
   (->> rels
        (group-by (partial relationship-with subject-name))
        (mapcat (fn [[other-side-name these-rels]]
@@ -200,9 +258,19 @@
                    these-rels)))))
 
 (s/fdef add-control-points
-  :args (s/cat :rels :structurizr.diagram/relationships
-               :view ::v/view)
-  :ret  :structurizr.diagram/relationships)
+        :args (s/cat :rels ::relationships-without-vertices
+                     :view ::v/view)
+        :ret  :structurizr.diagram/relationships
+        :fn   (fn [{{in-rels :rels
+                     view    :view} :args
+                    out-rels        :ret}]
+                (and (= (count in-rels) (count out-rels))
+                     (->> (filter :vertices out-rels)
+                          (every? (fn [{:keys [destination source] :as out-rel}]
+                                    (let [all-cp-groups (get-in view [::v/control-points ::v/system-context])
+                                          cp-group-systems (set (keys all-cp-groups))]
+                                      (or (contains? cp-group-systems destination)
+                                          (contains? cp-group-systems source)))))))))
 
 (defn- relationships
   [view model]
@@ -229,9 +297,9 @@
         (distinct))))
 
 (s/fdef relationships
-  :args (s/cat :view ::v/view
-               :model ::m/model)
-  :ret  :structurizr.diagram/relationships)
+        :args (s/cat :view ::v/view
+                     :model ::m/model)
+        :ret  :structurizr.diagram/relationships)
 
 (defn dequalify-keys
   "Given a nested map, removes the namespaces from any keys that are qualified
@@ -246,8 +314,8 @@
    m))
 
 (s/fdef dequalify-keys
-  :args (s/cat :m (s/map-of qualified-keyword? any?))
-  :ret  (s/map-of ::fs/unqualified-keyword any?))
+        :args (s/cat :m (s/map-of qualified-keyword? any?))
+        :ret  (s/map-of ::fs/unqualified-keyword any?))
 
 (defn- rename-internal-tag
   "Please see docstring of replace-internal-tag."
@@ -256,12 +324,19 @@
    (fn [style]
      (if-not (= (::st/tag style) "internal")
        style
-       (update style ::st/tag (fn [_] "in-house"))))
+       (update style ::st/tag (constantly "in-house"))))
    styles))
 
 (s/fdef rename-internal-tag
         :args (s/cat :styles ::st/styles)
-        :ret  ::st/styles)
+        :ret  ::st/styles
+        :fn (fn [{{in-styles :styles} :args, out-styles :ret}]
+              (every? true?
+                      (map (fn [in-style out-style]
+                             (if (= (::st/tag in-style) "internal")
+                               (= (::st/tag out-style) "in-house")
+                               (= (::st/tag in-style) (::st/tag out-style))))
+                           in-styles out-styles))))
 
 (defn view->system-context
   "Converts an FC4 view to a Structurizr Express System Context diagram."
@@ -278,4 +353,4 @@
         :args (s/cat :view ::v/view
                      :model ::m/model
                      :styles ::st/styles)
-        :ret :structurizr/diagram)
+        :ret ::sz/diagram)
