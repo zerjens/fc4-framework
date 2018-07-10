@@ -3,6 +3,11 @@
             [clojure.spec.alpha  :as s]
             [fc4c.spec           :as fs]))
 
+(defn ns-with-alias
+  [ns-sym alias-sym]
+  (create-ns ns-sym)
+  (alias alias-sym ns-sym))
+
 (defn lookup-table-by
   "Given a function and a seqable, returns a map of (f x) to x.
 
