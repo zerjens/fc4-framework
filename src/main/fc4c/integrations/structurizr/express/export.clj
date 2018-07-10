@@ -98,6 +98,22 @@
                             (includes? out-tags (name in-tag))))
                         in-tags)))
 
+(defn dequalify-keys
+  "Given a nested map, removes the namespaces from any keys that are qualified
+  keywords."
+  {:fork-of 'clojure.walk/stringify-keys}
+  [m]
+  (update-all
+   (fn [[k v]]
+     (if (qualified-keyword? k)
+       [(keyword (name k)) v]
+       [k v]))
+   m))
+
+(s/fdef dequalify-keys
+        :args (s/cat :m (s/map-of qualified-keyword? any?))
+        :ret  (s/map-of ::fs/unqualified-keyword any?))
+
 (defn- sys-elem
   ;; TODO: this should *maybe* be combined with user-elem
   "Constructs a Structurizr Express \"Software System\" element for the named
@@ -308,22 +324,6 @@
         :args (s/cat :view ::v/view
                      :model ::m/model)
         :ret  :structurizr.diagram/relationships)
-
-(defn dequalify-keys
-  "Given a nested map, removes the namespaces from any keys that are qualified
-  keywords."
-  {:fork-of 'clojure.walk/stringify-keys}
-  [m]
-  (update-all
-   (fn [[k v]]
-     (if (qualified-keyword? k)
-       [(keyword (name k)) v]
-       [k v]))
-   m))
-
-(s/fdef dequalify-keys
-        :args (s/cat :m (s/map-of qualified-keyword? any?))
-        :ret  (s/map-of ::fs/unqualified-keyword any?))
 
 (defn- rename-internal-tag
   "Please see docstring of replace-internal-tag."
