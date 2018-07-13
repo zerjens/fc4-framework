@@ -72,7 +72,9 @@
 
 (defn- fixup-container
   [container sys-name]
-  (-> (update container ::tags to-set-of-keywords)
+  (-> (update container :tags to-set-of-keywords)
+      (update :repos to-set-of-keywords)
+      (update :tags to-set-of-keywords)
       ;; Container references in the YAML files don’t have to specify the target
       ;; system; if ommitted then the target system is implicitly the same
       ;; system; the container in that case is targeting a sibling container.
@@ -80,31 +82,34 @@
       ;; and write (by humans, manually).) In our in-memory data structure,
       ;; however, the target system must be specified, for uniformity. So we
       ;; just add it in right here.
-      (update ::uses (fn [sys-refs]
-                       (into #{}
-                             (map #(if (::system %)
-                                     %
-                                     (assoc % ::system sys-name))
-                                  sys-refs))))))
+      (update :uses (fn [sys-refs]
+                      (into #{}
+                            (map #(if (:system %)
+                                    %
+                                    (assoc % :system sys-name))
+                                 sys-refs))))
+      (fu/qualify-keys this-ns-name)))
 
 (s/fdef fixup-container
-        :args (s/cat :sys-name  ::name
-                     :container ::proto-entity)
-        :ret  ::container-map)
+        :args (s/cat :container ::proto-entity
+                     :sys-name  ::name)
+        :ret  ::container-map
+        :fn   (fn [{{in :container} :args, out :ret}]
+                (= (count (::uses in)) (count (::uses out)))))
 
 (defn- fixup-element
   [entity-type tags-from-path {:keys [name] :as elem}]
   (-> elem
       (assoc ::type entity-type)
-      (fu/qualify-keys this-ns-name)
-      (update ::repos to-set-of-keywords)
-      (update ::tags to-set-of-keywords)
-      (update ::tags (partial union tags-from-path))
-      (update ::uses set)
-      (update ::containers #(into #{}
-                                  (map (fn [container]
-                                         (fixup-container container name))
-                                       %)))))
+      (update :repos to-set-of-keywords)
+      (update :tags to-set-of-keywords)
+      (update :tags (partial union tags-from-path))
+      (update :uses set)
+      (update :containers #(into #{}
+                                 (map (fn [container]
+                                        (fixup-container container name))
+                                      %)))
+      (fu/qualify-keys this-ns-name)))
 
 (s/fdef fixup-element
         :args (s/cat :entity-type    ::entity-type

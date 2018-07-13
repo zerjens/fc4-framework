@@ -15,7 +15,7 @@
 (s/def ::description ::fs/non-blank-str) ;; Could reasonably have linebreaks.
 
 (s/def ::simple-strings
-  (s/coll-of ::fs/short-non-blank-simple-str))
+  (s/coll-of ::fs/short-non-blank-simple-str :gen-max 11))
 
 (s/def ::short-simple-keyword
   (s/with-gen
