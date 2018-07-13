@@ -137,10 +137,10 @@
         :args (s/cat :sys-name ::m/name
                      :view     ::v/view
                      :model    ::m/model)
-        :ret  (s/nilable ::st/sys-elem)
-        :fn   (fn [{{:keys [sys-name view model]} :args, ret :ret}]
+        :ret  (s/nilable ::st/system-elem)
+        :fn   (fn [{{:keys [:sys-name :view :model]} :args, ret :ret}]
                 (cond
-                  (get-in model [::m/system sys-name]) ; the named system is in the model
+                  (get-in model [::m/systems sys-name]) ; the named system is in the model
                   (= (:name ret) sys-name)
 
                   :sys-not-in-model
@@ -182,19 +182,19 @@
   ;; TODO: I think maybe we also need the
   ;; TODO: maybe should be merged with users-of?
   ;; TODO: this should handle the case of a system that the subject uses >1 ways
-  [system {systems ::m/systems}]
-  (some->>
-   ; start with the systems that this system uses directly
-   (::m/uses system)
-   ; add the systems that the containers of this system use
-   (concat (mapcat ::m/uses (::m/containers system)))
-   ; We only want those references that are to a *different* system.
-   (remove #(= (::m/system %) (::m/name system)))))
+  [{:keys [::m/uses ::m/containers ::m/name]} {systems ::m/systems}]
+  (or
+   (some->> uses ; start with the systems that this system uses directly
+             ; add the systems that the containers of this system use
+            (concat (mapcat ::m/uses containers))
+             ; We only want those references that are to a *different* system.
+            (remove #(= (::m/system %) name)))
+   []))
 
 (s/fdef deps-of
         :args (s/cat :system ::m/system-map
                      :model  ::m/model)
-        :ret  (s/coll-of :sys-ref))
+        :ret  (s/coll-of ::m/sys-ref))
 
 (defn- users-of
   "Returns the systems that use the subject system."
@@ -254,7 +254,7 @@
 (s/fdef get-subject
         :args (s/cat :view ::v/view
                      :model ::m/model)
-        :ret  ::m/system)
+        :ret  ::m/system-map)
 
 (defn- elements
   [view model]

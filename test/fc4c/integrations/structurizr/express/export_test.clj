@@ -13,6 +13,10 @@
 (deftest add-control-points (check `e/add-control-points))
 (deftest add-in-house-tag (check `e/add-in-house-tag))
 (deftest dep->relationship (check `e/dep->relationship))
+(deftest deps-of (check `e/deps-of))
+(deftest dequalify-keys (check `e/dequalify-keys))
+(deftest elements (check `e/elements))
+(deftest get-subject (check `e/get-subject))
 (deftest inject-control-points (check `e/inject-control-points))
 (deftest relationship-with (check `e/relationship-with))
 
@@ -24,7 +28,8 @@
 
 (deftest rename-internal-tag (check `e/rename-internal-tag))
 (deftest replace-internal-tag (check `e/replace-internal-tag))
-(deftest sys-elem (check `e/user-elem 100))
+(deftest sys-elem (check `e/sys-elem 300))
+(deftest sys-position (check `e/sys-position 300))
 (deftest tags (check `e/tags))
 (deftest user->relationships (check `e/user->relationships))
 
