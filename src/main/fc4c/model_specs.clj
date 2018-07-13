@@ -94,9 +94,9 @@
 
 (s/def ::system-map
   (s/and
-    (s/keys :req [::name ::type]
-            :opt [::containers ::description ::repos ::tags ::uses])
-    #(= (::type %) :system)))
+   (s/keys :req [::name ::type]
+           :opt [::containers ::description ::repos ::tags ::uses])
+   #(= (::type %) :system)))
 
 (s/def ::systems
   (s/with-gen
@@ -132,11 +132,11 @@
       spec
       (fn []
         (gen/fmap
-           (fn [m]
+         (fn [m]
              ; let’s make the model make sense
-             (let [sys-names (take 2 (keys (::systems m)))]
-               (-> (update m ::systems #(select-keys % sys-names))
-                   (update-in [::systems (first sys-names) ::uses] empty)
-                   (update-in [::systems (second sys-names) ::uses]
-                              (fn [_] #{{::system (first sys-names)}})))))
-           (s/gen spec))))))
+           (let [sys-names (take 2 (keys (::systems m)))]
+             (-> (update m ::systems #(select-keys % sys-names))
+                 (update-in [::systems (first sys-names) ::uses] empty)
+                 (update-in [::systems (second sys-names) ::uses]
+                            (fn [_] #{{::system (first sys-names)}})))))
+         (s/gen spec))))))

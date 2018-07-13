@@ -22,9 +22,9 @@
   (optional) arg is a map of generator overrides, e.g.
   `{:foo/bar #(s/gen string?)}`"
   ([sym]
-    (check sym 1000 {}))
+   (check sym 1000 {}))
   ([sym num-tests]
-    (check sym num-tests {}))
+   (check sym num-tests {}))
   ([sym num-tests gen]
    (let [results (st/check sym (make-opts num-tests gen))]
      (is (nil? (-> results first :failure))

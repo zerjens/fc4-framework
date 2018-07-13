@@ -134,18 +134,18 @@
                 :tags (tags system)}))))
 
 (s/fdef sys-elem
-  :args (s/cat :sys-name ::m/name
-               :view     ::v/view
-               :model    ::m/model)
-  :ret  (s/nilable ::st/sys-elem)
-  :fn   (fn [{{:keys [sys-name view model]} :args, ret :ret}]
-          (cond
-            (get-in model [::m/system sys-name]) ; the named system is in the model
-            (= (:name ret) sys-name)
+        :args (s/cat :sys-name ::m/name
+                     :view     ::v/view
+                     :model    ::m/model)
+        :ret  (s/nilable ::st/sys-elem)
+        :fn   (fn [{{:keys [sys-name view model]} :args, ret :ret}]
+                (cond
+                  (get-in model [::m/system sys-name]) ; the named system is in the model
+                  (= (:name ret) sys-name)
 
-            :sys-not-in-model
-            (and (includes? (:name ret) sys-name)
-                 (includes? (:name ret) "undefined")))))
+                  :sys-not-in-model
+                  (and (includes? (:name ret) sys-name)
+                       (includes? (:name ret) "undefined")))))
 
 (defn- user-elem
   ;; TODO: this should probably be combined with sys-elem.
@@ -164,18 +164,18 @@
                 :tags (tags user)}))))
 
 (s/fdef user-elem
-  :args (s/cat :user-name ::m/name
-               :view      ::v/view
-               :model     ::m/model)
-  :ret  (s/nilable ::st/user-elem)
-  :fn   (fn [{{:keys [user-name view model]} :args, ret :ret}]
-          (cond
-            (get-in model [::m/users user-name]) ; the named user is in the model
-            (= (:name ret) user-name)
+        :args (s/cat :user-name ::m/name
+                     :view      ::v/view
+                     :model     ::m/model)
+        :ret  (s/nilable ::st/user-elem)
+        :fn   (fn [{{:keys [user-name view model]} :args, ret :ret}]
+                (cond
+                  (get-in model [::m/users user-name]) ; the named user is in the model
+                  (= (:name ret) user-name)
 
-            :user-not-in-model
-            (and (includes? (:name ret) user-name)
-                 (includes? (:name ret) "undefined")))))
+                  :user-not-in-model
+                  (and (includes? (:name ret) user-name)
+                       (includes? (:name ret) "undefined")))))
 
 (defn- deps-of
   "Returns the systems that the subject system uses — its dependencies."
@@ -192,9 +192,9 @@
    (remove #(= (::m/system %) (::m/name system)))))
 
 (s/fdef deps-of
-  :args (s/cat :system ::m/system-map
-               :model  ::m/model)
-  :ret  (s/coll-of :sys-ref))
+        :args (s/cat :system ::m/system-map
+                     :model  ::m/model)
+        :ret  (s/coll-of :sys-ref))
 
 (defn- users-of
   "Returns the systems that use the subject system."
@@ -242,10 +242,10 @@
         :ret  (s/coll-of ::st/relationship)
         :fn   (fn [{{:keys [user subject-name]} :args, ret :ret}]
                 (every?
-                  (fn [rel]
-                    (= (:source rel)
-                       (::m/name user)))
-                  ret)))
+                 (fn [rel]
+                   (= (:source rel)
+                      (::m/name user)))
+                 ret)))
 
 (defn- get-subject
   [{subject-name ::v/system :as view} model]

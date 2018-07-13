@@ -27,7 +27,7 @@
 (s/def ::other-systems ::position-map)
 
 (s/def ::positions
- (s/keys
+  (s/keys
   ; You might look at this and think that the keys in the `or` are mutually
   ; exclusive — that a valid value may contain only *one* of those keys. I tested
   ; this though, and that’s not the case. This merely states that in order to
@@ -36,8 +36,8 @@
   ; suppose it might be handy if s/keys supported `not` but in this case that’s
   ; not needed.) (Another possible useful feature for s/keys could be something
   ; like `one-of` as in “only one of”.)
-  :req [(and ::subject (or ::users ::containers ::other-systems))]
-  :opt [::users ::containers ::other-systems]))
+   :req [(and ::subject (or ::users ::containers ::other-systems))]
+   :opt [::users ::containers ::other-systems]))
 
 (s/def ::control-point-seqs
   (s/coll-of (s/coll-of ::coord-string :min-count 1 :gen-max 3)

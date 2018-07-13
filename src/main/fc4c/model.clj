@@ -81,16 +81,16 @@
       ;; however, the target system must be specified, for uniformity. So we
       ;; just add it in right here.
       (update ::uses (fn [sys-refs]
-                        (into #{}
-                              (map #(if (::system %)
-                                      %
-                                      (assoc % ::system sys-name))
-                                   sys-refs))))))
+                       (into #{}
+                             (map #(if (::system %)
+                                     %
+                                     (assoc % ::system sys-name))
+                                  sys-refs))))))
 
 (s/fdef fixup-container
-  :args (s/cat :sys-name  ::name
-               :container ::proto-entity)
-  :ret  ::container-map)
+        :args (s/cat :sys-name  ::name
+                     :container ::proto-entity)
+        :ret  ::container-map)
 
 (defn- fixup-element
   [entity-type tags-from-path {:keys [name] :as elem}]
