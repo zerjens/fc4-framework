@@ -286,7 +286,7 @@
 (s/fdef relationship-with
         :args (s/cat :subject-name ::v/name
                      :rel          ::st/relationship)
-        :ret  (s/nilable ::v/name)
+        :ret  (s/nilable ::st/name)
         :fn   (fn [{{:keys [subject-name rel]} :args, ret-name :ret}]
                 (or (= ret-name (:source rel))
                     (= ret-name (:destination rel))
