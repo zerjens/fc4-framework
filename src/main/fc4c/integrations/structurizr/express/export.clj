@@ -384,15 +384,15 @@
         :ret  :structurizr.diagram/relationships
         :fn   (fn [{{:keys [view model]} :args
                     ret                  :ret}]
-                (let [subject (get-subject view model)
-                      sub-name (::m/name subject)
-                      direct-deps (::m/uses subject)]
+                (let [{sub-name    ::m/name
+                       direct-deps ::m/uses} (get-subject view model)]
                   ;; TODO: also verify control points
-                  (every? (fn [dep]
-                            (filter (fn [{:keys [source destination]}]
-                                      (or (= source sub-name)
-                                          (= destination sub-name)))
-                                    ret))
+                  (every? (fn [{dep-sys-name ::m/system :as dep}]
+                            (some (fn [{source-sys-name :source
+                                        dest-sys-name   :destination}]
+                                    (or (= source-sys-name dep-sys-name)
+                                        (= dest-sys-name dep-sys-name)))
+                                  ret))
                           direct-deps))))
 
 (defn- rename-internal-tag
