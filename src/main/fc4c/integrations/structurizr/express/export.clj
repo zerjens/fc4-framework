@@ -213,16 +213,16 @@
   [dep subject-name]
   (merge (select-keys dep [::m/description ::m/technology]) ;; <- might return an empty map
          {:source subject-name
-          :destination (or (::m/system dep)
-                           (::m/container dep))}))
+          :destination (or (::m/container dep)
+                           (::m/system dep))}))
 
 (s/fdef dep->relationship
         :args (s/cat :dep          ::m/sys-ref
                      :subject-name ::m/name)
         :ret  ::st/relationship
         :fn   (fn [{{:keys [dep subject-name]} :args, ret :ret}]
-                (and (or (= (:destination ret) (::m/system dep))
-                         (= (:destination ret) (::m/container dep)))
+                (and (or (= (:destination ret) (::m/container dep))
+                         (= (:destination ret) (::m/system dep)))
                      (= (:source ret) subject-name))))
 
 (defn- user->relationships
