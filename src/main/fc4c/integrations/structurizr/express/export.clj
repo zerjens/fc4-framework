@@ -121,9 +121,10 @@
   ;; TODO: this should probably be combined with user-elem.
   "Constructs a Structurizr Express \"Software System\" element for the named
   system for the given view and model. For now, excludes containers. If the named
-  system is not present in the ::m/systems coll of the model, returns nil. If the
-  named system is not present in the view under ::v/positions then the returned
-  element will have the position '0,0'."
+  system is not present in the ::m/systems coll of the model, the value of :name
+  will be the supplied name with (undefined) appended. If the named system is
+  not present in the view under ::v/positions then the returned element will
+  have the position '0,0'."
   [sys-name view model]
   (if-let [system (get-in model [::m/systems sys-name]
                           {::m/name (str sys-name " (undefined)")})]
