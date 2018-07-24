@@ -3,6 +3,7 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.string :as str :refer [blank?]]
             [com.gfredericks.test.chuck.generators :refer [string-from-regex]]
+            [fc4c.model :as m]
             [fc4c.spec :as fs]
             [fc4c.util :as fu]))
 
@@ -64,8 +65,12 @@
 
 ;;;; Relationships
 
-(s/def ::sr/source ::st/name)
-(s/def ::sr/destination ::st/name)
+; These specs use the generator of :fc4c.model/name so that the values generated
+; when generating instances of ::st/relationship-without-vertices will match
+; values generated in :fc4c.model/model and :fc4c.view/view, which are the main
+; inputs into the export feature defined in export.clj.
+(s/def ::sr/source (s/with-gen ::st/name #(s/gen ::m/name)))
+(s/def ::sr/destination (s/with-gen ::st/name #(s/gen ::m/name)))
 (s/def ::sr/order ::st/int-in-string)
 (s/def ::sr/vertices (s/coll-of ::st/position :min-count 1))
 
