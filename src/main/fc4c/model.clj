@@ -5,7 +5,8 @@
             [clojure.spec.gen.alpha  :as gen]
             [clojure.string                    :refer [includes? split]]
             [fc4c.files                        :refer [relativize]]
-            [fc4c.spec               :as fs]))
+            [fc4c.spec               :as fs]
+            [fc4c.util               :as fu]))
 
 (load "model_specs")
 
@@ -22,7 +23,8 @@
        \"/docs/fc4/model/systems/\")
   #{:uk :compliance :internal}"
   [file-path relative-root]
-  (as-> (or (relativize file-path relative-root) file-path) v
+  (as-> (or (relativize file-path relative-root)
+            (str file-path)) v
     (split v #"/")
     (map keyword v)
     (drop-last v)
@@ -35,8 +37,8 @@
 ;; and better generators (the generators will need to create two paths that are
 ;; usefully and realistic related).
 (s/fdef get-tags-from-path
-        :args (s/cat :file-path     ::fs/file-path-str
-                     :relative-root ::fs/dir-path-str)
+        :args (s/cat :file-path     ::fs/file-path
+                     :relative-root ::fs/dir-path)
         :ret  ::tags)
 
 (defn- to-set-of-keywords
@@ -49,6 +51,17 @@
         :fn (fn [{{:keys [xs]} :args, ret :ret}]
               (= (count (distinct xs)) (count ret))))
 
+;; An element just after it’s parsed from the YAML, before any fixup.
+;; TODO: this file uses a mix of “element” and “entity” to refer to pretty much
+;; the same thing. Choose one and stick with it!
+(s/def ::proto-entity
+  (s/with-gen
+    (s/map-of ::fs/unqualified-keyword (s/or :name    ::name
+                                             :strings ::simple-strings))
+    #(gen/hash-map :name  (s/gen ::name)
+                   :repos (s/gen ::simple-strings)
+                   :tags  (s/gen ::simple-strings))))
+
 ; We have to capture this at compile time in order for it to have the value we
 ; want it to; if we referred to *ns* in the body of a function then, because it
 ; is dynamically bound, it would return the namespace at the top of the stack,
@@ -57,37 +70,74 @@
 ; qualified with.
 (def ^:private this-ns-name (str *ns*))
 
+(defn- fixup-container
+  [container sys-name]
+  (-> (update container :tags to-set-of-keywords)
+      (update :repos to-set-of-keywords)
+      (update :tags to-set-of-keywords)
+      ;; Container references in the YAML files don’t have to specify the target
+      ;; system; if ommitted then the target system is implicitly the same
+      ;; system; the container in that case is targeting a sibling container.
+      ;; (This is optional in the YAML files to make the files easier to read
+      ;; and write (by humans, manually).) In our in-memory data structure,
+      ;; however, the target system must be specified, for uniformity. So we
+      ;; just add it in right here.
+      (update :uses (fn [sys-refs]
+                      (into #{}
+                            (map #(if (:system %)
+                                    %
+                                    (assoc % :system sys-name))
+                                 sys-refs))))
+      (fu/qualify-keys this-ns-name)))
+
+(s/fdef fixup-container
+        :args (s/cat :container ::proto-entity
+                     :sys-name  ::name)
+        :ret  ::container-map
+        :fn   (fn [{{in :container} :args, out :ret}]
+                (= (count (::uses in)) (count (::uses out)))))
+
 (defn- fixup-element
-  [tags-from-path elem]
+  [entity-type tags-from-path {:keys [name] :as elem}]
   (-> elem
-      (util/qualify-keys this-ns-name)
-      (update ::repos to-set-of-keywords)
-      (update ::tags to-set-of-keywords)
-      (update ::tags (partial union tags-from-path))
-      (update ::containers (fn [containers]
-                             (map #(update % ::tags to-set-of-keywords)
-                                  containers)))))
+      (assoc ::type entity-type)
+      (update :repos to-set-of-keywords)
+      (update :tags to-set-of-keywords)
+      (update :tags (partial union tags-from-path))
+      (update :uses set)
+      (update :containers #(into #{}
+                                 (map (fn [container]
+                                        (fixup-container container name))
+                                      %)))
+      (fu/qualify-keys this-ns-name)))
 
 (s/fdef fixup-element
-        :args (s/cat :tags-from-path ::tags
-                     :proto-element  ::proto-element)
-        :ret ::element)
+        :args (s/cat :entity-type    ::entity-type
+                     :tags-from-path ::tags
+                     :proto-entity   ::proto-entity)
+        :ret  ::element
+        :fn   (fn [{{elem-in :proto-entity} :args, elem-out :ret}]
+                (every? #(>= (count (get elem-out %)) (count (get elem-in %)))
+                        [::repos ::tags ::uses ::containers])))
 
 ;; A file might contain a single element (as a map), or an array containing
 ;; multiple elements.
 (defn elements-from-file
   "Parses the contents of a YAML file, then processes those contents such that
-  each element conforms to ::element. The file-path and root-path are used to
-  generate tags from the file’s path relative to the root path."
-  [file-contents file-path root-path]
+  each element conforms to ::element. entity-type is needed because the files
+  on disk don’t include the `type` key — it’s implicit in the file’s path. The
+  file-path and root-path are used to generate tags from the file’s path
+  relative to the root path."
+  [file-contents entity-type file-path root-path]
   (let [parsed (yaml/parse-string file-contents)
         elems (if (associative? parsed) [parsed] parsed)
         tags-from-path (get-tags-from-path file-path root-path)]
-    (map (partial fixup-element tags-from-path)
+    (map (partial fixup-element entity-type tags-from-path)
          elems)))
 
 (s/fdef elements-from-file
         :args (s/cat :file-contents ::yaml-file-contents
-                     :file-path     ::fs/dir-path-str
-                     :root-path     ::fs/dir-path-str)
+                     :entity-type   ::entity-type
+                     :file-path     ::fs/file-path
+                     :root-path     ::fs/dir-path)
         :ret  (s/coll-of ::element))

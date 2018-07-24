@@ -1,18 +1,52 @@
 (ns fc4c.integrations.structurizr.express.export-test
-  (:require [clojure.pprint          :as pp :refer [pprint]]
-            [clojure.spec.alpha      :as s]
-            [clojure.spec.test.alpha :as st]
+  (:require [clojure.spec.alpha      :as s]
             [clojure.string          :as string :refer [includes?]]
             [clojure.test            :as ct :refer [deftest is testing]]
             [cognitect.anomalies     :as anom]
             [expound.alpha           :as expound]
             [fc4c.integrations.structurizr.express.export :as e]
             [fc4c.io                 :as io]
-            [fc4c.test-utils :refer [opts]]))
+            [fc4c.model              :as m]
+            [fc4c.test-utils         :as tu :refer [check]]
+            [fc4c.view               :as v]))
+
+(deftest add-control-points (check `e/add-control-points))
+(deftest add-in-house-tag (check `e/add-in-house-tag))
+(deftest dep->relationship (check `e/dep->relationship))
+(deftest deps-of (check `e/deps-of))
+(deftest dequalify-keys (check `e/dequalify-keys))
+(deftest elements (check `e/elements))
+(deftest get-subject (check `e/get-subject))
+(deftest inject-control-points (check `e/inject-control-points))
+(deftest relationship-with (check `e/relationship-with))
+
+(deftest relationships
+  (check `e/relationships
+         500
+         {::v/positions #(s/gen (s/merge ::v/positions
+                                         (s/keys :req [::v/other-systems])))}))
+
+(deftest rename-internal-tag (check `e/rename-internal-tag))
+(deftest replace-internal-tag (check `e/replace-internal-tag))
+(deftest sys-elem (check `e/sys-elem 300))
+(deftest sys-position (check `e/sys-position 300))
+(deftest tags (check `e/tags))
+(deftest user->relationships (check `e/user->relationships))
+
+(deftest user-elem
+  (check `e/user-elem
+         300
+         {::v/positions #(s/gen (s/merge ::v/positions
+                                         (s/keys :req [::v/users])))
+          ::v/users #(s/gen (s/map-of ::name ::coord-string
+                                      :min-count 2 :max-count 2))}))
 
 (deftest view->system-context
   (testing "generative"
-    (st/check `e/view->system-context (opts 100)))
+    (check `e/view->system-context
+           200
+           {::m/uses #(s/gen (s/coll-of (s/merge ::system-ref
+                                                 (s/keys :req [::system]))))}))
 
   (testing "on-disk examples"
     (testing "happy path"
@@ -27,14 +61,11 @@
                                  "styles" [styles sp]}]
                 (when (and (map? v) (contains? v ::anom/category))
                   (throw (ex-info (str "invalid " n " in " p) v))))
-            result (e/view->system-context view model styles)
-            valid (s/valid? :structurizr/diagram result)]
-        (when-not valid
-          (expound/expound :structurizr/diagram result)
-          (pprint result))
-        (is valid)))
+            result (e/view->system-context view model styles)]
+        (is (s/valid? :structurizr/diagram result)
+            (expound/expound-str :structurizr/diagram result))))
 
-    (testing "sad path:"
+    (testing "neutral path:"
       (testing "view references undefined system"
         (let [mp     "test/data/model (valid)/"
               model  (io/read-model mp)
@@ -47,8 +78,8 @@
                                    "styles" [styles sp]}]
                   (when (and (map? v) (contains? v ::anom/category))
                     (throw (ex-info (str "invalid " n " in " p) v))))
-              result (e/view->system-context view model styles)
-              valid (s/valid? :structurizr/diagram result)
-              exposition (expound/expound-str :structurizr/diagram result)]
-          (is (not valid))
-          (is (includes? exposition "should contain key: :name")))))))
+              result (e/view->system-context view model styles)]
+          (is (s/valid? :structurizr/diagram result)
+              (expound/expound-str :structurizr/diagram result))
+          (is (some #(includes? (:name %) "undefined")
+                    (:elements result))))))))

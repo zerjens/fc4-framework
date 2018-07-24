@@ -3,6 +3,7 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.string :as str :refer [blank?]]
             [com.gfredericks.test.chuck.generators :refer [string-from-regex]]
+            [fc4c.model :as m]
             [fc4c.spec :as fs]
             [fc4c.util :as fu]))
 
@@ -20,13 +21,20 @@
 (s/def ::st/name ::fs/non-blank-simple-str)
 (s/def ::st/description ::fs/non-blank-simple-str)
 
-(s/def ::st/tags ::fs/non-blank-simple-str) ;; comma-delimited TODO: use a regex
+(def ^:private comma-delimited-simple-strs-pattern #"[A-Za-z\-,0-9]+")
+
+(s/def :st/comma-delimited-simple-strings
+  (s/with-gen
+    (s/and string? (partial re-matches comma-delimited-simple-strs-pattern))
+    #(string-from-regex comma-delimited-simple-strs-pattern)))
+
+(s/def ::st/tags :st/comma-delimited-simple-strings)
 
 (s/def ::st/position ::fs/coord-string)
 
 (s/def ::st/foo string?)
 
-(def int-pattern #"\d{1,4}")
+(def ^:private int-pattern #"\d{1,4}")
 (s/def ::st/int-in-string
   (s/with-gen (s/and string? (partial re-matches int-pattern))
     #(string-from-regex int-pattern)))
@@ -47,21 +55,44 @@
   (s/keys :req-un [::st/name ::st/position ::se/type]
           :opt-un [::st/description ::st/tags ::se/containers]))
 
+(s/def ::st/system-elem
+  (s/and ::st/element
+         #(= (:type %) "Software System")))
+
+(s/def ::st/user-elem
+  (s/and ::st/element
+         #(= (:type %) "Person")))
+
 ;;;; Relationships
 
-(s/def ::sr/source ::st/name)
-(s/def ::sr/destination ::st/name)
+; These specs use the generator of :fc4c.model/name so that the values generated
+; when generating instances of ::st/relationship-without-vertices will match
+; values generated in :fc4c.model/model and :fc4c.view/view, which are the main
+; inputs into the export feature defined in export.clj.
+(s/def ::sr/source (s/with-gen ::st/name #(s/gen ::m/name)))
+(s/def ::sr/destination (s/with-gen ::st/name #(s/gen ::m/name)))
 (s/def ::sr/order ::st/int-in-string)
 (s/def ::sr/vertices (s/coll-of ::st/position :min-count 1))
 
-(s/def ::st/relationship
+;; This is useful for an interim stage in the export process
+(s/def ::st/relationship-without-vertices
   (s/keys :req-un [::sr/source ::sr/destination]
-          :opt-un [::st/description ::st/tags ::sr/vertices ::sr/order]))
+          :opt-un [::st/description ::st/tags ::sr/order]))
+
+(s/def ::st/relationship
+  (s/merge ::st/relationship-without-vertices
+           (s/keys :opt-un [::sr/vertices])))
 
 ;;;; Styles
 
 (s/def ::ss/type #{"element" "relationship"})
-(s/def ::ss/tag ::fs/non-blank-simple-str)
+
+(s/def ::ss/tag
+  (s/with-gen ::fs/non-blank-simple-str
+              ;; This generator helps test ...express.export/rename-internal-tag
+    #(gen/one-of [(s/gen ::fs/non-blank-simple-str)
+                  (gen/return "internal")])))
+
 (s/def ::ss/width ::fs/coord-int)
 (s/def ::ss/height ::fs/coord-int)
 (s/def ::ss/color ::fs/non-blank-simple-str) ;;; TODO: Make this more specific
@@ -82,10 +113,9 @@
 (s/def ::sd/scope ::st/name)
 (s/def ::sd/size #{"A2_Landscape" "A3_Landscape"}) ;;; TODO: Add the rest of the options
 (s/def ::sd/elements (s/coll-of ::st/element :min-count 1))
-(s/def ::sd/relationships (s/coll-of ::st/relationship :min-count 1))
-(s/def ::sd/styles (s/coll-of ::st/style :min-count 1))
+(s/def ::sd/relationships (s/coll-of ::st/relationship))
+(s/def ::sd/styles (s/coll-of ::st/style))
 
 (s/def ::st/diagram
-  (s/keys :req-un [::sd/type ::sd/scope ::sd/elements ::sd/relationships
-                   ::sd/styles ::sd/size]
-          :opt-un [::st/description]))
+  (s/keys :req-un [::sd/type ::sd/scope ::sd/elements ::sd/size]
+          :opt-un [::st/description ::sd/relationships ::sd/styles]))
