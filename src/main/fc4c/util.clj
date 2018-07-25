@@ -3,17 +3,16 @@
             [clojure.spec.alpha  :as s]
             [fc4c.spec           :as fs]))
 
+(s/def ::ns-tuples
+  (s/+ (s/tuple simple-symbol? #{:as} simple-symbol?)))
+
 ;; TODO: consider making this a macro so the ns-symbols won’t have to be quoted
 ;; when calling them.
 (defn namespaces
   "Pass one or more tuples of namespaces to create along with aliases:
   (namespaces '[foo :as f] '[bar :as b])"
   [t & ts] ; At least one tuple is required.
-  ;; TODO: is it silly to use all these preconditions when I already have a spec?
-  {:pre [(every? indexed? (concat [t] ts))
-         (every? #(= (count %) 3) (concat [t] ts))
-         (every? #(= (second %) :as) (concat [t] ts))
-         (every? #(every? symbol? (take-nth 2 %)) (concat [t] ts))]}
+  {:pre [(s/valid? ::ns-tuples (concat [t] ts))]}
   (doseq [[ns-sym _ alias-sym] (concat [t] ts)]
     (create-ns ns-sym)
     (alias alias-sym ns-sym)))
@@ -23,7 +22,7 @@
 ; is mutating the state of the current namespace, and can thus fail in all sorts
 ; of odd ways).
 (s/fdef namespaces
-        :args (s/cat :args (s/+ (s/tuple simple-symbol? #{:as} simple-symbol?)))
+        :args (s/cat :args ::ns-tuples)
         :ret  nil?)
 
 (defn lookup-table-by
