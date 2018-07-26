@@ -5,7 +5,7 @@
   org.clojure/tools.cli  {:mvn/version "0.3.7"}
   circleci/clj-yaml {:mvn/version "0.5.6"}
   potemkin {:mvn/version "0.4.5"}
-  expound {:mvn/version "0.7.0"}
+  expound {:mvn/version "0.7.1"}
   com.cognitect/anomalies {:mvn/version "0.1.12"}
 
   ;; test.chuck is in the main dependency list, rather than in the test profile,
@@ -24,7 +24,7 @@
            :test/run  {:main-opts   ["-m" "fc4c.test-runner.runner"]}
 
            :test/coverage
-                      {:extra-deps  {cloverage                  {:mvn/version "1.0.11-SNAPSHOT"}}
+                      {:extra-deps  {cloverage                  {:mvn/version "1.0.11"}}
                        :main-opts   ["-m" "cloverage.coverage"
                                      "--src-ns-path" "src/main"
                                      "--test-ns-path" "test"
