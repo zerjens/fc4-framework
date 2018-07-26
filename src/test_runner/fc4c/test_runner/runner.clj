@@ -6,9 +6,6 @@
             [eftest.report.junit    :as ju]
             [eftest.runner          :as runner :refer [find-tests]]))
 
-;; TODO add a way to to measure coverage with Cloverage.
-;;    see: https://github.com/weavejester/eftest/issues/50
-
 (def test-dir "test")
 
 (def output-path
