@@ -32,7 +32,7 @@
                                      "--fail-threshold" "65"
                                      "--codecov"]}
 
-           :lint      {:extra-deps  {com.jameslaverack/cljfmt-runner
+           :lint      {:extra-deps  {github-JamesLaverack/cljfmt-runner
                                      {:git/url "https://github.com/JamesLaverack/cljfmt-runner"
                                       :sha     "51f85c9d6cc67107620749ceacd46120647fe107"}}
                        :main-opts   ["-m" "cljfmt-runner.check"]}
