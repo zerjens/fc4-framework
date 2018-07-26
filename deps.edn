@@ -1,18 +1,17 @@
 {:paths ["src/main" "src/cli"]
  :deps
- {org.clojure/core.async {:mvn/version "0.4.474"}
-  org.clojure/spec.alpha {:mvn/version "0.2.168"}
-  org.clojure/tools.cli  {:mvn/version "0.3.7"}
-  circleci/clj-yaml {:mvn/version "0.5.6"}
-  potemkin {:mvn/version "0.4.5"}
-  expound {:mvn/version "0.7.1"}
-  com.cognitect/anomalies {:mvn/version "0.1.12"}
-
+ {org.clojure/core.async      {:mvn/version "0.4.474"}
+  org.clojure/spec.alpha      {:mvn/version "0.2.168"}
+  org.clojure/tools.cli       {:mvn/version "0.3.7"}
+  circleci/clj-yaml           {:mvn/version "0.5.6"}
+  potemkin                    {:mvn/version "0.4.5"}
+  expound                     {:mvn/version "0.7.1"}
+  com.cognitect/anomalies     {:mvn/version "0.1.12"}
   ;; test.chuck is in the main dependency list, rather than in the test profile,
   ;; because we’re using one of its generators in a spec in a source file.
   ;; This means we’ll also need org.clojure/test.check at runtime. Not ideal,
   ;; but worth it.
-  com.gfredericks/test.chuck {:mvn/version "0.2.9"}}
+  com.gfredericks/test.chuck  {:mvn/version "0.2.9"}}
 
  :aliases {:dev       {:extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
                                      inspectable                {:mvn/version "0.2.2"}}}
