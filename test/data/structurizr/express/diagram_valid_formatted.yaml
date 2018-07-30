@@ -1,0 +1,21 @@
+link__for_use_with: https://structurizr.com/express
+link__diagram_scheme_description: https://c4model.com/
+---
+type: System Landscape
+scope: Acme inc.
+description: Big-picture diagram showing how our top-level systems and stakeholders interact
+
+elements:
+- type: Person
+  name: A
+  position: '100,100'
+- type: Software System
+  name: B
+  position: '800,100'
+
+relationships:
+- source: A
+  description: interacts with
+  destination: B
+
+size: A6_Landscape

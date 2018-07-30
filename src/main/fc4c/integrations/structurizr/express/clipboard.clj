@@ -42,7 +42,7 @@
     (if (probably-diagram-yaml? contents)
       (-> contents
           process-file
-          ::ed/main-processed
+          ::ed/str-processed
           spit)
       (throw (RuntimeException. "Not a FC4 diagram.")))))
 
