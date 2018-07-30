@@ -55,6 +55,10 @@
 (defn ^:private current-local-time-str []
   (.format current-local-time-format (java.util.Date.)))
 
+(defn ^:private err-name
+  [e]
+  (-> e class .getSimpleName))
+
 (defn ^:private try-process [contents]
   (try
     (let [[main str-result] (process-file contents)
@@ -64,9 +68,15 @@
       (flush)
       str-result)
     (catch Exception err
-       ; toString _should_ suffice but some of the SnakeYAML exception classes seem to have a bug in
-       ; their toString implementations wherein they don’t print their names.
-      (println (-> err class .getSimpleName) "->" (.getMessage err))
+      ; This takes pains to print the name of the error, even though it’s almost
+      ; certainly included in the string version of the error, because some of
+      ; the SnakeYAML exception classes seem to have a bug in their toString
+      ; implementations wherein the results don’t include the (simple) name of
+      ; the class.
+      (println "\nUnfortunately, a" (err-name err) "error has occurred:\n\n" err
+               "\n\nIf you can spare a moment, please paste the above error"
+               "into a new issue at"
+               "https://github.com/FundingCircle/fc4c/issues/new — thanks!\n")
       (flush)
       nil)))
 
