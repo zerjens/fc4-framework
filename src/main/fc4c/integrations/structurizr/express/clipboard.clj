@@ -59,9 +59,10 @@
   [e]
   (-> e class .getSimpleName))
 
-(defn ^:private try-process [contents]
+(defn try-process [contents]
   (try
-    (let [[main str-result] (process-file contents)
+    (let [{main       ::ed/main-processed
+           str-result ::ed/str-processed} (process-file contents)
           _ (spit str-result)
           {:keys [:type :scope]} main]
       (println (current-local-time-str) "-> processed" type "for" scope "with great success!")

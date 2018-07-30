@@ -36,3 +36,12 @@
                 _   (c/spit in)
                 out (c/pcb)]
             (is (= in out))))))))
+
+(deftest try-process
+  (testing "happy path"
+    (testing "processing a file that’s valid and already formatted"
+      (let [fp  "test/data/structurizr/express/diagram_valid_formatted.yaml"
+            in  (slurp fp)
+            out (binding [*out* (java.io.StringWriter.)]
+                  (c/try-process in))]
+        (is (= in out))))))
