@@ -13,7 +13,8 @@
 
 ;; Based on code found at https://gist.github.com/Folcon/1167903
 ;; This was a simple var at one point but that broke CI builds, which run on
-;; headless machines; therefore this needs to be a function.
+;; headless machines; therefore this needs to be a function and it shouldn’t be
+;; called during CI test runs.
 (defn clipboard [] (.getSystemClipboard (Toolkit/getDefaultToolkit)))
 
 ;; based on code found at https://gist.github.com/Folcon/1167903
@@ -30,8 +31,10 @@
           (.getTransferData transferable string-flavor))))
     (catch java.lang.NullPointerException e nil)))
 
-(defn spit [text]
-  (.setContents (clipboard) (StringSelection. text) nil))
+(defn spit
+  [s]
+  {:pre [(string? s)]}
+  (.setContents (clipboard) (StringSelection. s) nil))
 
 (defn pcb
   "Process Clipboard — process the contents of the clipboard and write the results back to the
