@@ -212,19 +212,28 @@
 (defn snap-coords
   "Accepts a seq of X and Y numbers, and config values and returns a string in
   the form \"x,y\"."
+  ; TODO: it’s inconsistent that the min-margin is passed in as an arg but the
+  ; max margin is referenced from a var in the spec namespace. (My idea to fix
+  ; this is to define a new map named something like ::snap-config that would
+  ; contain the target, margins, and offsets — and this single value could then
+  ; be threaded through, rather than threading a bunch of scalar values through
+  ; (see below how often e.g. min-margin is threaded through various function
+  ; calls).
   ([coords to-closest min-margin]
    (snap-coords coords to-closest min-margin (repeat 0)))
   ([coords to-closest min-margin offsets]
    (->> coords
         (map (partial round-to-closest to-closest))
-        (map (partial max min-margin)) ; minimum left/top margins
         (map + offsets)
+        (map (partial max min-margin))       ; minimum left/top margins
+        (map (partial min fs/max-coord-int)) ; maximum right/bottom margins
         (join ","))))
 
 (s/fdef snap-coords
         :args (s/cat :coords     (s/coll-of ::fs/coord-int :count 2)
-                     :to-closest ::fs/coord-int
-                     :min-margin ::fs/coord-int)
+                     :to-closest ::snap-target
+                     :min-margin ::fs/coord-int
+                     :offsets    (s/? (s/coll-of (s/int-in -50 50) :count 2)))
         :ret ::fs/coord-string
         :fn (fn [{:keys [ret args]}]
               (let [parsed-ret (parse-coords ret)
