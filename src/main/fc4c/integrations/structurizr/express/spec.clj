@@ -9,6 +9,8 @@
 
 (def ^:private aliases-to-namespaces
   {'st 'structurizr
+   'sy 'structurizr.system
+   'sp 'structurizr.person
    'sc 'structurizr.container
    'se 'structurizr.element
    'sr 'structurizr.relationship
@@ -39,29 +41,51 @@
   (s/with-gen (s/and string? (partial re-matches int-pattern))
     #(string-from-regex int-pattern)))
 
-;;;; Elements
+;;;;; Elements (TODO: maybe should be a multispec?)
+
+;;;; Base element
+
+(s/def ::st/base-elem
+  (s/keys :req-un [::st/name]
+          :opt-un [::st/description ::st/tags]))
+
+;;;; Container
 
 (s/def ::sc/type #{"Container"})
 (s/def ::sc/technology string?)
 
 (s/def ::st/container
-  (s/keys :req-un [::st/name ::st/position ::sc/type]
-          :opt-un [::st/description ::st/tags ::sc/technology]))
+  (s/merge ::st/base-elem
+           (s/keys :req-un [::sc/type ::st/position]
+                   :opt-un [::sc/technology])))
 
-(s/def ::se/type #{"Person" "Software System"})
-(s/def ::se/containers (s/coll-of ::st/container :min-count 1))
+;;;; Person
 
-(s/def ::st/element
-  (s/keys :req-un [::st/name ::st/position ::se/type]
-          :opt-un [::st/description ::st/tags ::se/containers]))
+(s/def ::sp/type #{"Person"})
 
-(s/def ::st/system-elem
-  (s/and ::st/element
-         #(= (:type %) "Software System")))
+(s/def ::st/person
+  (s/merge ::st/base-elem
+           (s/keys :req-un [::sp/type ::st/position])))
 
-(s/def ::st/user-elem
-  (s/and ::st/element
-         #(= (:type %) "Person")))
+
+;;;; System
+
+(s/def ::sy/type #{"Software System"})
+(s/def ::sy/containers (s/coll-of ::st/container :min-count 1))
+
+(s/def ::st/system
+  (s/merge ::st/base-elem
+           (s/keys :req-un [::sy/type
+                            ; The subject of a container diagram must contain
+                            ; :containers; in all other cases system elements
+                            ; must contain :position.
+                            (or ::st/position ::sy/containers)])))
+
+;;;; Element (an abstraction)
+
+(s/def ::st/element (s/or :system    ::st/system
+                          :person    ::st/person
+                          :container ::st/container))
 
 ;;;; Relationships
 
