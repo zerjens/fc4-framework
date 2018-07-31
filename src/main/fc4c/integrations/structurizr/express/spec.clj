@@ -21,7 +21,7 @@
 (s/def ::st/name ::fs/non-blank-simple-str)
 (s/def ::st/description ::fs/non-blank-simple-str)
 
-(def ^:private comma-delimited-simple-strs-pattern #"[A-Za-z\-,0-9]+")
+(def ^:private comma-delimited-simple-strs-pattern #"[A-Za-z\-_,0-9]+")
 
 (s/def :st/comma-delimited-simple-strings
   (s/with-gen
