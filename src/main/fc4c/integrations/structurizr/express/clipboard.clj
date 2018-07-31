@@ -13,7 +13,8 @@
 
 ;; Based on code found at https://gist.github.com/Folcon/1167903
 ;; This was a simple var at one point but that broke CI builds, which run on
-;; headless machines; therefore this needs to be a function.
+;; headless machines; therefore this needs to be a function and it shouldn’t be
+;; called during CI test runs.
 (defn clipboard [] (.getSystemClipboard (Toolkit/getDefaultToolkit)))
 
 ;; based on code found at https://gist.github.com/Folcon/1167903
@@ -30,8 +31,10 @@
           (.getTransferData transferable string-flavor))))
     (catch java.lang.NullPointerException e nil)))
 
-(defn spit [text]
-  (.setContents (clipboard) (StringSelection. text) nil))
+(defn spit
+  [s]
+  {:pre [(string? s)]}
+  (.setContents (clipboard) (StringSelection. s) nil))
 
 (defn pcb
   "Process Clipboard — process the contents of the clipboard and write the results back to the
@@ -42,7 +45,7 @@
     (if (probably-diagram-yaml? contents)
       (-> contents
           process-file
-          ::ed/main-processed
+          ::ed/str-processed
           spit)
       (throw (RuntimeException. "Not a FC4 diagram.")))))
 
@@ -52,18 +55,29 @@
 (defn ^:private current-local-time-str []
   (.format current-local-time-format (java.util.Date.)))
 
-(defn ^:private try-process [contents]
+(defn ^:private err-name
+  [e]
+  (-> e class .getSimpleName))
+
+(defn try-process [contents]
   (try
-    (let [[main str-result] (process-file contents)
+    (let [{main       ::ed/main-processed
+           str-result ::ed/str-processed} (process-file contents)
           _ (spit str-result)
           {:keys [:type :scope]} main]
       (println (current-local-time-str) "-> processed" type "for" scope "with great success!")
       (flush)
       str-result)
     (catch Exception err
-       ; toString _should_ suffice but some of the SnakeYAML exception classes seem to have a bug in
-       ; their toString implementations wherein they don’t print their names.
-      (println (-> err class .getSimpleName) "->" (.getMessage err))
+      ; This takes pains to print the name of the error, even though it’s almost
+      ; certainly included in the string version of the error, because some of
+      ; the SnakeYAML exception classes seem to have a bug in their toString
+      ; implementations wherein the results don’t include the (simple) name of
+      ; the class.
+      (println "\nUnfortunately, a" (err-name err) "error has occurred:\n\n" err
+               "\n\nIf you can spare a moment, please paste the above error"
+               "into a new issue at"
+               "https://github.com/FundingCircle/fc4c/issues/new — thanks!\n")
       (flush)
       nil)))
 
