@@ -8,10 +8,11 @@
 
 (deftest blank-nil-or-empty? (check `e/blank-nil-or-empty?))
 (deftest parse-coords (check `e/parse-coords))
+(deftest process (check `e/process 300))
+(deftest reorder (check `e/reorder))
 (deftest round-to-closest (check `e/round-to-closest))
 (deftest snap-coords (check `e/snap-coords))
 (deftest shrink (check `e/shrink 300))
-(deftest process (check `e/process 300))
 
 (deftest process-file
   (check `e/process-file 200)
