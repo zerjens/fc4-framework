@@ -1,5 +1,6 @@
-link__for_use_with: https://structurizr.com/express
-link__diagram_scheme_description: https://c4model.com/
+links:
+  The FC4 Framework: https://fundingcircle.github.io/fc4-framework/
+  Structurizr Express: https://structurizr.com/express
 ---
 type: System Landscape
 scope: Acme inc.
@@ -8,6 +9,7 @@ description: Big-picture diagram showing how our top-level systems and stakehold
 elements:
 - type: Person
   name: A
+  tags: foo, bar,foo_bar,foo-bar
   position: '125,50'
 - type: Software System
   name: B
