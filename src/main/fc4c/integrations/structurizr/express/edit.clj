@@ -245,21 +245,20 @@
   component) as a map and snaps its position (coords) to a grid using the
   specified values."
   [elem to-closest min-margin]
-  (let [coords (parse-coords (::st/position elem))
-        offsets (get elem-offsets (:structurizr.element/type elem) (repeat 0))
+  (let [coords (parse-coords (:position elem))
+        offsets (get elem-offsets (:type elem) (repeat 0))
         new-coords (snap-coords coords to-closest min-margin offsets)]
-    (assoc elem :structurizr.element/position new-coords)))
+    (assoc elem :position new-coords)))
 
 (s/fdef snap-elem-to-grid
         :args (s/cat :elem ::st/element
                      :to-closest ::snap-target
                      :min-margin nat-int?)
         :ret ::st/element
-        :fn (fn [{{:keys [elem to-closest min-margin]} :args, ret :ret}]
-              (= (::st/position ret)
-                 (-> (::st/position elem)
-                     parse-coords
-                     (snap-coords to-closest min-margin)))))
+        :fn (fn [{{elem-in :elem
+                   :keys [to-closest min-margin]} :args
+                  elem-out :ret}]
+              (= (keys elem-out) (keys elem-in))))
 
 (defn snap-vertices-to-grid
   "Accepts an ordered-map representing a relationship, and snaps its vertices, if any, to a grid
