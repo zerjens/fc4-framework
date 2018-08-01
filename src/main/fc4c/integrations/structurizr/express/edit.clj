@@ -129,11 +129,11 @@
                   (and
                     ; Yeah, OrderedMaps are equal to maps with the same entries
                     ; regardless of order — surprised me too!
-                    (= m ret)
-                    (= (or (keys ret) []) ; keys on empty map returns nil
-                       (concat (filter (partial contains? m) ks)
-                               (sort (remove (partial contains? kss)
-                                             (keys m)))))))))
+                   (= m ret)
+                   (= (or (keys ret) []) ; keys on empty map returns nil
+                      (concat (filter (partial contains? m) ks)
+                              (sort (remove (partial contains? kss)
+                                            (keys m)))))))))
 
 (def desired-order
   {:root          {:sort-keys nil

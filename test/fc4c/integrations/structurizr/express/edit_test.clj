@@ -23,7 +23,7 @@
             in  (slurp (str dir "diagram_valid_messy.yaml"))
             {out ::e/str-processed} (e/process-file in)
             expected (slurp (str dir "diagram_valid_cleaned.yaml"))]
-         (is (= expected out)))))
+        (is (= expected out)))))
 
   (testing "when the front matter has an extra newline at the end"
     (let [d (-> (s/gen :structurizr/diagram) gen/generate y/stringify)

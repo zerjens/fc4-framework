@@ -67,7 +67,6 @@
   (s/merge ::st/base-elem
            (s/keys :req-un [::sp/type ::st/position])))
 
-
 ;;;; System
 
 (s/def ::sy/type #{"Software System"})
