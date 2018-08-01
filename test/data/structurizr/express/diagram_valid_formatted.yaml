@@ -8,7 +8,7 @@ description: Big-picture diagram showing how our top-level systems and stakehold
 elements:
 - type: Person
   name: A
-  position: '100,100'
+  position: '125,50'
 - type: Software System
   name: B
   position: '800,100'
@@ -17,5 +17,10 @@ relationships:
 - source: A
   description: interacts with
   destination: B
+
+styles:
+- type: element
+  tag: Person
+  shape: Person
 
 size: A6_Landscape
