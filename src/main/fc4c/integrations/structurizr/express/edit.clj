@@ -76,7 +76,7 @@
              (fn [{{in :in} :args, ret :ret}]
                (let [all-vals #(if (map? %) (vals %) %) ; works on maps or sequences
                      leaf-vals #(->> (tree-seq coll? all-vals %)
-                                     (filter (complement coll?))
+                                     (remove coll?)
                                      flatten)
                      in-vals (->> (leaf-vals in) (filter (complement blank-nil-or-empty?)) set)
                      ret-vals (->> (leaf-vals ret) set)]

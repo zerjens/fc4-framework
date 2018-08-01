@@ -25,7 +25,7 @@
 
 (s/def ::unqualified-keyword
   (s/with-gen
-    (s/and keyword? (complement qualified-keyword?))
+    simple-keyword?
     #(gen/fmap keyword (s/gen ::non-blank-simple-str))))
 
 (def max-coord-int 9999) ;; inclusive
