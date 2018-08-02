@@ -55,19 +55,21 @@
                     (= ret false))))))
 
 (defn shrink
-  "Remove key-value pairs wherein the value is blank, nil, or empty from a
-  (possibly nested) map. Also transforms maps to nil if all of their values are
-  nil, blank, or empty.
-  
+  "Recursively remove map entries with a blank, nil, or empty value.
+
+  Also replaces maps with nil if all of their values are nil, blank, or empty;
+  the traversal is depth-first, so if that nil is the value of a map entry then
+  that map entry will then be removed.
+
   Adapted from https://stackoverflow.com/a/29363255/7012"
-  [in]
+  [diagram]
   (postwalk (fn [el]
               (if (map? el)
                 (let [m (into (empty el) ; using empty to preserve ordered maps 
                               (remove (comp blank-nil-or-empty? second) el))]
                   (when (seq m) m))
                 el))
-            in))
+            diagram))
 
 (s/fdef shrink
         :args (s/cat :in ::st/diagram)
@@ -81,9 +83,7 @@
                                      flatten)
                      in-vals (->> (leaf-vals in) (filter (complement blank-nil-or-empty?)) set)
                      ret-vals (->> (leaf-vals ret) set)]
-                 (if (seq in)
-                   (= in-vals ret-vals)
-                   (nil? ret))))))
+                 (= in-vals ret-vals)))))
 
 (defn reorder
   "Reorder a map as per a seq of keys.
