@@ -80,7 +80,17 @@ If you’re old-school and prefer to run tests on bare metal:
 ## Starting a REPL for Dev/Test
 
 You _could_ just run `clj` but you’re likely to want the test deps and dev utils to be accessible.
-So you’ll probably want to run `clj -A:test:dev`
+So you’ll probably want to run `clj -A:dev:test`
+
+### Running the tests in a REPL
+
+```
+$ clj -A:dev:test
+Clojure 1.9.0
+user=> (require '[eftest.runner :refer [find-tests run-tests]])
+user=> (run-tests (find-tests "test") {:fail-fast? true})
+...
+```
 
 ## Running the Linter
 
