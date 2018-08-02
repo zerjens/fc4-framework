@@ -10,7 +10,7 @@
 (deftest parse-coords (check `e/parse-coords))
 (deftest process (check `e/process 300))
 (deftest reorder (check `e/reorder))
-(deftest round-to-closest (check `e/round-to-closest))
+(deftest round-to-closest (check `e/round-to-closest 2000))
 (deftest snap-coords (check `e/snap-coords))
 (deftest shrink (check `e/shrink 300))
 
