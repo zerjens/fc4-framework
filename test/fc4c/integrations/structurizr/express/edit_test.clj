@@ -12,6 +12,7 @@
 (deftest reorder (check `e/reorder))
 (deftest round-to-closest (check `e/round-to-closest 2000))
 (deftest snap-coords (check `e/snap-coords))
+(deftest snap-elem-to-grid (check `e/snap-elem-to-grid))
 (deftest shrink (check `e/shrink 300))
 
 (deftest process-file
