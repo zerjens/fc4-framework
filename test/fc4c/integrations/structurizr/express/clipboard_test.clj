@@ -30,8 +30,8 @@
     (with-redefs [c/slurp #(deref faux-clipboard)
                   c/spit  (partial faux-spit faux-clipboard)]
       (testing "happy path"
-        (testing "processing a file that’s valid and already formatted"
-          (let [fp  "test/data/structurizr/express/diagram_valid_formatted.yaml"
+        (testing "processing a file that’s valid and has been cleaned"
+          (let [fp  "test/data/structurizr/express/diagram_valid_cleaned.yaml"
                 in  (slurp fp)
                 _   (c/spit in)
                 out (c/pcb)]
@@ -39,8 +39,8 @@
 
 (deftest try-process
   (testing "happy path"
-    (testing "processing a file that’s valid and already formatted"
-      (let [fp  "test/data/structurizr/express/diagram_valid_formatted.yaml"
+    (testing "processing a file that’s valid and has been cleaned"
+      (let [fp  "test/data/structurizr/express/diagram_valid_cleaned.yaml"
             in  (slurp fp)
             out (binding [*out* (java.io.StringWriter.)]
                   (c/try-process in))]

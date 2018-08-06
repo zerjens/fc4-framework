@@ -33,8 +33,8 @@
 (deftest tags (check `e/tags))
 (deftest user->relationships (check `e/user->relationships))
 
-(deftest user-elem
-  (check `e/user-elem
+(deftest person-elem
+  (check `e/person-elem
          300
          {::v/positions #(s/gen (s/merge ::v/positions
                                          (s/keys :req [::v/users])))

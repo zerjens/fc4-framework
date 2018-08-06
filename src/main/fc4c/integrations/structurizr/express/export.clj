@@ -138,7 +138,7 @@
         :args (s/cat :sys-name ::m/name
                      :view     ::v/view
                      :model    ::m/model)
-        :ret  (s/nilable ::st/system-elem)
+        :ret  (s/nilable ::st/system)
         :fn   (fn [{{:keys [:sys-name :view :model]} :args, ret :ret}]
                 (cond
                   (get-in model [::m/systems sys-name]) ; the named system is in the model
@@ -148,7 +148,7 @@
                   (and (includes? (:name ret) sys-name)
                        (includes? (:name ret) "undefined")))))
 
-(defn- user-elem
+(defn- person-elem
   ;; TODO: this should probably be combined with sys-elem.
   "Constructs a Structurizr Express \"Person\" element for the named
   user for the given view and model. If the named user is not present in the
@@ -164,11 +164,11 @@
                 :position (get-in view [::v/positions ::v/users user-name] "0,0")
                 :tags (tags user)}))))
 
-(s/fdef user-elem
+(s/fdef person-elem
         :args (s/cat :user-name ::m/name
                      :view      ::v/view
                      :model     ::m/model)
-        :ret  (s/nilable ::st/user-elem)
+        :ret  (s/nilable ::st/person)
         :fn   (fn [{{:keys [user-name view model]} :args, ret :ret}]
                 (cond
                   (get-in model [::m/users user-name]) ; the named user is in the model
@@ -265,8 +265,8 @@
         sys-names (conj other-systems-names subject-name)
         sys-elems (map #(sys-elem % view model) sys-names)
         user-names (-> view ::v/positions ::v/users keys)
-        user-elems (map #(user-elem % view model) user-names)]
-    (concat user-elems sys-elems)))
+        person-elems (map #(person-elem % view model) user-names)]
+    (concat person-elems sys-elems)))
 
 (s/fdef elements
         :args (s/cat :view  ::v/view

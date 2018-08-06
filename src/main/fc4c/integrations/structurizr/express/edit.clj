@@ -14,7 +14,8 @@
             [clojure.string :as str :refer [blank? ends-with? includes? join
                                             split trim]]
             [clojure.walk :as walk :refer [postwalk]]
-            [clojure.set :refer [difference intersection]]))
+            [clojure.set :refer [difference intersection]])
+  (:import [flatland.ordered.map OrderedMap]))
 
 (fu/ns-with-alias 'structurizr 'st)
 
@@ -92,20 +93,47 @@
   order as the specified keys. If any keys present in the input map are omitted
   from the seq of keys, the corresponding k/v pairs will be sorted “naturally”
   after the specified k/v pairs."
-  [ks m]
+  [m ks]
+  ; You might think it’d be reasonable to also have a precondition like
+  ; `(>= (count m) 2)` because why bother reordering the keys of an empty map,
+  ; or one with 1 key? But no, I don’t think that’d be a good idea, because I
+  ; suspect there’s a good chance that all sorts of instances of various maps
+  ; might be passed to this function — maps that we can’t know about ahead of
+  ; time. In other words, I suspect the data will vary at runtime; some maps
+  ; might have a dozen keys, and some might have only 1. As long as the maps are
+  ; valid according to their own criteria, I think this function should pass
+  ; them through unchanged.
+  {:pre [(seq ks)]}
   (let [specified-keys (set ks) ; reminder: this set is unordered.
         present-keys (set (keys m)) ; reminder: this set is unordered.
         unspecified-but-present-keys (difference present-keys specified-keys)
         ; The below starts with ks because the above sets don’t retain order. I
         ; tried using flatland.ordered.set but the difference and intersection
-        ; functions from clojure.set did not work as expected with those. This
-        ; means this function won’t filter out keys that are specified but not
-        ; present, and therefore those keys will be present in the output map with
-        ; nil values. This is acceptable to me; I can work with it.
+        ; functions from clojure.set did not work as expected with those.
         all-keys-in-order (concat ks (sort unspecified-but-present-keys))]
-    (into (ordered-map)
-          (map (juxt identity (partial get m))
-               all-keys-in-order))))
+    (->> all-keys-in-order
+         (map (juxt identity (partial get m)))
+         ; we want the output to contain the same keys as the input
+         (filter (fn [[k _]] (present-keys k)))
+         (into (ordered-map)))))
+
+(s/fdef reorder
+        :args (s/cat :m  (s/map-of simple-keyword? any?)
+                     :ks (s/coll-of simple-keyword?
+                                    :min-count 2
+                                    :distinct true))
+        :ret  (s/and (s/map-of simple-keyword? any?)
+                     (partial instance? OrderedMap))
+        :fn   (fn [{{:keys [m ks]} :args, ret :ret}]
+                (let [kss (set ks)]
+                  (and
+                    ; Yeah, OrderedMaps are equal to maps with the same entries
+                    ; regardless of order — surprised me too!
+                   (= m ret)
+                   (= (or (keys ret) []) ; keys on empty map returns nil
+                      (concat (filter (partial contains? m) ks)
+                              (sort (remove (partial contains? kss)
+                                            (keys m)))))))))
 
 (def desired-order
   {:root          {:sort-keys nil
@@ -130,10 +158,10 @@
   (reduce
    (fn [d [key {:keys [sort-keys key-order]}]]
      (if (= key :root)
-       (reorder key-order d)
+       (reorder d key-order)
        (update-in d [key]
-                  #(->> (sort-by (comp join (apply juxt sort-keys)) %)
-                        (map (partial reorder key-order))))))
+                  (fn [v] (->> (sort-by (comp join (apply juxt sort-keys)) v)
+                               (map #(reorder % key-order)))))))
    diagram
    desired-order))
 
@@ -184,19 +212,28 @@
 (defn snap-coords
   "Accepts a seq of X and Y numbers, and config values and returns a string in
   the form \"x,y\"."
+  ; TODO: it’s inconsistent that the min-margin is passed in as an arg but the
+  ; max margin is referenced from a var in the spec namespace. (My idea to fix
+  ; this is to define a new map named something like ::snap-config that would
+  ; contain the target, margins, and offsets — and this single value could then
+  ; be threaded through, rather than threading a bunch of scalar values through
+  ; (see below how often e.g. min-margin is threaded through various function
+  ; calls).
   ([coords to-closest min-margin]
    (snap-coords coords to-closest min-margin (repeat 0)))
   ([coords to-closest min-margin offsets]
    (->> coords
         (map (partial round-to-closest to-closest))
-        (map (partial max min-margin)) ; minimum left/top margins
         (map + offsets)
+        (map (partial max min-margin))       ; minimum left/top margins
+        (map (partial min fs/max-coord-int)) ; maximum right/bottom margins
         (join ","))))
 
 (s/fdef snap-coords
         :args (s/cat :coords     (s/coll-of ::fs/coord-int :count 2)
-                     :to-closest ::fs/coord-int
-                     :min-margin ::fs/coord-int)
+                     :to-closest ::snap-target
+                     :min-margin ::fs/coord-int
+                     :offsets    (s/? (s/coll-of (s/int-in -50 50) :count 2)))
         :ret ::fs/coord-string
         :fn (fn [{:keys [ret args]}]
               (let [parsed-ret (parse-coords ret)
@@ -208,21 +245,20 @@
   component) as a map and snaps its position (coords) to a grid using the
   specified values."
   [elem to-closest min-margin]
-  (let [coords (parse-coords (::st/position elem))
-        offsets (get elem-offsets (:structurizr.element/type elem) (repeat 0))
+  (let [coords (parse-coords (:position elem))
+        offsets (get elem-offsets (:type elem) (repeat 0))
         new-coords (snap-coords coords to-closest min-margin offsets)]
-    (assoc elem :structurizr.element/position new-coords)))
+    (assoc elem :position new-coords)))
 
 (s/fdef snap-elem-to-grid
         :args (s/cat :elem ::st/element
                      :to-closest ::snap-target
                      :min-margin nat-int?)
         :ret ::st/element
-        :fn (fn [{{:keys [elem to-closest min-margin]} :args, ret :ret}]
-              (= (::st/position ret)
-                 (-> (::st/position elem)
-                     parse-coords
-                     (snap-coords to-closest min-margin)))))
+        :fn (fn [{{elem-in :elem
+                   :keys [to-closest min-margin]} :args
+                  elem-out :ret}]
+              (= (keys elem-out) (keys elem-in))))
 
 (defn snap-vertices-to-grid
   "Accepts an ordered-map representing a relationship, and snaps its vertices, if any, to a grid
