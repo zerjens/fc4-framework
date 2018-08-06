@@ -3,14 +3,23 @@
             [clojure.spec.alpha  :as s]
             [fc4c.spec           :as fs]))
 
-;; TODO: consider making this a macro, so the ns-symbols won’t have to be quoted
-;; when calling them. Also consider making each thing a tuple of [ns :as alias]
-;; for consistency with require (and :require in ns).
-(defn ns-with-alias
-  [& sym-pairs]
-  (doseq [[ns-sym alias-sym] (partition 2 sym-pairs)]
+;; TODO: consider making this a macro so the ns-symbols won’t have to be quoted
+;; when calling them.
+(defn namespaces
+  "Pass one or more tuples of namespaces to create along with aliases:
+  (namespaces '[foo :as f] '[bar :as b])"
+  [& args]
+  (doseq [[ns-sym _ alias-sym] args]
     (create-ns ns-sym)
     (alias alias-sym ns-sym)))
+
+; This spec is here for documentation and instrumentation; don’t do any
+; generative testing with this spec because this function has side effects (and
+; is mutating the state of the current namespace, and can thus fail in all sorts
+; of odd ways).
+(s/fdef namespaces
+        :args (s/cat :args (s/+ (s/tuple simple-symbol? #{:as} simple-symbol?)))
+        :ret  nil?)
 
 (defn lookup-table-by
   "Given a function and a seqable, returns a map of (f x) to x.

@@ -10,11 +10,11 @@
             [fc4c.model           :as m]
             [fc4c.spec            :as fs]
             [fc4c.styles          :as ss]
-            [fc4c.util            :as fu :refer [update-all]]
+            [fc4c.util            :as fu :refer [namespaces update-all]]
             [fc4c.view            :as v]
             [fc4c.yaml            :as fy :refer [split-file]]))
 
-(fu/ns-with-alias 'structurizr 'st)
+(namespaces '[structurizr :as st])
 
 (defn- sys-position
   "Returns the position of the named system in the view. If the named system is not
