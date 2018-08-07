@@ -55,19 +55,21 @@
                     (= ret false))))))
 
 (defn shrink
-  "Remove key-value pairs wherein the value is blank, nil, or empty from a
-  (possibly nested) map. Also transforms maps to nil if all of their values are
-  nil, blank, or empty.
-  
+  "Recursively remove map entries with a blank, nil, or empty value.
+
+  Also replaces maps with nil if all of their values are nil, blank, or empty;
+  the traversal is depth-first, so if that nil is the value of a map entry then
+  that map entry will then be removed.
+
   Adapted from https://stackoverflow.com/a/29363255/7012"
-  [in]
+  [diagram]
   (postwalk (fn [el]
               (if (map? el)
                 (let [m (into (empty el) ; using empty to preserve ordered maps 
                               (remove (comp blank-nil-or-empty? second) el))]
                   (when (seq m) m))
                 el))
-            in))
+            diagram))
 
 (s/fdef shrink
         :args (s/cat :in ::st/diagram)
@@ -81,9 +83,7 @@
                                      flatten)
                      in-vals (->> (leaf-vals in) (filter (complement blank-nil-or-empty?)) set)
                      ret-vals (->> (leaf-vals ret) set)]
-                 (if (seq in)
-                   (= in-vals ret-vals)
-                   (nil? ret))))))
+                 (= in-vals ret-vals)))))
 
 (defn reorder
   "Reorder a map as per a seq of keys.
@@ -207,7 +207,12 @@
                   (= ret fs/max-coord-int))))
 
 (def elem-offsets
-  {"Person" [25, -50]})
+  {"Person" [25 -50]
+   :default [0 0]})
+
+(defn get-offsets
+  [elem-type]
+  (get elem-offsets elem-type (:default elem-offsets)))
 
 (defn snap-coords
   "Accepts a seq of X and Y numbers, and config values and returns a string in
@@ -245,20 +250,33 @@
   component) as a map and snaps its position (coords) to a grid using the
   specified values."
   [elem to-closest min-margin]
-  (let [coords (parse-coords (:position elem))
-        offsets (get elem-offsets (:type elem) (repeat 0))
-        new-coords (snap-coords coords to-closest min-margin offsets)]
-    (assoc elem :position new-coords)))
+  (update elem :position
+          #(let [coords (parse-coords %)
+                 offsets (get-offsets (:type elem))]
+             (snap-coords coords to-closest min-margin offsets))))
+
+(defn- snap-elem-to-grid-fdef-pred
+  "This is in a var because it’s just too big+long to inline."
+  [{{elem-in-conformed :elem
+     min-margin        :min-margin} :args
+    elem-out-conformed              :ret}]
+  (let [elem-in (s/unform ::st/element-with-position elem-in-conformed)
+        elem-out (s/unform ::st/element-with-position elem-out-conformed)
+        out-coords (parse-coords (:position elem-out))]
+    (and (= (keys elem-out) (keys elem-in))
+         (every? #(or (= % min-margin)
+                      (= % fs/max-coord-int)
+                      (= % (+ fs/max-coord-int (-> (get-offsets (:type elem-in))
+                                                   (second))))
+                      (zero? (rem % 5)))
+                 out-coords))))
 
 (s/fdef snap-elem-to-grid
-        :args (s/cat :elem ::st/element
+        :args (s/cat :elem       ::st/element-with-position
                      :to-closest ::snap-target
-                     :min-margin nat-int?)
-        :ret ::st/element
-        :fn (fn [{{elem-in :elem
-                   :keys [to-closest min-margin]} :args
-                  elem-out :ret}]
-              (= (keys elem-out) (keys elem-in))))
+                     :min-margin (s/int-in 0 500))
+        :ret  ::st/element-with-position
+        :fn   snap-elem-to-grid-fdef-pred)
 
 (defn snap-vertices-to-grid
   "Accepts an ordered-map representing a relationship, and snaps its vertices, if any, to a grid

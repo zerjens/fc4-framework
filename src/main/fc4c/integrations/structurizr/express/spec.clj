@@ -86,6 +86,14 @@
                           :person    ::st/person
                           :container ::st/container))
 
+(s/def ::st/element-with-position
+  ; Normally I wouldn’t register a one-off spec with such a simple definition;
+  ; I’d just inline it. But in this case I want it here, just below st/element,
+  ; because it’s tightly-coupled to the way that st/element is conformed. (The
+  ; way s/and works is by passing conformed values to all but its first
+  ; predicate; those predicates are then used as filters.)
+  (s/and ::st/element #(contains? (second %) :position)))
+
 ;;;; Relationships
 
 ; These specs use the generator of :fc4c.model/name so that the values generated
