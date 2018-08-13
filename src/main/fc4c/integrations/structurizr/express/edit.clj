@@ -4,7 +4,7 @@
   (:require [fc4c.integrations.structurizr.express.spec :as ss]
             [fc4c.integrations.structurizr.express.yaml :as sy :refer [stringify]]
             [fc4c.spec :as fs]
-            [fc4c.util :as fu]
+            [fc4c.util :as fu :refer [namespaces]]
             [fc4c.yaml :as fy :refer [split-file]]
             [clj-yaml.core :as yaml]
             [clojure.spec.alpha :as s]
@@ -17,7 +17,7 @@
             [clojure.set :refer [difference intersection]])
   (:import [flatland.ordered.map OrderedMap]))
 
-(fu/ns-with-alias 'structurizr 'st)
+(namespaces '[structurizr :as st])
 
 (def default-front-matter
   (str "links:\n"

@@ -5,20 +5,16 @@
             [com.gfredericks.test.chuck.generators :refer [string-from-regex]]
             [fc4c.model :as m]
             [fc4c.spec :as fs]
-            [fc4c.util :as fu]))
+            [fc4c.util :as fu :refer [namespaces]]))
 
-(def ^:private aliases-to-namespaces
-  {'st 'structurizr
-   'sy 'structurizr.system
-   'sp 'structurizr.person
-   'sc 'structurizr.container
-   'se 'structurizr.element
-   'sr 'structurizr.relationship
-   'ss 'structurizr.style
-   'sd 'structurizr.diagram})
-
-(doseq [[alias-sym ns-sym] aliases-to-namespaces]
-  (fu/ns-with-alias ns-sym alias-sym))
+(namespaces '[structurizr              :as st]
+            '[structurizr.container    :as sc]
+            '[structurizr.diagram      :as sd]
+            '[structurizr.element      :as se]
+            '[structurizr.person       :as sp]
+            '[structurizr.relationship :as sr]
+            '[structurizr.style        :as ss]
+            '[structurizr.system       :as sy])
 
 (s/def ::st/name ::fs/non-blank-simple-str)
 (s/def ::st/description ::fs/non-blank-simple-str)
