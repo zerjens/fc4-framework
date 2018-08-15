@@ -3,8 +3,17 @@ jobs:
    build:
      docker:
        - image: clojure:tools-deps-alpine
+
+     # It’s a little tricky to get working_directory and checkout to work
+     # together when I want the working directory for all steps *except*
+     # checkout to be a subdirectory of the project — because by default,
+     # checkout checks out into the specified working_directory. I found this
+     # solution here: https://stackoverflow.com/a/50570581/7012
+     working_directory: ~/project/tool
+
      steps:
-       - checkout
+       - checkout:
+           path: ~/project
 
        - restore_cache:
            keys:
