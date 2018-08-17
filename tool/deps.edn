@@ -20,14 +20,14 @@
                        :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
                                      eftest                     {:mvn/version "0.5.2"}}}
 
-           :test/run  {:main-opts   ["-m" "fc4c.test-runner.runner"]}
+           :test/run  {:main-opts   ["-m" "fc4.test-runner.runner"]}
 
            :test/coverage
                       {:extra-deps  {cloverage                  {:mvn/version "1.0.11"}}
                        :main-opts   ["-m" "cloverage.coverage"
                                      "--src-ns-path" "src/main"
                                      "--test-ns-path" "test"
-                                     "--runner" ":fc4c.test-runner"
+                                     "--runner" ":fc4.test-runner"
                                      "--fail-threshold" "65"
                                      "--codecov"]}
 

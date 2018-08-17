@@ -1,2 +1,2 @@
 #!/bin/sh
-clojure --main fc4c.cli.export "$@"
+clojure --main fc4.cli.export "$@"
