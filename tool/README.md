@@ -29,13 +29,13 @@ As explained in
       try running the appropriate
       [installer](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
 2. Clone this repo
-3. `cd` into the repo
+3. `cd` into the repo and then `cd tool`
 4. To install the dependencies, run: `clojure -R:dev -e '(println "deps installed!")'`
 
 ## Basic Usage
 
 1. Have `clj` installed ([guide](https://clojure.org/guides/getting_started))
-1. Run in your shell: `./wcb`
+1. Run in your shell, from the root of the repo: `cd tool && ./wcb`
 
 ## Full Usage Workflow
 
@@ -43,7 +43,7 @@ As explained in [The Authoring Workflow](https://fundingcircle.github.io/fc4-fra
 [the FC4 Methodology](https://fundingcircle.github.io/fc4-framework/methodology/):
 
 > 1. In your text editor: either create a new diagram source file or open an existing diagram source file
-> 1. In a terminal, in your fc4-tool working dir, run `./wcb`
+> 1. In a terminal, in your `fc4` working dir, run `cd tool && ./wcb`
 >    1. This starts a background process that will watch your clipboard for diagram source YAML and process (clean up) that YAML when it sees that it’s been changed.
 > 1. In your text editor, add/revise elements and relationships, then select-all and cut the diagram source from your editor into your system clipboard.
 >    1. This will cause fc4-tool to process the contents of your clipboard.
