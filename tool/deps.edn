@@ -1,0 +1,41 @@
+{:paths ["src/main" "src/cli"]
+ :deps
+ {org.clojure/core.async      {:mvn/version "0.4.474"}
+  org.clojure/spec.alpha      {:mvn/version "0.2.168"}
+  org.clojure/tools.cli       {:mvn/version "0.3.7"}
+  circleci/clj-yaml           {:mvn/version "0.5.6"}
+  potemkin                    {:mvn/version "0.4.5"}
+  expound                     {:mvn/version "0.7.1"}
+  com.cognitect/anomalies     {:mvn/version "0.1.12"}
+  ;; test.chuck is in the main dependency list, rather than in the test profile,
+  ;; because we’re using one of its generators in a spec in a source file.
+  ;; This means we’ll also need org.clojure/test.check at runtime. Not ideal,
+  ;; but worth it.
+  com.gfredericks/test.chuck  {:mvn/version "0.2.9"}}
+
+ :aliases {:dev       {:extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
+                                     inspectable                {:mvn/version "0.2.2"}}}
+
+           :test      {:extra-paths ["test" "src/test_utils"]
+                       :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
+                                     eftest                     {:mvn/version "0.5.2"}}}
+
+           :test/run  {:main-opts   ["-m" "fc4.test-runner.runner"]}
+
+           :test/coverage
+                      {:extra-deps  {cloverage                  {:mvn/version "1.0.11"}}
+                       :main-opts   ["-m" "cloverage.coverage"
+                                     "--src-ns-path" "src/main"
+                                     "--test-ns-path" "test"
+                                     "--runner" ":fc4.test-runner"
+                                     "--fail-threshold" "65"
+                                     "--codecov"]}
+
+           :lint      {:extra-deps  {github-JamesLaverack/cljfmt-runner
+                                     {:git/url "https://github.com/JamesLaverack/cljfmt-runner"
+                                      :sha     "51f85c9d6cc67107620749ceacd46120647fe107"}}
+                       :main-opts   ["-m" "cljfmt-runner.check"]}
+
+           :lint/fix  {:main-opts   ["-m" "cljfmt-runner.fix"]}
+
+           :clj-next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha6"}}}}}
