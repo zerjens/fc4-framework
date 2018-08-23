@@ -7,7 +7,7 @@ It builds on [the C4 Model](https://c4model.com/) and [Structurizr Express](http
 It has two components:
 
 * [the methodology](methodology/README.md)
-* the tool: [FC4C](https://github.com/FundingCircle/fc4c)
+* [fc4-tool](tool/README.md)
 
 It originated at and is maintained by [Funding Circle](https://engineering.fundingcircle.com/).
 
@@ -15,9 +15,9 @@ To get started, we recommend reading [the methodology](methodology/README.md). I
 
 ## The Name
 
-FC4 is not ([yet](https://en.wikipedia.org/wiki/Backronym)) an acronym or initialism; it doesn’t stand for anything — it’s “just” a name. (This is also true of the name of [FC4C](https://github.com/FundingCircle/fc4c).)
+FC4 is not ([yet](https://en.wikipedia.org/wiki/Backronym)) an acronym or initialism; it doesn’t stand for anything — it’s “just” a name.
 
-The name is a combination of “FC” and “C4” — the former is a reference to Funding Circle, the originating context of the framework; the latter to Simon Brown’s C4 model,  the foundation of the framework.
+The name is a combination of “FC” and “C4” — the former is a reference to Funding Circle, the originating context of the framework; the latter to Simon Brown’s C4 model, the foundation of the framework.
 
 ## Contributing
 
