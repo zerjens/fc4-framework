@@ -30,7 +30,7 @@ As explained in
       [installer](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
 2. Clone [this repo](https://github.com/FundingCircle/fc4-framework)
 3. `cd` into the repo and then `cd tool`
-4. To install the dependencies, run: `clojure -R:dev -e '(println "deps installed!")'`
+4. To install the dependencies, run: `clojure -Sdescribe'`
 
 ## Basic Usage
 

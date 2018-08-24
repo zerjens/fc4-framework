@@ -4,11 +4,11 @@ LABEL maintainer="Avi Flax <avi.flax@fundingcircle.com>"
 
 WORKDIR /code
 
-# Copy deps.edn then invoke `clojure` with a simple form just to download the deps, separately
-# from and prior to copying the app code so that we don’t have to re-download deps every time the
-# app code changes.
+# Copy deps.edn then invoke `clojure` just to download the deps, separately from
+# and prior to copying the app code so that we don’t have to re-download deps
+# every time the app code changes.
 COPY deps.edn ./
-RUN clojure -Rrun-tests -e '(println "Our deps are in the house!")'
+RUN clojure -R:test -Stree
 
 # Now copy all the app code.
 COPY . ./
