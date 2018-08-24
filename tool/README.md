@@ -3,8 +3,8 @@
 A tool for reorganizing, restructuring, and reformatting
 [FC4](https://fundingcircle.github.io/fc4-framework/) diagrams.
 
-[![CircleCI](https://circleci.com/gh/FundingCircle/fc4.svg?style=shield)](https://circleci.com/gh/FundingCircle/fc4)
-[![codecov](https://codecov.io/gh/FundingCircle/fc4/branch/master/graph/badge.svg)](https://codecov.io/gh/FundingCircle/fc4)
+[![CircleCI](https://circleci.com/gh/FundingCircle/fc4-framework.svg?style=shield)](https://circleci.com/gh/FundingCircle/fc4-framework)
+[![codecov](https://codecov.io/gh/FundingCircle/fc4-framework/branch/master/graph/badge.svg)](https://codecov.io/gh/FundingCircle/fc4-framework)
 
 ## Purpose
 
