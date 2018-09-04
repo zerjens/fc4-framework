@@ -24,7 +24,7 @@ jobs:
        - run:
           name: Download dependencies (if necessary)
           # Clojure automatically downloads deps if necessary
-          command: "clojure -R:test:test/run:test/coverage:lint -e '(println \"deps are installed!\")'"
+          command: "clojure -R:test:test/coverage:lint -Sdescribe"
 
        - save_cache:
            key: dependencies-{{ checksum "deps.edn" }}

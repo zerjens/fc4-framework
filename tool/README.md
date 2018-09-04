@@ -3,8 +3,8 @@
 A tool for reorganizing, restructuring, and reformatting
 [FC4](https://fundingcircle.github.io/fc4-framework/) diagrams.
 
-[![CircleCI](https://circleci.com/gh/FundingCircle/fc4.svg?style=shield)](https://circleci.com/gh/FundingCircle/fc4)
-[![codecov](https://codecov.io/gh/FundingCircle/fc4/branch/master/graph/badge.svg)](https://codecov.io/gh/FundingCircle/fc4)
+[![CircleCI](https://circleci.com/gh/FundingCircle/fc4-framework.svg?style=shield)](https://circleci.com/gh/FundingCircle/fc4-framework)
+[![codecov](https://codecov.io/gh/FundingCircle/fc4-framework/branch/master/graph/badge.svg)](https://codecov.io/gh/FundingCircle/fc4-framework)
 
 ## Purpose
 
@@ -28,9 +28,9 @@ As explained in
       not have these tools installed. Try `which clj` to check, and if that prints a blank line,
       try running the appropriate
       [installer](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
-2. Clone this repo
+2. Clone [this repo](https://github.com/FundingCircle/fc4-framework)
 3. `cd` into the repo and then `cd tool`
-4. To install the dependencies, run: `clojure -R:dev -e '(println "deps installed!")'`
+4. To install the dependencies, run: `clojure -Sdescribe'`
 
 ## Basic Usage
 
