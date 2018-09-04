@@ -33,11 +33,10 @@
   (let [report-to-file-fn (report-to-file ju/report output-path)
         report-fn (multi-report progress/report report-to-file-fn)]
     {:report report-fn
-     ;; Specifying a constraint on the multithreading behavior because without
-     ;; this the XML output of the JUnit reporter is malformed, as per this bug:
-     ;; https://github.com/weavejester/eftest/issues/47
-     ;; I tested the other supported value (:namespaces) and it was
-     ;; significantly slower.
+     ;; :multithread? supports a few different values; I tested the other
+     ;; supported values (:namespaces and `true`) and they were both
+     ;; significantly slower. For more see
+     ;; https://github.com/weavejester/eftest/#multithreading
      :multithread? :vars}))
 
 (defn run-tests

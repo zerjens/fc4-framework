@@ -18,12 +18,12 @@
 
            :test      {:extra-paths ["test" "src/test_utils"]
                        :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
-                                     eftest                     {:mvn/version "0.5.2"}}}
+                                     eftest                     {:mvn/version "0.5.3"}}}
 
            :test/run  {:main-opts   ["-m" "fc4.test-runner.runner"]}
 
            :test/coverage
-                      {:extra-deps  {cloverage                  {:mvn/version "1.0.11"}}
+                      {:extra-deps  {cloverage                  {:mvn/version "1.0.13"}}
                        :main-opts   ["-m" "cloverage.coverage"
                                      "--src-ns-path" "src/main"
                                      "--test-ns-path" "test"
