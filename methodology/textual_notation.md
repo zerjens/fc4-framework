@@ -8,7 +8,7 @@ We have a few key requirements for our textual notation:
 | the source of our diagrams to be _structured data_   | the information of a diagram can be machine-readable and machine-writeable — i.e. so that software tooling can consume and/or generate the information. |
 | the source to be human readable and writeable        | people can efficiently and effectively author and review the source of the diagrams. |
 
-For now we are using a [YAML](http://yaml.org) format that meets these requirements. It comes from, and is supported by, Structurizr Express, a tool described in [The Toolset](Toolset.md).
+For now we are using a [YAML](http://yaml.org) format that meets these requirements. It comes from, and is supported by, Structurizr Express, a tool described in [The Toolset](toolset.md).
 
 The format supports describing:
 
