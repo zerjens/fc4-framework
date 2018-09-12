@@ -27,7 +27,10 @@ Once a basic YAML file has been created with some initial contents, the basic au
    1. Save the rendered diagram to a PNG file next to the YAML file and with the same name as the YAML file, except for the filename extension of course.
 1. Use your git UI of choice to commit your changes.
 1. Push your local changes to the origin repository regularly.
-1. When you’re ready to submit your changes for review, open a (Merge|Pull) Request to get your changes reviewed and then merged into master.
+1. When you’re ready to submit your changes for review, open a
+   [Merge Request](https://docs.gitlab.com/ee/user/project/merge_requests/index.html) or
+   [Pull Request](https://help.github.com/articles/about-pull-requests/) to get your changes
+   reviewed and then merged into master.
 
 ----
 

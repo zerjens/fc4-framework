@@ -14,7 +14,7 @@ This methodology does not specify, and is not concerned with, the question of ho
 
 There can be lots of other files in the same repo, or you could dedicate a repo to host only your diagrams — it’s your call.
 
-Some users of the framework host their diagrams in a `docs` repo that hosts cross-domain, cross-system, or cross-team documentation. In such a case the diagrams might be in a root-level dir with an imaginitive name such as `diagrams`.
+Some users of the framework host their diagrams in a `docs` repo that hosts cross-domain, cross-system, or cross-team documentation. In such a case the diagrams might be in a root-level dir with an imaginative name such as `diagrams`.
 
 ### On Storing the Images in the Repository
 
@@ -53,13 +53,69 @@ If you prefer to keep your Git repositories svelte, [Git Large File Storage (LFS
 
 Here are some recommendations for file names:
 
-| Diagram              | Recommended File Name Mask                   |
-| -------------------- | -------------------------------------------- |
-| System Landscape     | `system_landscape.{yaml\|png}`                |
-| System Context       | `{system}_01_{context}.{yaml\|png}`           |
-| Container            | `{system}_02_{container}.{yaml\|png}`         |
-| Intra-System Dynamic | `{system}_03_{dataflow\|workflow}.{yaml\|png}` |
-| Inter-System Dynamic | `{case}_{dataflow\|workflow}.{yaml\|png}`      |
+<!-- You might be wondering why the table below uses HTML tags as opposed to Markdown. In a
+nutshell, it’s because I couldn’t get the formatting quite right when using the table extension
+that’s supported by GitHub Flavored Markdown: https://github.github.com/gfm/#tables-extension-
+
+## Rant
+
+If you don’t like seeing HTML tags in a Markdown document, please don’t @me. I believe this is a
+correct and proper way to use Markdown.
+
+Markdown is so widely used these days that many people don’t realize that it was never intended to
+support tables et al:
+
+> Markdown's syntax is intended for one purpose: to be used as a
+> format for *writing* for the web.
+>
+> Markdown is not a replacement for HTML, or even close to it. Its
+> syntax is very small, corresponding only to a very small subset of
+> HTML tags. The idea is *not* to create a syntax that makes it easier
+> to insert HTML tags. In my opinion, HTML tags are already easy to
+> insert. The idea for Markdown is to make it easy to read, write, and
+> edit prose. HTML is a *publishing* format; Markdown is a *writing*
+> format. Thus, Markdown's formatting syntax only addresses issues that
+> can be conveyed in plain text.
+>
+> For any markup that is not covered by Markdown's syntax, you simply
+> use HTML itself. There's no need to preface it or delimit it to
+> indicate that you're switching from Markdown to HTML; you just use
+> the tags.
+
+https://daringfireball.net/projects/markdown/syntax#html
+-->
+
+<table>
+  <caption>File Name Recommendations</caption>
+  <thead>
+    <tr>
+      <th>Diagram</th>
+      <th>Recommended File Name Mask</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>System Landscape</td>
+      <td><code>{landscape}_system_landscape.{yaml|png}</code></td>
+    </tr>
+    <tr>
+      <td>System Context</td>
+      <td><code>{system}_01_context.{yaml|png}</code></td>
+    </tr>
+    <tr>
+      <td>Container</td>
+      <td><code>{system}_02_container.{yaml|png}</code></td>
+    </tr>
+    <tr>
+      <td>Intra-System Dynamic</td>
+      <td><code>{system}_03_{dataflow|workflow}.{yaml|png}</code></td>
+    </tr>
+    <tr>
+      <td>Inter-System Dynamic</td>
+      <td><code>{case}_{dataflow|workflow}.{yaml|png}</code></td>
+    </tr>
+  </tbody>
+</table>
 
 * If the diagrams might be published externally, the file names should be prefixed with `{org}_`
 * If the org has multiple landscapes, the names of the System Landscape files should be prefixed with `{landscape}_` — after the `{org}_` prefix, if present

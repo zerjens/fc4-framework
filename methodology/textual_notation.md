@@ -8,7 +8,9 @@ We have a few key requirements for our textual notation:
 | the source of our diagrams to be _structured data_   | the information of a diagram can be machine-readable and machine-writeable — i.e. so that software tooling can consume and/or generate the information. |
 | the source to be human readable and writeable        | people can efficiently and effectively author and review the source of the diagrams. |
 
-For now we are using a [YAML](http://yaml.org) format that meets these requirements. It comes from, and is supported by, Structurizr Express, a tool described in [The Toolset](Toolset.md).
+For now we are using a [YAML](http://yaml.org) format that meets these requirements. It comes from,
+and is supported by, [Structurizr Express](https://structurizr.com/help/express), a tool described
+in [The Toolset](toolset.md).
 
 The format supports describing:
 
@@ -19,6 +21,8 @@ The format supports describing:
 * Custom styles
 
 Each diagram is manifested as a single YAML file using this format.
+
+You can find a detailed description of the format in [the Structurizr Express help](https://structurizr.com/help/express).
 
 We don’t currently have a specification for this format, but if we continue using it much longer we’ll create one.
 
