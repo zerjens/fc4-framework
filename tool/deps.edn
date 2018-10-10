@@ -7,6 +7,8 @@
   potemkin                    {:mvn/version "0.4.5"}
   expound                     {:mvn/version "0.7.1"}
   com.cognitect/anomalies     {:mvn/version "0.1.12"}
+  seesaw                      {:mvn/version "1.5.0"}
+  com.github.jgraph/jgraphx   {:mvn/version "v3.9.10"}
   ;; test.chuck is in the main dependency list, rather than in the test profile,
   ;; because we’re using one of its generators in a spec in a source file.
   ;; This means we’ll also need org.clojure/test.check at runtime. Not ideal,
@@ -38,4 +40,9 @@
 
            :lint/fix  {:main-opts   ["-m" "cljfmt-runner.fix"]}
 
-           :clj-next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha6"}}}}}
+           :clj-next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha6"}}}}
+
+ :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
+             "clojars" {:url "https://clojars.org/repo"}
+             "jitpack" {:url "https://jitpack.io"}}
+}

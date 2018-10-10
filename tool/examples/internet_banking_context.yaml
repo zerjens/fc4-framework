@@ -1,0 +1,49 @@
+type: System Context
+scope: Internet Banking System
+description: The container diagram for the Internet Banking System.
+
+elements:
+- type: Person
+  name: Customer
+  description: A customer of the bank.
+  position: '525,50'
+- type: Software System
+  name: Internet Banking System
+  description: Allows customers to view information about their bank accounts and make payments.
+  position: '400,1200'
+  tags: Internal
+- type: Software System
+  name: Mainframe Banking System
+  description: Stores all of the core banking information about customers, accounts, transactions, etc.
+  tags: Internal
+  position: '1600,700'
+
+relationships:
+- source: Customer
+  description: uses
+  destination: Internet Banking System
+  technology: HTTPS
+- source: Internet Banking System
+  description: uses
+  destination: Mainframe Banking System
+  technology: XML/HTTPS
+
+styles:
+- type: element
+  tag: Container
+  background: '#438dd5'
+- type: element
+  tag: Database
+  shape: Cylinder
+- type: element
+  tag: Element
+  color: '#ffffff'
+- type: element
+  tag: Person
+  background: '#08427b'
+  shape: Person
+- type: element
+  tag: Software System
+  background: '#1168bd'
+
+size: A5_Landscape
