@@ -70,16 +70,16 @@ I saw in [Whimsical’s architecture diagram](https://whimsical.co/Q5patpyGV3RDv
 
 ### Paper.js + JSDom
 
-I found [in Paper’s README](https://github.com/paperjs/paper.js#installing-paperjs-for-nodejs) that it apparently supports rendering graphics in Node, as opposed to in a browser, via [jsdom](https://github.com/jsdom/jsdom). This might be desirable because it wouldn’t require the user to have a recent version of Chrome installed.
+I found [in Paper’s README](https://github.com/paperjs/paper.js#installing-paperjs-for-nodejs) that it apparently supports rendering graphics in Node, as opposed to in a browser, via [jsdom](https://github.com/jsdom/jsdom). This might be desirable because it wouldn’t require the user to have a recent version of Chrome installed. And, _if_ we were to [migrate fc4-tool to ClojureScript](#on-clojurescript), then this approach might not require any additional system dependencies beyond Node.
 
 #### Cons
 
 * Pretty low-level; potentially lots of work to get the layout and aesthetics right
-* Would add some system dependencies to fc4-tool: Node and maybe ClojureScript.
+* Might add a system dependency to fc4-tool: Node — unless we [migrate fc4-tool to ClojureScript](#on-clojurescript)
 
 ### JGraphX
 
-[JGraphX](https://github.com/jgraph/jgraphx) is a [Java](https://en.wikipedia.org/wiki/Java_%28programming_language%29) [Swing](https://en.wikipedia.org/wiki/Swing_%28Java%29) diagramming (graph visualisation) library. I have a very old branch of fc4-tool that contains an experimental implementation of rendering a Structurizr Express diagram to a Swing view. It was somewhat promising at the time; I was able to render the diagrams such that they were recognizable and legible. But they weren't aesthetically attractive, and I don’t really have a clue whether it’s possible and/or practical to make Swing graphics aesthetically attractive. I also have no real idea how much work it would be to implement the ability to convert those Swing views to bitmaps and save them to PNG files. (I started dabbling with a library called [vectorgraphics2d](https://github.com/eseifert/vectorgraphics2d) that seemed like it might be able to render Swing views to PDF, which I assumed it wouldn't be too difficult to convert to PNG.)
+[JGraphX](https://github.com/jgraph/jgraphx) is a [Java](https://en.wikipedia.org/wiki/Java_%28programming_language%29) [Swing](https://en.wikipedia.org/wiki/Swing_%28Java%29) diagramming (graph visualisation) library. Back in February I created [a branch of fc4-tool](https://github.com/FundingCircle/fc4-framework/tree/jgraph) (and  [today](https://github.com/FundingCircle/fc4-framework/commit/41b646da8c54b067fd904b7e3cb27f6ed6d9347c#diff-79bf787a4b989cb5ae4e7b2571ce746c) I rebased it onto master and adapted it to the current state of the tool) that contains an experimental implementation of rendering a Structurizr Express diagram to a Swing view or [to a PNG file](https://github.com/FundingCircle/fc4-framework/blob/jgraph/tool/examples/internet_banking_context.png). It’s somewhat promising at the time; it can already render the diagrams such that they are recognizable and legible. But they aren't currently aesthetically attractive, and I don’t really have a clue whether it’s possible and/or practical to make Swing graphics aesthetically attractive.
 
 ### Apache Batik
 
@@ -130,9 +130,11 @@ I found [in Paper’s README](https://github.com/paperjs/paper.js#installing-pap
   		<td>✓</td>
   	</tr>
   	<tr>
-  		<th>Paper.js + JSDom</th>
-  		<td>✕</td>
-  		<td>✕</td>
+  		<td><b>Paper.js + JSDom</b><br>
+       (*If* we [migrate fc4-tool to ClojureScript](#on-clojurescript))
+      </td>
+  		<td>✓</td>
+  		<td>✓</td>
   		<td>✓</td>
   	</tr>
   	<tr>
