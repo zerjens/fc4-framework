@@ -7,22 +7,33 @@ const {promisify} = require('util');
 const readFileAsync = promisify(readFile);
 const writeFileAsync = promisify(writeFile);
 
-function renderCanvas(json_string) {
-  const canvas = paper.createCanvas(500, 400, 'pdf');
+// These values are currently hard-coded for the content of examples/test1.json
+const [canvasWidth, canvasHeight] = [550, 550];
+const [offsetX, offsetY] = [200, 170];
+
+function renderCanvas(jsonString, file_type) {
+  const canvas = paper.createCanvas(canvasWidth, canvasHeight, file_type);
   paper.setup(canvas);
-  paper.project.importJSON(json_string);
+  paper.project.importJSON(jsonString);
+
+  // I don’t know why, but without this the image is cut off.
+  paper.view.translate(new paper.Point(offsetX, offsetY));
+
   paper.view.update();
   return canvas.toBuffer()
 }
 
 async function main() {
+  // TODO: read this from the command-line, defaulting to 'pdf'
+  const fileType = 'pdf';
+
   const stdin = 0;
   const stdout = 1;
 
-  const json_string = await readFileAsync(stdin, { encoding: 'utf8' });
-  const pdf_buffer = renderCanvas(json_string);
+  const jsonString = await readFileAsync(stdin, { encoding: 'utf8' });
+  const imageBuffer = renderCanvas(jsonString, fileType);
 
-  await writeFileAsync(stdout, pdf_buffer);
+  await writeFileAsync(stdout, imageBuffer);
 }
 
 main();
