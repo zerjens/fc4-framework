@@ -17,4 +17,6 @@ brew install node cairo pango \
 
 ```shell
 cat examples/test1.json | ./render.js > examples/test1_canvas.pdf
+
+cat examples/test2.json | ./render.js > examples/test2_canvas.pdf
 ```
