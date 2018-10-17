@@ -37,14 +37,16 @@
 (defn rect
   [x y width height m]
   (shape :rectangle (merge m {:point [x y]
+                              ; I’m not sure why rectangles require radius, but they do.
+                              :radius [0 0]
                               :size  [width height]})))
 
 (defn text
   ([content x y]
    (text content x y nil))
   ([content x y m]
-   [:Text (merge m {:content content
-                    :point [x y]})]))
+   [:PointText (merge m {:content content
+                         :point [x y]})]))
 
 (defn color
   [red green blue]
