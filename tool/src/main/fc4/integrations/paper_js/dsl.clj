@@ -5,8 +5,8 @@
   (concat [first-child] more-children))
 
 (defn layer
-  [first-child & more-children]
-  [:Layer {:children (concat [first-child] more-children)}])
+  [children]
+  [:Layer {:children children}])
 
 (defn group
   ([{:keys [name matrix]} children]
@@ -36,8 +36,8 @@
 
 (defn rect
   [x y width height m]
-  (shape :rectangle (merge m {:point [x y]
-                              ; I’m not sure why rectangles require radius, but they do.
+  (shape :rectangle (merge m {:position [x y]
+                              ; I’m not sure why rectangles require radius, but they seem to.
                               :radius [0 0]
                               :size  [width height]})))
 
@@ -46,7 +46,7 @@
    (text content x y nil))
   ([content x y m]
    [:PointText (merge m {:content content
-                         :point [x y]})]))
+                         :position [x y]})]))
 
 (defn color
   [red green blue]

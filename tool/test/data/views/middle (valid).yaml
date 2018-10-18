@@ -7,7 +7,7 @@ description: Ao
 positions:
   subject: 3, 7
   containers: {Front: '3, 9', Internal: '16, 13', Back: '001,5'}
-  other-systems: {Mobile: '4,9593', External: '59,234', Front: '74, 67', Internal: '88,8'}
+  other-systems: {Mobile: '100,100', External: '300,300', Front: '500,500', Internal: '700,700'}
 control-points:
   system-context:
     Front:

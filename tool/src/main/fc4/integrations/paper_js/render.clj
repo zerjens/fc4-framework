@@ -35,8 +35,7 @@
   [view model]
   (let [shapes (view->shapes view model)]
     (project
-      (layer
-        (group nil shapes)))))
+      (layer shapes))))
 
 (defn paper->pdf
   "Renders a paper.js data structure into a PDF, returning the PDF bytearray.
@@ -71,6 +70,10 @@
   (require '[clojure.data.json :as j])
   (j/pprint (view->paper v m))
   (def pdfb (render v m))
-  (with-open [out (output-stream (file "/tmp/fc4-paper.pdf"))]
-     (.write out pdfb))
+
+  (defn binary-spit [file-path data]
+    (with-open [out (output-stream (file file-path))]
+       (.write out data)))
+
+  (binary-spit "/tmp/fc4-paper.pdf" (render v m))
 )
