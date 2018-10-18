@@ -38,4 +38,13 @@
 
            :lint/fix  {:main-opts   ["-m" "cljfmt-runner.fix"]}
 
-           :clj-next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha6"}}}}}
+           :native-image
+                      {:main-opts   ["-m clj.native-image fc4.cli.wcb"
+                                     "-H:Name=wcb"]
+                       :extra-deps  {clj.native-image
+                                     {:git/url "https://github.com/taylorwood/clj.native-image.git"
+                                      :sha "0f113d46f9f0d07e8a29545c636431ddf5360a7d"}}}
+
+           :clj-next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha6"}}}}
+
+ :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}
