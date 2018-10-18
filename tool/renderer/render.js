@@ -5,8 +5,13 @@ const paper = require('paper-jsdom-canvas');
 const {promisify} = require('util');
 
 // These values are currently hard-coded for the content of examples/test1.json
-const [canvasWidth, canvasHeight] = [550, 550];
-const [offsetX, offsetY] = [200, 170];
+// const [canvasWidth, canvasHeight] = [550, 550];
+// const [offsetX, offsetY] = [200, 170];
+
+const [canvasWidth, canvasHeight] = [1000, 600];
+
+// I don’t know why, but without this the image is cut off.
+const [offsetX, offsetY] = [50, 40];
 
 function renderCanvas(jsonString, file_type) {
   const canvas = paper.createCanvas(canvasWidth, canvasHeight, file_type);
