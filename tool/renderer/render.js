@@ -33,7 +33,7 @@ async function main() {
   const jsonString = await readFileAsync(stdin, { encoding: 'utf8' });
   const imageBuffer = renderCanvas(jsonString, fileType);
 
-  await writeFileAsync(stdout, imageBuffer);
+  process.stdout.write(imageBuffer);
 }
 
 main();
