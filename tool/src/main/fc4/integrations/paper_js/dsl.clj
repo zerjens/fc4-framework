@@ -37,8 +37,8 @@
 (defn rect
   [x y width height m]
   (shape :rectangle (merge m {:position [x y]
-                              ; I’m not sure why rectangles require radius, but they seem to.
-                              :radius [0 0]
+                              ;; for some reason, radius is required.
+                              :radius (or (:radius m) [0 0])
                               :size  [width height]})))
 
 (defn text
@@ -53,13 +53,23 @@
   ["rgb" red green blue])
 
 (def representations
-  {:system {:width 100
-            :height 80}})
+  {:system {:width 120
+            :height 80
+            :corner-radius 10
+            :name-font-size 12
+            :desc-font-size 10
+            :fill-color (color 170 74 237)}})
 
 (defn system
   [name description x y]
-  (let [{:keys [width height]} (:system representations)]
+  (let [{:keys [width height corner-radius name-font-size desc-font-size fill-color]}
+        (:system representations)]
     (group
       {:name name}
-      [(rect x y width height {:strokeColor (color 1 0 0)})
-       (text name x y)])))
+      [(rect x y width height {:fillColor fill-color
+                               :radius (repeat 2 corner-radius)
+                               :strokeColor (color 1 0 0)})
+       (text name x (- y 18) {:fontSize name-font-size
+                              :fontWeight :bold})
+       (when description
+         (text description x (+ y 2) {:fontSize desc-font-size}))])))

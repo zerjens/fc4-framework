@@ -2,7 +2,7 @@ what is this: A description of a software system, using the semantics of the FC4
 links:
   The FC4 Framework: https://fundingcircle.github.io/fc4-framework/
 ---
-name: Mobile
+name: Mobile App for Phablets # long name for testing text wrapping
 uses:
 - container: External
   system: Front
@@ -31,7 +31,7 @@ tags:
 - sP7m9y6f0HQK05J0bvfFVG5gG182b9vRA04SIjMA5Pu
 - 6AJ4bV9YRx
 - Q49ES9u0261bO0WYAneE6FJ7gqaNimlRY3q
-description: m78Cq
+description: Super-great mobile app!
 containers:
 - name: Internal
   technology: 33b
