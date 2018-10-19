@@ -1,26 +1,24 @@
 #!/usr/bin/env node
 
 const dataUriToBuffer = require('data-uri-to-buffer');
-const {writeFileSync} = require('fs')
 const puppeteer = require('puppeteer');
 
 function next(step) {
-  console.log(step + '...');
+  process.stderr.write(step + '...' + '\n');
 }
 
-async function waitasec(page) {
-  next('pausing');
-  await page.waitFor(1000);
+function result(is) {
+  process.stderr.write(is + '.' + '\n');
 }
 
 async function render(diagramYaml) {
-  console.log('launching browser...');
+  next('launching browser');
   const browser = await puppeteer.launch({headless: true});
   const page = await browser.newPage();
 
-  async function asec() {
+  async function asec(s = 1) {
     next('pausing');
-    await page.waitFor(1000);
+    await page.waitFor(s * 1000);
   }
 
   next('loading SE');
@@ -38,59 +36,70 @@ async function render(diagramYaml) {
     (async () => {
       // helps with debugging, screenshots, etc
       document.getElementById('expressIntroductionModal').style = "display: none;"
-    await sleep(200);
+
+      await sleep(200);
       document.querySelector('a[href="#yaml"]').click();
-    await sleep(200);
+
+      await sleep(200);
       const yamlTextArea = document.getElementById('yamlDefinition');
-    await sleep(200);
+
+      await sleep(200);
       yamlTextArea.value = theYaml;
-    await sleep(200);
+
+      await sleep(1000);
       changes = true;
-    await sleep(200);
+
+      await sleep(1000);
       structurizrExpressToDiagram();
+
+      await sleep(1000);
     })();
   }, diagramYaml);
 
-  await asec();
+  next('calling export function');
+  await asec(4);
   await page.evaluate(() => Structurizr.diagram.exportCurrentView(1, true, false, false, false));
   await asec();
 
-  const pages = await browser.pages()
+  const pages = await browser.pages();
   const exportPage = pages[2];
-  const exportPageTitle = await exportPage.title()
-  console.log('export page opened with title', exportPageTitle);
+  const exportPageTitle = await exportPage.title();
+  result('export page opened with title: ' + exportPageTitle);
 
-  await waitasec(page);
+  await asec();
 
   next('getting image');
   const image = await exportPage.$('#exportedContent > img');
 
-  await waitasec(page);
+  await asec();
 
-  console.log('getting image source...');
+  next('getting image source');
   const imageSourceHandle = await image.getProperty('src');
   const imageSource = await imageSourceHandle.jsonValue();
   const imageBuffer = dataUriToBuffer(imageSource);
 
-  console.log('closing browser...')
-await browser.close();
+  next('closing browser');
+  await browser.close();
 
   return imageBuffer;
 }
 
-async function main() {
-  const theYaml = `---
-elements:
-  -
-    type: 'Software System'
-    name: 'Fuck Off'
-    position: '300,300'
-type: 'System Context'
-scope: 'Fuck Off'
-size: A6_Landscape
-`
-  const ib = await render(theYaml);
-  writeFileSync('/tmp/diagram.png', ib);
+async function readEntireTextStream(stream) {
+  let str = '';
+
+  stream.setEncoding('utf8');
+
+  for await (const chunk of stream) {
+    str += chunk;
+  }
+
+  return str;
 }
 
-main()
+async function main() {
+  const theYaml = await readEntireTextStream(process.stdin);
+  const imageBuffer = await render(theYaml);
+  process.stdout.write(imageBuffer);
+}
+
+main();
