@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const dataUriToBuffer = require('data-uri-to-buffer');
+const path = require('path');
 const puppeteer = require('puppeteer');
 
 function next(step) {
@@ -13,16 +14,26 @@ function result(is) {
 
 async function render(diagramYaml) {
   next('launching browser');
-  const browser = await puppeteer.launch({headless: true});
-  const page = await browser.newPage();
 
+  // We need to disable web security to enable the main SE page to communicate
+  // with the export page (pop-up window, tab, etc) without being blocked by
+  // cross-origin restrictions.
+  const args = ["--disable-web-security"];
+
+  const browser = await puppeteer.launch({headless: true, args: args});
+  const page = await browser.newPage();
+  page.setOfflineMode(true);
+
+  // This is here inside render because it has to be a closure that captures page.
   async function asec(s = 1) {
     next('pausing');
     await page.waitFor(s * 1000);
   }
 
-  next('loading SE');
-  await page.goto('https://structurizr.com/express', {'waitUntil' : 'networkidle0'});
+  const url = `file:${path.join(__dirname, 'structurizr/Structurizr Express.html')}`
+
+  next(`loading SE from ${url}`);
+  await page.goto(url, {'waitUntil' : 'domcontentloaded'});
 
   await asec();
 
@@ -35,7 +46,7 @@ async function render(diagramYaml) {
 
     (async () => {
       // helps with debugging, screenshots, etc
-      document.getElementById('expressIntroductionModal').style = "display: none;"
+      document.getElementById('expressIntroductionModal').style = 'display: none;';
 
       await sleep(200);
       document.querySelector('a[href="#yaml"]').click();
@@ -63,6 +74,7 @@ async function render(diagramYaml) {
 
   const pages = await browser.pages();
   const exportPage = pages[2];
+  exportPage.setOfflineMode(true);
   const exportPageTitle = await exportPage.title();
   result('export page opened with title: ' + exportPageTitle);
 
