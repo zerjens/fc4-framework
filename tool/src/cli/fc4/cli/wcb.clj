@@ -1,7 +1,10 @@
 (ns fc4.cli.wcb
   "wcb = Watch ClipBoard"
   (:require [fc4.integrations.structurizr.express.clipboard :refer [wcb]]
-            [clojure.core.async :as ca :refer [<!!]]))
+            [clojure.core.async :as ca :refer [<!!]])
+  ;; Required for compilation to a “native image” executable via GraalVM.
+  (:gen-class))
+
 
 (defn -main []
   (let [c (wcb)]

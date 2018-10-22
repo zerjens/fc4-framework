@@ -43,7 +43,7 @@
                                      "-H:Name=wcb"]
                        :extra-deps  {clj.native-image
                                      {:git/url "https://github.com/taylorwood/clj.native-image.git"
-                                      :sha "0f113d46f9f0d07e8a29545c636431ddf5360a7d"}}}
+                                      :sha "2dd7ce300e152d56a65dfc28de7d860981bf85cf"}}}
 
            :clj-next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha6"}}}}
 
