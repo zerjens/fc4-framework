@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const dataUriToBuffer = require('data-uri-to-buffer');
+const {existsSync} = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
@@ -12,15 +13,41 @@ function result(is) {
   process.stderr.write(is + '.' + '\n');
 }
 
+function puppeteerOpts() {
+  const args = [
+    // We need to disable web security to enable the main SE page to communicate
+    // with the export page (pop-up window, tab, etc) without being blocked by
+    // cross-origin restrictions.
+    '--disable-web-security',
+
+    // We need this because we’re using the default user in our local Docker-based
+    // test running environment, which is apparently root, and Chromium won’t
+    // run as root unless this arg is passed.
+    '--no-sandbox',
+
+    // Recommended here: https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#tips
+    '--disable-dev-shm-usage'
+  ];
+
+  const opts = {headless: true, args: args};
+
+  // When we’re running in CI, there’s a very good chance that we’re going to
+  // want to use the Chromium installed via the OS package manager.
+  // See <project-root>/.circleci/images/tool/Dockerfile
+  // and https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-on-alpine
+  const ciChromiumPath = '/usr/bin/chromium-browser';
+  if (existsSync(ciChromiumPath)) {
+    opts.executablePath = ciChromiumPath;
+  }
+
+  return opts;
+}
+
 async function render(diagramYaml) {
   next('launching browser');
 
-  // We need to disable web security to enable the main SE page to communicate
-  // with the export page (pop-up window, tab, etc) without being blocked by
-  // cross-origin restrictions.
-  const args = ["--disable-web-security"];
-
-  const browser = await puppeteer.launch({headless: true, args: args});
+  const opts = puppeteerOpts();
+  const browser = await puppeteer.launch(opts);
   const page = await browser.newPage();
   page.setOfflineMode(true);
 
