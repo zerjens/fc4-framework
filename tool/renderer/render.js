@@ -5,12 +5,12 @@ const {existsSync} = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
-function next(step) {
-  process.stderr.write(step + '...' + '\n');
+function next(step, suffix = '...') {
+  process.stderr.write(step + suffix + '\n');
 }
 
 function result(is) {
-  process.stderr.write(is + '.' + '\n');
+  next(is, '.');
 }
 
 function puppeteerOpts() {
@@ -31,8 +31,9 @@ function puppeteerOpts() {
 
   const opts = {headless: true, args: args};
 
-  // When we’re running in CI, there’s a very good chance that we’re going to
-  // want to use the Chromium installed via the OS package manager.
+  // If we’re running on Alpine Linux and Chromium has been installed via apk
+  // (the Alpine package manager) then we want to use that install of Chromium
+  // rather than the Chromium that Puppeteer downloads itself by default.
   // See <project-root>/.circleci/images/tool/Dockerfile
   // and https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-on-alpine
   const ciChromiumPath = '/usr/bin/chromium-browser';
@@ -43,28 +44,21 @@ function puppeteerOpts() {
   return opts;
 }
 
-async function render(diagramYaml) {
-  next('launching browser');
+function abit(ms) {
+  next(`pausing ${ms}ms`);
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-  const opts = puppeteerOpts();
-  const browser = await puppeteer.launch(opts);
+async function render(diagramYaml, browser, url) {
   const page = await browser.newPage();
   page.setOfflineMode(true);
 
-  // This is here inside render because it has to be a closure that captures page.
-  async function abit(ms = 500) {
-    next('pausing');
-    await page.waitFor(ms);
-  }
-
-  const url = `file:${path.join(__dirname, 'structurizr/Structurizr Express.html')}`
-
-  next(`loading SE from ${url}`);
+  next(`loading Structurizr Express from ${url}`);
   await page.goto(url, {'waitUntil' : 'domcontentloaded'});
 
   next('setting YAML and updating diagram');
   await page.evaluate(theYaml => {
-    function sleep(ms) {
+    function abit(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
@@ -75,7 +69,7 @@ async function render(diagramYaml) {
       // Show the YAML tab. Not sure why but without this the diagram doesn’t render.
       document.querySelector('a[href="#yaml"]').click();
 
-      await sleep(200);
+      await abit(200);
       const yamlTextArea = document.getElementById('yamlDefinition');
       yamlTextArea.value = theYaml;
       changes = true;
@@ -112,19 +106,24 @@ async function render(diagramYaml) {
 
 async function readEntireTextStream(stream) {
   let str = '';
-
   stream.setEncoding('utf8');
-
   for await (const chunk of stream) {
     str += chunk;
   }
-
   return str;
 }
 
 async function main() {
+  // Read stdin first; if it fails or blocks, no sense in launching the browser
   const theYaml = await readEntireTextStream(process.stdin);
-  const imageBuffer = await render(theYaml);
+
+  next('launching browser');
+  const opts = puppeteerOpts();
+  const browser = await puppeteer.launch(opts);
+
+  const url = `file:${path.join(__dirname, 'structurizr/Structurizr Express.html')}`
+
+  const imageBuffer = await render(theYaml, browser, url);
   process.stdout.write(imageBuffer);
 }
 
