@@ -52,9 +52,9 @@ async function render(diagramYaml) {
   page.setOfflineMode(true);
 
   // This is here inside render because it has to be a closure that captures page.
-  async function asec(s = 1) {
+  async function abit(ms = 500) {
     next('pausing');
-    await page.waitFor(s * 1000);
+    await page.waitFor(ms);
   }
 
   const url = `file:${path.join(__dirname, 'structurizr/Structurizr Express.html')}`
@@ -62,10 +62,7 @@ async function render(diagramYaml) {
   next(`loading SE from ${url}`);
   await page.goto(url, {'waitUntil' : 'domcontentloaded'});
 
-  await asec();
-
   next('setting YAML and updating diagram');
-
   await page.evaluate(theYaml => {
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
@@ -75,42 +72,32 @@ async function render(diagramYaml) {
       // helps with debugging, screenshots, etc
       document.getElementById('expressIntroductionModal').style = 'display: none;';
 
-      await sleep(200);
+      // Show the YAML tab. Not sure why but without this the diagram doesn’t render.
       document.querySelector('a[href="#yaml"]').click();
 
       await sleep(200);
       const yamlTextArea = document.getElementById('yamlDefinition');
-
-      await sleep(200);
       yamlTextArea.value = theYaml;
-
-      await sleep(1000);
       changes = true;
 
-      await sleep(1000);
       structurizrExpressToDiagram();
-
-      await sleep(1000);
     })();
   }, diagramYaml);
 
   next('calling export function');
-  await asec(4);
+  await abit(200);
   await page.evaluate(() => Structurizr.diagram.exportCurrentView(1, true, false, false, false));
-  await asec();
 
+  next('getting export page')
+  await abit(250);
   const pages = await browser.pages();
   const exportPage = pages[2];
   exportPage.setOfflineMode(true);
   const exportPageTitle = await exportPage.title();
   result('export page opened with title: ' + exportPageTitle);
 
-  await asec();
-
   next('getting image');
   const image = await exportPage.$('#exportedContent > img');
-
-  await asec();
 
   next('getting image source');
   const imageSourceHandle = await image.getProperty('src');
