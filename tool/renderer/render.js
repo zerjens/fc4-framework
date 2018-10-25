@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// NB: here’s how I’ve been testing this on my Mac:
+// renderer $ cat ../test/data/structurizr/express/diagram_valid_cleaned.yaml | time ./render.js | open -a Preview.app -f
+
 const dataUriToBuffer = require('data-uri-to-buffer');
 const {existsSync} = require('fs');
 const path = require('path');
