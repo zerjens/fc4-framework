@@ -24,7 +24,7 @@ const log = {
   }
 }
 
-function puppeteerOpts() {
+function puppeteerOpts(debugMode) {
   const args = [
     // We need to disable web security to enable the main SE page to communicate
     // with the export page (pop-up window, tab, etc) without being blocked by
@@ -40,7 +40,7 @@ function puppeteerOpts() {
     '--disable-dev-shm-usage'
   ];
 
-  const opts = {headless: true, args: args};
+  const opts = {headless: !debugMode, args: args};
 
   // If we’re running on Alpine Linux and Chromium has been installed via apk
   // (the Alpine package manager) then we want to use that install of Chromium
@@ -60,15 +60,17 @@ function abit(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function render(diagramYaml, browser, url) {
+async function render(diagramYaml, browser, url, debugMode) {
   const page = await browser.newPage();
-  page.setOfflineMode(true);
 
   log.next(`loading Structurizr Express from ${url}`);
-  await page.goto(url, {'waitUntil' : 'domcontentloaded'});
+  await page.goto(url, {'waitUntil' : 'networkidle2'});
 
   log.next('setting YAML and updating diagram');
   await page.evaluate(theYaml => {
+    // This might shadow the outer context’s function of the same name, but
+    // that’s OK because that function doesn’t cross the boundary to the browser
+    // successfully. I guess maybe this isn’t a closure… honestly I’m not sure.
     function abit(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -80,47 +82,47 @@ async function render(diagramYaml, browser, url) {
       // Show the YAML tab. Not sure why but without this the diagram doesn’t render.
       document.querySelector('a[href="#yaml"]').click();
 
-      await abit(200);
       const yamlTextArea = document.getElementById('yamlDefinition');
       yamlTextArea.value = theYaml;
       changes = true;
 
+      await abit(200);
       structurizrExpressToDiagram();
     })();
   }, diagramYaml);
 
   log.next('calling export function');
 
+  // from https://github.com/GoogleChrome/puppeteer/issues/386#issuecomment-343059315
+  const newPagePromise = new Promise(r => browser.once('targetcreated', target => r(target.page())));
+
   // On my system, if this is any shorter than 300ms then the Structurizr logo
-  // doesn’t show up on the exported image. Which I think it should, because
-  // Simon Brown wants it included in the images that Structurizr Express
-  // exports, and it’s his software.
-  await abit(350);
+  // doesn’t reliably show up on the exported image. Which I think it should,
+  // because Simon Brown wants it included in the images that Structurizr
+  // Express exports, and it’s his software.
+  await abit(300);
   await page.evaluate(() => Structurizr.diagram.exportCurrentView(1, true, false, false, false));
 
   log.next('getting export page');
+  const exportPage = await newPagePromise;
 
-  // I *think* I might have seem some intermittent race condition errors related
-  // to this pause; it seems pretty reliable on my system at 200ms, but we might
-  // need to bump this up a bit (e.g. 250ms) if we start seeing intermittent
-  // errors with the process.
-  await abit(200);
-  const pages = await browser.pages();
-  const exportPage = pages[2];
-  exportPage.setOfflineMode(true);
   const exportPageTitle = await exportPage.title();
   log.result('export page opened with title: ' + exportPageTitle);
 
   log.next('getting image');
-  const image = await exportPage.$('#exportedContent > img');
+  const image = await exportPage.waitForSelector('#exportedContent > img');
 
   log.next('getting image source');
   const imageSourceHandle = await image.getProperty('src');
   const imageSource = await imageSourceHandle.jsonValue();
   const imageBuffer = dataUriToBuffer(imageSource);
 
-  log.next('closing browser');
-  await browser.close();
+  if (debugMode) {
+    log.next('DEBUG MODE: leaving browser open; script may be blocked until the browser quits.');
+  } else {
+    log.next('closing browser');
+    await browser.close();
+  }
 
   return imageBuffer;
 }
@@ -134,18 +136,18 @@ async function readEntireTextStream(stream) {
   return str;
 }
 
-async function main() {
+async function main(url, debugMode) {
   // Read stdin first; if it fails or blocks, no sense in launching the browser
   const theYaml = await readEntireTextStream(process.stdin);
 
   log.next('launching browser');
-  const opts = puppeteerOpts();
+  const opts = puppeteerOpts(debugMode);
   const browser = await puppeteer.launch(opts);
 
-  const url = `file:${path.join(__dirname, 'structurizr/Structurizr Express.html')}`
-
-  const imageBuffer = await render(theYaml, browser, url);
+  const imageBuffer = await render(theYaml, browser, url, debugMode);
   process.stdout.write(imageBuffer);
 }
 
-main();
+const url = 'https://structurizr.com/express';
+const debugMode = false;
+main(url, debugMode);
