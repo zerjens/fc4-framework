@@ -124,10 +124,6 @@ I found [in Paper’s README](https://github.com/paperjs/paper.js#installing-pap
 
 …so I’d guess we’d be able to use it to generate “native” vector graphics and export them as PDF and PNG. The most compelling advantage here would be the ability to render images without any external dependencies such as Node, Puppeteer, Chrome, etc.
 
-### Quil
-
-[Quil](http://quil.info/) is a Clojure/ClojureScript library for creating interactive drawings and animations. It’s based on [Processing](https://processing.org/). I don’t remember exactly why, but at some point I thought it might be worth trying to use it to implement diagram rendering “from scratch” i.e. at a very low level. I have an old branch somewhere with a single commit in it, but really there’s barely anything in there. It’s really just a stub of an idea.
-
 ### Summary
 
 <table>
@@ -191,13 +187,6 @@ I found [in Paper’s README](https://github.com/paperjs/paper.js#installing-pap
   		<td>✓</td>
   		<td>✓</td>
       <td>✓</td>
-  	</tr>
-  	<tr>
-  		<th align="left">Quil</th>
-  		<td>✓</td>
-  		<td>✓?</td>
-  		<td>✓?</td>
-      <td>✓?</td>
   	</tr>
   </tbody>
 </table>
