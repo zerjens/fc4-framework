@@ -90,11 +90,21 @@ async function render(diagramYaml, browser, url) {
   }, diagramYaml);
 
   log.next('calling export function');
-  await abit(200);
+
+  // On my system, if this is any shorter than 300ms then the Structurizr logo
+  // doesn’t show up on the exported image. Which I think it should, because
+  // Simon Brown wants it included in the images that Structurizr Express
+  // exports, and it’s his software.
+  await abit(300);
   await page.evaluate(() => Structurizr.diagram.exportCurrentView(1, true, false, false, false));
 
-  log.next('getting export page')
-  await abit(250);
+  log.next('getting export page');
+
+  // I *think* I might have seem some intermittent race condition errors related
+  // to this pause; it seems pretty reliable on my system at 200ms, but we might
+  // need to bump this up a bit (e.g. 250ms) if we start seeing intermittent
+  // errors with the process.
+  await abit(200);
   const pages = await browser.pages();
   const exportPage = pages[2];
   exportPage.setOfflineMode(true);
