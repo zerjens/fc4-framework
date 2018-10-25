@@ -24,6 +24,15 @@ const log = {
   }
 }
 
+async function readEntireTextStream(stream) {
+  let str = '';
+  stream.setEncoding('utf8');
+  for await (const chunk of stream) {
+    str += chunk;
+  }
+  return str;
+}
+
 function puppeteerOpts(debugMode) {
   const args = [
     // We need to disable web security to enable the main SE page to communicate
@@ -60,12 +69,14 @@ function abit(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function render(diagramYaml, browser, url, debugMode) {
-  const page = await browser.newPage();
-
+async function loadStructurizrExpress(browser, url) {
   log.next(`loading Structurizr Express from ${url}`);
-  await page.goto(url, {'waitUntil' : 'networkidle2'});
+  const mainPage = await browser.newPage();
+  await mainPage.goto(url, {'waitUntil' : 'networkidle2'});
+  return mainPage;
+}
 
+async function setYamlAndUpdateDiagram(page, diagramYaml) {
   log.next('setting YAML and updating diagram');
   await page.evaluate(theYaml => {
     // This might shadow the outer context’s function of the same name, but
@@ -90,10 +101,13 @@ async function render(diagramYaml, browser, url, debugMode) {
       structurizrExpressToDiagram();
     })();
   }, diagramYaml);
+}
 
+async function doExport(mainPage) {
   log.next('calling export function');
 
   // from https://github.com/GoogleChrome/puppeteer/issues/386#issuecomment-343059315
+  const browser = mainPage.browser();
   const newPagePromise = new Promise(r => browser.once('targetcreated', target => r(target.page())));
 
   // On my system, if this is any shorter than 300ms then the Structurizr logo
@@ -101,7 +115,7 @@ async function render(diagramYaml, browser, url, debugMode) {
   // because Simon Brown wants it included in the images that Structurizr
   // Express exports, and it’s his software.
   await abit(300);
-  await page.evaluate(() => Structurizr.diagram.exportCurrentView(1, true, false, false, false));
+  await mainPage.evaluate(() => Structurizr.diagram.exportCurrentView(1, true, false, false, false));
 
   log.next('getting export page');
   const exportPage = await newPagePromise;
@@ -109,6 +123,10 @@ async function render(diagramYaml, browser, url, debugMode) {
   const exportPageTitle = await exportPage.title();
   log.result('export page opened with title: ' + exportPageTitle);
 
+  return exportPage;
+};
+
+async function getImageBuffer(exportPage) {
   log.next('getting image');
   const image = await exportPage.waitForSelector('#exportedContent > img');
 
@@ -117,23 +135,24 @@ async function render(diagramYaml, browser, url, debugMode) {
   const imageSource = await imageSourceHandle.jsonValue();
   const imageBuffer = dataUriToBuffer(imageSource);
 
+  return imageBuffer;
+}
+
+async function render(diagramYaml, browser, url, debugMode) {
+  const mainPage =    await loadStructurizrExpress(browser, url);
+                      await setYamlAndUpdateDiagram(mainPage, diagramYaml);
+  const exportPage =  await doExport(mainPage);
+  const imageBuffer = await getImageBuffer(exportPage)
+  return imageBuffer;
+}
+
+async function closeBrowser(browser, debugMode) {
   if (debugMode) {
     log.next('DEBUG MODE: leaving browser open; script may be blocked until the browser quits.');
   } else {
     log.next('closing browser');
     await browser.close();
   }
-
-  return imageBuffer;
-}
-
-async function readEntireTextStream(stream) {
-  let str = '';
-  stream.setEncoding('utf8');
-  for await (const chunk of stream) {
-    str += chunk;
-  }
-  return str;
 }
 
 async function main(url, debugMode) {
@@ -145,6 +164,8 @@ async function main(url, debugMode) {
   const browser = await puppeteer.launch(opts);
 
   const imageBuffer = await render(theYaml, browser, url, debugMode);
+  closeBrowser(browser, debugMode);
+
   process.stdout.write(imageBuffer);
 }
 
