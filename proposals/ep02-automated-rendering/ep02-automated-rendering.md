@@ -25,6 +25,7 @@ I’m not sure if these are all possible, so let’s think of this as a wish lis
 * A: Operates completely locally; does not require any sort of network connectivity
 * B: Has as few additional system requirements as possible, ideally zero
 * C: Operates completely in a single OS process
+* D: Requires adding no additional programming systems to the tool
 
 In other words: ideally a user would install and use fc4-tool as a single simple self-contained program with minimal dependencies and it’d just do its job on its own quickly and simply with predictable, straightforward failure modes, low resource utilization, and no race conditions.
 
@@ -69,6 +70,10 @@ Here’s my evaluation of this approach against each of the properties listed ab
       <td>…that would eliminate one of the processes, as Puppeteer would then be able to be called directly by the ClojureScript code.</td>
     </tr>
     <tr>
+      <th align="left">D: Single Programming System</th>
+      <td>The initial implementation would require adding a single JavaScript file to the tool, simply because I already know JavaScript, I don’t know how to work with ClojureScript, and I want to make these changes as small and incremental as possible.</td>
+      <td>…we’d then be able to port the JavaScript to ClojureScript, taking us back to a single programming system.</td>
+    </tr>
   </tbody>
 </table>
 
@@ -128,36 +133,41 @@ I found [in Paper’s README](https://github.com/paperjs/paper.js#installing-pap
 <table>
   <thead>
   	<tr>
-  		<th>Approach</th>
-  		<th>Few System Dependencies</th>
-  		<th>Single Process</th>
-  		<th>Works offline</th>
+  		<th align="left">Approach</th>
+  		<th align="left">A: Few System Dependencies</th>
+  		<th align="left">B: Single Process</th>
+  		<th align="left">C: Works offline</th>
+      <th align="left">D: Single Programming System</th>
   	</tr>
   </thead>
   <tbody>
   	<tr>
-  		<th>Structurizr’s Web API</th>
+  		<th align="left">Structurizr’s Web API</th>
   		<td>✓</td>
   		<td>✓</td>
   		<td>✕</td>
+      <td>✓</td>
   	</tr>
   	<tr>
-  		<th>Structurizr Express + Scripted Headless Browser</th>
+  		<th align="left">Structurizr Express + Scripted Headless Browser</th>
+  		<td>✓ (Just Node)</td>
   		<td>✕</td>
-  		<td>✕</td>
-  		<td>✕</td>
+  		<td>~ (Maybe)</td>
+      <td>✕</td>
   	</tr>
   	<tr>
-  		<th>Whimsical’s Hypothetical Web API</th>
+  		<th align="left">Whimsical’s Hypothetical Web API</th>
   		<td>✓</td>
   		<td>✓</td>
   		<td>✕</td>
+      <td>✓</td>
   	</tr>
   	<tr>
-  		<th>Paper.js + Scripted Headless Browser</th>
+  		<th align="left">Paper.js + Scripted Headless Browser</th>
   		<td>✕</td>
   		<td>✕</td>
   		<td>✓</td>
+      <td>✕</td>
   	</tr>
   	<tr>
   		<td><b>Paper.js + JSDom</b><br>
@@ -166,24 +176,28 @@ I found [in Paper’s README](https://github.com/paperjs/paper.js#installing-pap
   		<td>✓</td>
   		<td>✓</td>
   		<td>✓</td>
+      <td>✓</td>
   	</tr>
   	<tr>
-  		<th>JGraphX</th>
+  		<th align="left">JGraphX</th>
   		<td>✓</td>
   		<td>✓</td>
   		<td>✓</td>
+      <td>✓</td>
   	</tr>
   	<tr>
-  		<th>Apache Batik</th>
+  		<th align="left">Apache Batik</th>
   		<td>✓</td>
   		<td>✓</td>
   		<td>✓</td>
+      <td>✓</td>
   	</tr>
   	<tr>
-  		<th>Quil</th>
+  		<th align="left">Quil</th>
   		<td>✓</td>
   		<td>✓?</td>
   		<td>✓?</td>
+      <td>✓?</td>
   	</tr>
   </tbody>
 </table>
