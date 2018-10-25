@@ -95,7 +95,7 @@ async function render(diagramYaml, browser, url) {
   // doesn’t show up on the exported image. Which I think it should, because
   // Simon Brown wants it included in the images that Structurizr Express
   // exports, and it’s his software.
-  await abit(300);
+  await abit(350);
   await page.evaluate(() => Structurizr.diagram.exportCurrentView(1, true, false, false, false));
 
   log.next('getting export page');
