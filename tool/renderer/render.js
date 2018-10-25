@@ -5,23 +5,17 @@ const {existsSync} = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
-const log = {
+const log = function(msg) {
   // This program must log to stderr rather than stdout because it outputs its
   // result to stdout.
-  stderr(msg) {
-    // Calling process.stderr.write twice might be slightly more efficient than
-    // concatenating the newline to msg.
-    process.stderr.write(msg);
-    process.stderr.write('\n');
-  },
+  process.stderr.write(msg);
+  // Calling process.stderr.write twice might be slightly more efficient than
+  // concatenating the newline to msg.
+  process.stderr.write('\n');
+}
 
-  next(step) {
-    this.stderr(step + '...');
-  },
-
-  result(is) {
-    this.stderr(is + '.');
-  }
+log.next = function(step) {
+  this(step + '...');
 }
 
 async function readEntireTextStream(stream) {
@@ -121,7 +115,7 @@ async function doExport(mainPage) {
   const exportPage = await newPagePromise;
 
   const exportPageTitle = await exportPage.title();
-  log.result('export page opened with title: ' + exportPageTitle);
+  log(`export page opened with title: ${exportPageTitle}.`);
 
   return exportPage;
 };
