@@ -11,17 +11,12 @@ The [current workflow](https://fundingcircle.github.io/fc4-framework/methodology
 
 ## New User Experience (Workflow)
 
-1. The dev runs a command such as:
-    1. `fc4 render`
-    1. `fc4 render --watch`
-    1. `fc4 render views/us/us_system_landscape.yaml`
-    1. `fc4 render --watch --model foo/bar/model/ foo/bar/views`
-1. fc4-tool would then render the specified view or views into PNG files, using either the specified model path or using the default model path of `./model/`
-    1. Every specified view would be rendered to a PNG file in the same directory and with the same file name as the YAML file, except for the extension.
-    1. System views would generally be rendered to two PNG files: the System Context diagram and (if any containers are specified) the Container diagram.
-    1. If the path to the view(s) was unspecified, the default used would be `./views/`.
-         1. If the effective view path (supplied or default) is to a directory, then fc4 will search recursively for view YAML files within that directory.
-1. If the `--watch` option is specified, then fc4-tool would stay up and running and watch both the model _and_ the specified view file(s) for changes, and re-render all relevant PNG files when any of the watched files change.
+1. The documentarian runs a command such as:
+   1. `fc4 render diagrams/us/us_system_landscape.yaml path/to/another.yaml`
+   1. `fc4 render --watch diagrams/us/us_system_landscape.yaml`
+1. fc4-tool would then render each specified diagram into a PNG file
+   1. Every specified view would be rendered to a PNG file in the same directory and with the same file name as the YAML file, except for the extension.
+1. If the `--watch` option is specified, then fc4-tool would stay up and running and watch all the specified view file(s) for changes, and re-render all relevant PNG files when any of the watched files change.
 
 ## Desired Implementation Properties
 
