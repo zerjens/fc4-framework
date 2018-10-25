@@ -5,12 +5,23 @@ const {existsSync} = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
-function next(step, suffix = '...') {
-  process.stderr.write(step + suffix + '\n');
-}
+const log = {
+  // This program must log to stderr rather than stdout because it outputs its
+  // result to stdout.
+  stderr(msg) {
+    // Calling process.stderr.write twice might be slightly more efficient than
+    // concatenating the newline to msg.
+    process.stderr.write(msg);
+    process.stderr.write('\n');
+  },
 
-function result(is) {
-  next(is, '.');
+  next(step) {
+    this.stderr(step + '...');
+  },
+
+  result(is) {
+    this.stderr(is + '.');
+  }
 }
 
 function puppeteerOpts() {
@@ -45,7 +56,7 @@ function puppeteerOpts() {
 }
 
 function abit(ms) {
-  next(`pausing ${ms}ms`);
+  log.next(`pausing ${ms}ms`);
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -53,10 +64,10 @@ async function render(diagramYaml, browser, url) {
   const page = await browser.newPage();
   page.setOfflineMode(true);
 
-  next(`loading Structurizr Express from ${url}`);
+  log.next(`loading Structurizr Express from ${url}`);
   await page.goto(url, {'waitUntil' : 'domcontentloaded'});
 
-  next('setting YAML and updating diagram');
+  log.next('setting YAML and updating diagram');
   await page.evaluate(theYaml => {
     function abit(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
@@ -78,27 +89,27 @@ async function render(diagramYaml, browser, url) {
     })();
   }, diagramYaml);
 
-  next('calling export function');
+  log.next('calling export function');
   await abit(200);
   await page.evaluate(() => Structurizr.diagram.exportCurrentView(1, true, false, false, false));
 
-  next('getting export page')
+  log.next('getting export page')
   await abit(250);
   const pages = await browser.pages();
   const exportPage = pages[2];
   exportPage.setOfflineMode(true);
   const exportPageTitle = await exportPage.title();
-  result('export page opened with title: ' + exportPageTitle);
+  log.result('export page opened with title: ' + exportPageTitle);
 
-  next('getting image');
+  log.next('getting image');
   const image = await exportPage.$('#exportedContent > img');
 
-  next('getting image source');
+  log.next('getting image source');
   const imageSourceHandle = await image.getProperty('src');
   const imageSource = await imageSourceHandle.jsonValue();
   const imageBuffer = dataUriToBuffer(imageSource);
 
-  next('closing browser');
+  log.next('closing browser');
   await browser.close();
 
   return imageBuffer;
@@ -117,7 +128,7 @@ async function main() {
   // Read stdin first; if it fails or blocks, no sense in launching the browser
   const theYaml = await readEntireTextStream(process.stdin);
 
-  next('launching browser');
+  log.next('launching browser');
   const opts = puppeteerOpts();
   const browser = await puppeteer.launch(opts);
 
