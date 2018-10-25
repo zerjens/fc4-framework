@@ -27,15 +27,59 @@ The [current workflow](https://fundingcircle.github.io/fc4-framework/methodology
 
 I’m not sure if these are all possible, so let’s think of this as a wish list for now:
 
-* Operates completely locally; does not require any sort of network connectivity
-* Has as few additional system requirements as possible, ideally zero
-* Operates completely in a single OS process
+* A: Operates completely locally; does not require any sort of network connectivity
+* B: Has as few additional system requirements as possible, ideally zero
+* C: Operates completely in a single OS process
 
 In other words: ideally a user would install and use fc4-tool as a single simple self-contained program with minimal dependencies and it’d just do its job on its own quickly and simply with predictable, straightforward failure modes, low resource utilization, and no race conditions.
 
-## Possible Implementation Approaches
+## Recommended Implementation Approach
 
-I don’t actually know yet how this will/should work. But! I have some ideas:
+### Structurizr Express + Scripted Headless Browser
+
+I had already started playing around with this approach when Simon Brown suggested it in [our correspondence](https://gist.github.com/aviflax/e274b87e558b3ca3d24a8c3f81843fc5). Using [Puppeteer](https://pptr.dev) with headless Chrome this is _fairly_ straightforward.
+
+I’m recommending this approach because I’ve already got it implemented and working locally, and it’s looking good.
+
+Here’s my evaluation of this approach against each of the properties listed above in [Desired Implementation Properties](#desired-implementation-properties):
+
+<table>
+  <thead>
+    <tr>
+      <th align="left">Property</th>
+      <th align="left">My Take</th>
+      <th align="left"><i>But</i> if we migrate the tool to ClojureScript on Node (as discussed <a href="#on-clojurescript">below</a>)…</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th align="left">A: Local Operation</th>
+      <td>
+        <p>Might depend on Structurizr Express being reachable and “up”.
+        <p>(We might be able to use an “embedded” (i.e. “vendored”) instance of Structurizr Express, in which case the tool should not require Internet connectivity.)
+      </td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <th align="left">B: System Dependencies</th>
+      <td>
+        <p>Would add a single system dependency to fc4-tool: Node.
+        <p>(Puppeteer will by default automatically download an embedded Chromium when it’s installed.)
+      </td>
+      <td>…that would cancel this out, as that’d remove a Java runtime as a system dependency.</td>
+    </tr>
+    <tr>
+      <th align="left">C: Single Process</th>
+      <td>The initial implementation would require Node to be run as a child process, and it would in turn run Chromium as a child process.</td>
+      <td>…that would eliminate one of the processes, as Puppeteer would then be able to be called directly by the ClojureScript code.</td>
+    </tr>
+    <tr>
+  </tbody>
+</table>
+
+## Alternate Implementation Approaches
+
+If the recommended approach doesn’t work out, here are some ideas for  alternate approaches:
 
 ### Structurizr’s Web API
 
@@ -45,15 +89,6 @@ Structurizr does have a Web API, and I’ve [corresponded](https://gist.github.c
 
 * Would depend on Structurizr being reachable and “up”
 * Would _probably_ depend on the user having access to a paid Structurizr account or instance. (My impression is that the free plan wouldn’t support this.) (OTOH, we might be able to do this with the free plan by uploading the “workspace” as public, downloading the PNG(s), and then deleting the workspace. But that might be slow and/or error prone and/or have unacceptable failure modes.)
-
-### Structurizr Express + Scripted Headless Browser
-
-I had already started playing around with this approach when Simon Brown suggested it in [our correspondence](https://gist.github.com/aviflax/e274b87e558b3ca3d24a8c3f81843fc5). Using [Puppeteer](https://pptr.dev) with headless Chrome this _should_ be fairly straightfoward. (I didn’t quite get it to work when I was playing around with it, but I didn’t spend much time on it back then; I didn’t have a chance to see it through.)
-
-#### Cons
-
-* Would depend on Structurizr Express being reachable and “up”
-* Would add lots of system dependencies to fc4-tool: Node, Chrome, and maybe ClojureScript. (Unless we maybe want to consider rigging up a Web service that’d do the rendering by running all that on the server, which’d still be a significant cost+downside.)
 
 ### Whimsical’s Hypothetical Web API
 
