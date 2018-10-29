@@ -59,11 +59,18 @@
   [e]
   (-> e class .getSimpleName))
 
-(defn try-process [contents]
+(defn try-process
+  "Accepts a Structurizr Express diagram as a YAML string, attempts to process
+  it, and if successful, returns the result. If an error occurs, prints some
+  debugging info to stdout and then returns nil. If no error occurs, prints a
+  success message to stdout. Why the side effects? Because I needed to put them
+  somewhere, and wcb is already hard to read even when it is solely concerned
+  with control flow. So this function is responsible for messaging the outcome
+  to the user."
+  [contents]
   (try
     (let [{main       ::ed/main-processed
            str-result ::ed/str-processed} (process-file contents)
-          _ (spit str-result)
           {:keys [:type :scope]} main]
       (println (current-local-time-str) "-> processed" type "for" scope "with great success!")
       (flush)
@@ -101,9 +108,10 @@
   (go-loop [prior-contents nil]
     (let [contents (slurp)
           process? (and (not= contents prior-contents)
-                        (probably-diagram-yaml? contents))
-          output (when process?
-                   (try-process contents))]
+                        (probably-diagram-yaml? contents))]
+      (when process?
+        (when-let [processed (try-process contents)]
+          (spit processed)))
       (if (poll! stop-chan)
         (do (println "Stopped!")
             (flush)
