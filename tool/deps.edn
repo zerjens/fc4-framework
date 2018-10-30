@@ -38,4 +38,4 @@
 
            :lint/fix  {:main-opts   ["-m" "cljfmt-runner.fix"]}
 
-           :clj-next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha6"}}}}}
+           :clj-next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-beta4"}}}}}
