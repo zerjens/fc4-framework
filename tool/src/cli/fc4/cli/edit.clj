@@ -8,23 +8,44 @@
     [fc4.integrations.structurizr.express.clipboard :as cb]
     [fc4.integrations.structurizr.express.edit :as se-edit]
     [fc4.io :as fio :refer [process-text-file render-diagram-file yaml-file?]]
-    [hawk.core :as hawk]))
+    [hawk.core :as hawk])
+  (:import [java.time Instant]
+           [java.time.temporal ChronoUnit]))
 
-(defn fs-event-filter
-  [_context {:keys [kind file] :as event}]
+;; The context values are a map of file path to the timestamp of the most recent
+;; occasion wherein we processed that file.
+
+(def seconds (ChronoUnit/SECONDS))
+(def min-secs-between-changes 2)
+
+(defn since
+  [inst]
+  (.between seconds inst (Instant/now)))
+
+(defn process?
+  [context {:keys [kind file] :as event}]
   (and (#{:create :modify} kind)
-       (yaml-file? file)))
+       (yaml-file? file)
+       (or (not (contains? context file))
+           (let [last-processed (get context file)]
+             (>= (since last-processed) min-secs-between-changes)))))
 
-(defn on-diagram-file-change
-  [_context {:keys [kind file] :as event}]
-  (println "processing" (str file))
+(defn process
+  [context {:keys [file] :as event}]
+  (println "BEGIN" (str file))
   (let [process-result (se-edit/process-file (slurp file))
         ;; TODO: error handling!
-        yaml-out (::se-edit/str-processed process-result)]
-    (spit file yaml-out)
-    (cb/spit yaml-out)
-    (println (render-diagram-file file)
-             "...done. Processed YAML written to file and clipboard.")))
+        yaml-out (::se-edit/str-processed process-result)
+        inst-written (do (cb/spit yaml-out)
+                         (spit file yaml-out)
+                         (Instant/now))
+        _ (println "processed YAML written to file and clipboard.\nstarting rendering...")
+        stderr (render-diagram-file file)]
+    (println (str stderr "rendering complete.\nEND " (.getName file) "\n"))
+    ; Return an updated context value so that process? will be able to filter out
+    ; the fs modify event that will be dispatched immediately because we wrote to
+    ; the YAML file.
+    (assoc context file inst-written)))
 
 (defn -main
   ;; NB: if and when we add options we’ll probably want to use
@@ -34,5 +55,6 @@
   ;; option ASAP.
   [& paths]
   (hawk/watch! [{:paths paths
-                 :filter fs-event-filter
-                 :handler on-diagram-file-change}]))
+                 :context (constantly {}) ; used only for initial context value
+                 :filter process?
+                 :handler process}]))
