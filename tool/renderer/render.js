@@ -85,10 +85,12 @@ async function setYamlAndUpdateDiagram(page, diagramYaml) {
 
     (async () => {
       // helps with debugging, screenshots, etc
-      document.getElementById('expressIntroductionModal').style = 'display: none;';
+      document.getElementById('expressIntroductionModal').style.display = 'none';
 
       // Show the YAML tab. Not sure why but without this the diagram doesn’t render.
-      document.querySelector('a[href="#yaml"]').click();
+      document.querySelector('a[href="#yaml"]').dispatchEvent(
+        new MouseEvent('click', {view: window, bubbles: true, cancelable: true})
+      );
 
       const yamlTextArea = document.getElementById('yamlDefinition');
       yamlTextArea.value = theYaml;
