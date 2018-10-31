@@ -21,8 +21,9 @@
 
 (defn yaml-file?
   [file]
-  (or (ends-with? file ".yaml")
-      (ends-with? file ".yml")))
+  (and (.isFile (io/file file))
+       (or (ends-with? file ".yaml")
+           (ends-with? file ".yml"))))
 
 (defn yaml-files
   "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
