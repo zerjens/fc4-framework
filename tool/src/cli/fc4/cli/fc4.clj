@@ -3,13 +3,15 @@
   (:gen-class)
   (:require
    [clojure.string   :as str     :refer [join]]
+   [fc4.cli.edit     :as edit]
    [fc4.cli.export   :as export]
    [fc4.cli.render   :as render]
    [fc4.cli.util     :as cu      :refer [exit]]
    [fc4.cli.wcb      :as wcb]))
 
 (def subcommands
-  {:export export/-main
+  {:edit   edit/-main
+   :export export/-main
    :render render/-main
    :wcb    wcb/-main})
 

@@ -46,7 +46,7 @@
         :ret  ::result)
 
 (comment
-  (use 'clojure.java.io 'clojure.java.shell)
+  (use 'clojure.java.io 'clojure.java.shell 'fc4.io)
   (require :reload '[fc4.integrations.structurizr.express.render :as r])
   (in-ns 'fc4.integrations.structurizr.express.render)
 
@@ -56,9 +56,5 @@
   ; png-bytes
   (def result (render dy))
   (def pngb (::png-bytes result))
-
-  (defn binary-spit [file-path data]
-    (with-open [out (output-stream (file file-path))]
-      (.write out data)))
 
   (binary-spit "/tmp/diagram.png" pngb))

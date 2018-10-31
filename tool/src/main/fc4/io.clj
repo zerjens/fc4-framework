@@ -2,20 +2,27 @@
   "Provides all I/O facilities so that the other namespaces can be pure. The
   function specs are provided as a form of documentation and for instrumentation
   during development. They should not be used for generative testing."
-  (:require [clojure.java.io         :as io]
-            [clojure.spec.alpha      :as s]
-            [clojure.spec.gen.alpha  :as gen]
-            [clojure.string          :as str :refer [ends-with?]]
-            [cognitect.anomalies     :as anom]
-            [expound.alpha           :as expound :refer [expound-str]]
-            [fc4.files              :as files :refer [relativize]]
-            [fc4.model              :as m :refer [elements-from-file]]
-            [fc4.spec               :as fs]
-            [fc4.styles             :as st :refer [styles-from-file]]
-            [fc4.util               :as u :refer [lookup-table-by]]
-            [fc4.yaml               :as fy :refer [split-file]]
-            [fc4.view               :as v :refer [view-from-file]])
+  (:require
+    [clojure.java.io         :as io]
+    [clojure.spec.alpha      :as s]
+    [clojure.spec.gen.alpha  :as gen]
+    [clojure.string          :as str :refer [ends-with?]]
+    [cognitect.anomalies     :as anom]
+    [expound.alpha           :as expound :refer [expound-str]]
+    [fc4.files               :as files :refer [relativize]]
+    [fc4.integrations.structurizr.express.render :as render :refer [render]]
+    [fc4.model               :as m :refer [elements-from-file]]
+    [fc4.spec                :as fs]
+    [fc4.styles              :as st :refer [styles-from-file]]
+    [fc4.util                :as u :refer [lookup-table-by]]
+    [fc4.yaml                :as fy :refer [split-file]]
+    [fc4.view                :as v :refer [view-from-file]])
   (:import [java.io FileNotFoundException]))
+
+(defn yaml-file?
+  [file]
+  (or (ends-with? file ".yaml")
+      (ends-with? file ".yml")))
 
 (defn yaml-files
   "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
@@ -23,12 +30,21 @@
   [dir]
   (->> (io/file dir)
        file-seq
-       (filter #(or (ends-with? % ".yaml")
-                    (ends-with? % ".yml")))))
+       (filter yaml-file?)))
 
 (s/fdef yaml-files
         :args (s/cat :dir ::fs/dir-path)
         :ret  (s/coll-of (partial instance? java.io.File)))
+
+(defn process-text-file
+  "Accepts a file as a File or a string containing a file path, reads the
+  contents of the file as UTF-8 text, applies f to the contents, and writes the
+  result of f to the file, overwriting its contents. Returns nil."
+  [file-or-file-path f]
+  (let [file (io/file file-or-file-path)]
+    (->> (slurp file)
+         (f)
+         (spit file))))
 
 (defn process-dir
   "Accepts a directory path as a string, finds all the YAML files in that dir or
@@ -38,11 +54,9 @@
   immediately, aborting the work."
   [dir-path f]
   (doseq [file (yaml-files dir-path)]
-    (binding [*out* *err*]
+    (binding [*out* *err*] ; not sure why this is printed to stderr.
       (println (relativize (str file) dir-path)))
-    (->> (slurp file)
-         (f)
-         (spit file))))
+    (process-text-file file f)))
 
 (s/fdef process-dir
         :args (s/cat :dir-path ::fs/dir-path
@@ -133,3 +147,20 @@
         :args (s/cat :file-path ::fs/file-path-str)
         :ret  (s/or :success ::st/styles
                     :error   ::error))
+
+(defn binary-spit [file-or-file-path data]
+  (with-open [out (io/output-stream (io/file file-or-file-path))]
+    (.write out data)))
+
+(defn render-diagram-file
+  ;; TODO: Error handling!!!!!
+  ;;
+  ;; TODO: Check that png-bytes is not empty and exit with an error code if it
+  ;; is.
+  [yaml-file]
+  (let [yaml                       (slurp yaml-file)
+        {:keys [::render/png-bytes
+                ::render/stderr]}  (render yaml)
+        out-path                   (str/replace yaml-file #"\.ya?ml$" ".png")]
+    (binary-spit out-path png-bytes)
+    stderr))

@@ -7,6 +7,7 @@
 
 (ns fc4.integrations.structurizr.express.render-test
   (:require [fc4.integrations.structurizr.express.render :as r]
+            [fc4.io                                             :refer [binary-spit]]
             [clojure.java.io                             :as io :refer [file input-stream]]
             [clojure.spec.alpha                          :as s]
             [clojure.test                                       :refer [deftest testing is]]
@@ -24,10 +25,6 @@
     (with-open [in (DataInputStream. (input-stream file))]
       (.readFully in result))
     result))
-
-(defn binary-spit [f data]
-  (with-open [out (io/output-stream (file f))]
-    (.write out data)))
 
 (defn bytes->buffered-image [bytes]
   (ImageIO/read (ByteArrayInputStream. bytes)))
