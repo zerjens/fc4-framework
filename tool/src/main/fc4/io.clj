@@ -3,20 +3,20 @@
   function specs are provided as a form of documentation and for instrumentation
   during development. They should not be used for generative testing."
   (:require
-    [clojure.java.io         :as io]
-    [clojure.spec.alpha      :as s]
-    [clojure.spec.gen.alpha  :as gen]
-    [clojure.string          :as str :refer [ends-with?]]
-    [cognitect.anomalies     :as anom]
-    [expound.alpha           :as expound :refer [expound-str]]
-    [fc4.files               :as files :refer [relativize]]
-    [fc4.integrations.structurizr.express.render :as render :refer [render]]
-    [fc4.model               :as m :refer [elements-from-file]]
-    [fc4.spec                :as fs]
-    [fc4.styles              :as st :refer [styles-from-file]]
-    [fc4.util                :as u :refer [lookup-table-by]]
-    [fc4.yaml                :as fy :refer [split-file]]
-    [fc4.view                :as v :refer [view-from-file]])
+   [clojure.java.io         :as io]
+   [clojure.spec.alpha      :as s]
+   [clojure.spec.gen.alpha  :as gen]
+   [clojure.string          :as str :refer [ends-with?]]
+   [cognitect.anomalies     :as anom]
+   [expound.alpha           :as expound :refer [expound-str]]
+   [fc4.files               :as files :refer [relativize]]
+   [fc4.integrations.structurizr.express.render :as render :refer [render]]
+   [fc4.model               :as m :refer [elements-from-file]]
+   [fc4.spec                :as fs]
+   [fc4.styles              :as st :refer [styles-from-file]]
+   [fc4.util                :as u :refer [lookup-table-by]]
+   [fc4.yaml                :as fy :refer [split-file]]
+   [fc4.view                :as v :refer [view-from-file]])
   (:import [java.io FileNotFoundException]))
 
 (defn yaml-file?
