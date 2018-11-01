@@ -1,5 +1,5 @@
 (ns fc4.integrations.structurizr.express.clipboard
-  (:require [clojure.core.async :as ca :refer [<! >! chan dropping-buffer go offer! poll! timeout]]
+  (:require [clojure.core.async :as ca :refer [<! >! chan close! dropping-buffer go offer! poll! timeout]]
             [fc4.integrations.structurizr.express.edit
              :as ed
              :refer [probably-diagram-yaml? process-file]])
@@ -79,7 +79,7 @@
     (let [{main       ::ed/main-processed
            str-result ::ed/str-processed} (process-file contents)
           {:keys [:type :scope]} main]
-      (println (current-local-time-str) "-> processed" type "for" scope "with great success!")
+      (println (current-local-time-str) "-> processed (to+from clipboard)" type "for" scope "with great success!")
       (flush)
       str-result)
     (catch Exception err
@@ -95,8 +95,6 @@
       (flush)
       nil)))
 
-(def ^:private stop-chan (chan 1))
-
 (defn watch
   "Must be called within a go block."
   [output-chan stop-chan]
@@ -109,9 +107,15 @@
       (when (and process output)
         (>! output-chan output)
         (spit output))
-      (when-not (poll! stop-chan)
-        (<! (timeout 1000))
-        (recur (or output contents))))))
+      (if (poll! stop-chan)
+          (close! output-chan)
+          (do (<! (timeout 1000))
+              (recur (or output contents)))))))
+
+(def ^:private stop-chan
+  ;; It’d be unhelpful at best, and potentially problematic, to allow values to
+  ;; collect in this channel. So it’ll drop all additional values beyond 1.
+  (chan (dropping-buffer 1)))
 
 (defn wcb
   "Start a background routine that watches the clipboard for changes. If the
@@ -126,14 +130,12 @@
 
   This is intended mainly for use in the CLI subcommand `wbc`."
   []
-  ;; Just in case stop was accidentally called twice, in which case there’d be a superfluous value
-  ;; in the channel, we’ll remove a value from the channel just before we get started.
-  (poll! stop-chan)
   ; In this case we don’t actually care about the output; we don’t need to do anything with it.
-  (let [output-chan (dropping-buffer 1)]
-    (go (watch output-chan stop-chan) ; blocks until stop is called
-        (println "Stopped!")
-        (flush))))
+  (let [output-chan (chan (dropping-buffer 1))]
+    (println "Watching clipboard for Structurizr Express diagram YAML documents...")
+    (go (watch output-chan stop-chan)) ; blocks until stop is called
+    (println "Stopped!")
+    (flush)))
 
 (defn stop
   "Stop the goroutine started by wcb."
