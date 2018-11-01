@@ -111,8 +111,8 @@
         (spit output))
       (if (poll! stop-chan)
         (close! output-chan)
-          (do (<! (timeout 1000))
-              (recur (or output contents)))))))
+        (do (<! (timeout 1000))
+            (recur (or output contents)))))))
 
 (def ^:private stop-chan
   ;; It’d be unhelpful at best, and potentially problematic, to allow values to

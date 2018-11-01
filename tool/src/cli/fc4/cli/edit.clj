@@ -73,8 +73,8 @@
         (spit file processed)
         (println "Clipboard contents processed and written to" (.getName file))
         (when-let [processed-next (<! output-chan)]
-          (recur processed-next)))
-    (stop-chan))))
+          (recur processed-next))))
+    (stop-chan)))
 
 (defn -main
   ;; NB: if and when we add options we’ll probably want to use
