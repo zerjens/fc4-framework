@@ -16,7 +16,7 @@
 ;; occasion wherein we processed that file.
 
 (def seconds (ChronoUnit/SECONDS))
-(def min-secs-between-changes 2)
+(def min-secs-between-changes 1)
 
 (defn since
   [inst]
@@ -28,6 +28,7 @@
        (yaml-file? file)
        (or (not (contains? context file))
            (let [last-processed (get context file)]
+             ; (println "it’s been" (since last-processed) "seconds since" (.getName file) "was last changed...")
              (>= (since last-processed) min-secs-between-changes)))))
 
 (defn process
@@ -35,17 +36,16 @@
   (println "BEGIN" (str file))
   (let [process-result (se-edit/process-file (slurp file))
         ;; TODO: error handling!
-        yaml-out (::se-edit/str-processed process-result)
-        inst-written (do (cb/spit yaml-out)
-                         (spit file yaml-out)
-                         (Instant/now))
-        _ (println "processed YAML written to file and clipboard.\nstarting rendering...")
-        stderr (render-diagram-file file)]
-    (println (str stderr "rendering complete.\nEND " (.getName file) "\n"))
+        yaml-out (::se-edit/str-processed process-result)]
+    (cb/spit yaml-out)
+    (spit file yaml-out)
+    (println "processed YAML written to file and clipboard.\nstarting rendering...")
+    (println (render-diagram-file file))
+    (println "rendering complete.\nEND" (.getName file) "\n")
     ; Return an updated context value so that process? will be able to filter out
     ; the fs modify event that will be dispatched immediately because we wrote to
     ; the YAML file.
-    (assoc context file inst-written)))
+    (assoc context file (Instant/now))))
 
 (defn start-watch [paths]
   (let [watch (hawk/watch! [{:paths paths
