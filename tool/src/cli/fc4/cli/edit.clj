@@ -4,11 +4,11 @@
   is rendered to an image file, and the cleaned up YAML is pasted to the
   clipboard."
   (:require
-    [clojure.string :as cstr :refer [ends-with?]]
-    [fc4.integrations.structurizr.express.clipboard :as cb]
-    [fc4.integrations.structurizr.express.edit :as se-edit]
-    [fc4.io :as fio :refer [process-text-file render-diagram-file yaml-file?]]
-    [hawk.core :as hawk])
+   [clojure.string :as cstr :refer [ends-with?]]
+   [fc4.integrations.structurizr.express.clipboard :as cb]
+   [fc4.integrations.structurizr.express.edit :as se-edit]
+   [fc4.io :as fio :refer [process-text-file render-diagram-file yaml-file?]]
+   [hawk.core :as hawk])
   (:import [java.time Instant]
            [java.time.temporal ChronoUnit]))
 
