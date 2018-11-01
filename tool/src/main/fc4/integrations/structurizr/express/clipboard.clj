@@ -111,7 +111,7 @@
         (>! output-chan output)
         (spit output))
       (if (poll! stop-chan)
-          (close! output-chan)
+        (close! output-chan)
           (do (<! (timeout 1000))
               (recur (or output contents)))))))
 
