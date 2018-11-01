@@ -43,18 +43,31 @@ MacOS quick-start for [Homebrew](https://brew.sh/) users: `brew cask install ado
    1. e.g. `mv ~/Downloads/fc4/fc4* ~/bin/`
 
 
-## Editing and Rendering Diagrams
+## Authoring Diagrams
 
 ### Basic Workflow
 
-1. Run in your terminal: `fc4 wcb`
-1. Copy-and-paste YAML diagram definitions between [Structurizr Express](https://structurizr.com/help/express) (SE) and an open file in your text editor.
-1. When done, ensure the YAML in your editor is the latest version, copy-and-pasting from SE one last time if necessary, then save the file.
-1. Switch to your terminal and hit ctrl-c to stop fc4-tool
-1. Run `fc4 render path/to/diagram.yaml` to generate a `.png` file alongside the `.yaml` file
-1. Commit both files
+1. In your terminal run: `fc4 edit [path ...]`
+   1. You may supply 1–n paths; each may be to a directory or a YAML file
+   2. Every file supplied will be watched, and every directory supplied will
+      be watched recursively
+1. Open one of the YAML files in your text editor and edit it
+1. When you’d like to switch to [Structurizr Express](https://structurizr.com/help/express) (SE) for graphical editing:
+   1. Save the file
+   1. fc4-tool will write the cleaned-up diagram YAML to your clipboard
+   1. Open SE
+   1. Paste the cleaned-up YAML into SE’s YAML tab
+   1. Modify the diagram in SE’s graphical editor
+1. When done working with SE:
+   1. Select all the YAML in SE’s YAML tab and copy it into your clipboard
+   1. Switch back to your text editor — you’ll see that fc4-tool already overwrote the file with what you just copied from SE
+   1. Continue editing in your text editor
+1. When you’d like to wrap up your session:
+   1. Save the file one last time
+   1. If you run `git status` you’ll see that the YAML file has been created/changed and its corresponding PNG file has also been created/changed
+   1. Commit both files
 
-### Full Workflow
+## Full Workflow
 
 Please see [The Authoring Workflow](https://fundingcircle.github.io/fc4-framework/methodology/authoring_workflow.html) section of
 [the FC4 Methodology](https://fundingcircle.github.io/fc4-framework/methodology/).
