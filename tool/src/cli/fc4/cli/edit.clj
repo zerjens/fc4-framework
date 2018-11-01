@@ -47,6 +47,14 @@
     ; the YAML file.
     (assoc context file inst-written)))
 
+(defn start-watch [paths]
+  (let [watch (hawk/watch! [{:paths paths
+                             :context (constantly {}) ; used only for initial context value
+                             :filter process?
+                             :handler process}])]
+    (println "now watching for changes to YAML files under specified paths...")
+    watch))
+
 (defn -main
   ;; NB: if and when we add options we’ll probably want to use
   ;; tools.cli/parse-opts to parse them.
@@ -54,7 +62,6 @@
   ;; TODO: Actually, now that I think about it, we should probably add a --help
   ;; option ASAP.
   [& paths]
-  (hawk/watch! [{:paths paths
-                 :context (constantly {}) ; used only for initial context value
-                 :filter process?
-                 :handler process}]))
+  (-> (start-watch paths)
+      (get :thread)
+      (.join)))
