@@ -45,13 +45,11 @@ MacOS quick-start for [Homebrew](https://brew.sh/) users: `brew cask install ado
 
 ## Authoring Diagrams
 
-### Basic Workflow
+### Editing A Single Diagram
 
-1. In your terminal run: `fc4 edit [path ...]`
-   1. You may supply 1–n paths; each may be to a directory or a YAML file
-   2. Every file supplied will be watched, and every directory supplied will
-      be watched recursively
-1. Open one of the YAML files in your text editor and edit it
+1. Run in your terminal: `fc4 edit path/to/diagram.yaml`
+   1. The YAML file will be watched for changes
+1. Open the YAML file in your text editor and edit it
 1. When you’d like to switch to [Structurizr Express](https://structurizr.com/help/express) (SE) for graphical editing:
    1. Save the file
    1. fc4-tool will write the cleaned-up diagram YAML to your clipboard
@@ -59,7 +57,7 @@ MacOS quick-start for [Homebrew](https://brew.sh/) users: `brew cask install ado
    1. Paste the cleaned-up YAML into SE’s YAML tab
    1. Modify the diagram in SE’s graphical editor
 1. When done working with SE:
-   1. Select all the YAML in SE’s YAML tab and copy it into your clipboard
+   1. Select all the YAML in SE’s YAML tab and cut it into your clipboard
    1. Switch back to your text editor — you’ll see that fc4-tool already overwrote the file with what you just copied from SE
    1. Continue editing in your text editor
 1. When you’d like to wrap up your session:
