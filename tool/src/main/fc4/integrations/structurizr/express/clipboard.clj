@@ -95,24 +95,28 @@
       nil)))
 
 (defn watch
-  "Must be called within a go block. Returns a channel that will block until
+  "Returns a channel that will block until
   the routine exits, at which point nil will be emitted to the channel,
   closing it. This may be useful if a caller wishes to block while this routine
   is running."
-  [output-chan stop-chan]
-  (go-loop [prior-contents nil]
-    (let [contents (slurp)
-          changed (not= contents prior-contents)
-          process (and changed (probably-diagram-yaml? contents))
-          output (when process
-                   (try-process contents))]
-      (when (and process output)
-        (>! output-chan output)
-        (spit output))
-      (if (poll! stop-chan)
-        (close! output-chan)
-        (do (<! (timeout 1000))
-            (recur (or output contents)))))))
+  ([output-chan stop-chan]
+   (watch output-chan stop-chan {}))
+  ([output-chan stop-chan {:keys [filter] :as _opts}]
+   (go-loop [prior-contents nil]
+     (let [contents (slurp)
+           changed (not= contents prior-contents)
+           process (and changed
+                        (probably-diagram-yaml? contents)
+                        (if filter (filter prior-contents contents) true))
+           output (when process
+                    (try-process contents))]
+       (when (and process output)
+         (>! output-chan output)
+         (spit output))
+       (if (poll! stop-chan)
+         (close! output-chan)
+         (do (<! (timeout 1000))
+             (recur (or output contents))))))))
 
 (def ^:private stop-chan
   ;; It’d be unhelpful at best, and potentially problematic, to allow values to
