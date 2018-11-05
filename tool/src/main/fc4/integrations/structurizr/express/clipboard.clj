@@ -4,7 +4,7 @@
              :as ed
              :refer [probably-diagram-yaml? process-file]])
   (:import [java.awt Toolkit]
-           [java.awt.datatransfer DataFlavor StringSelection])
+           [java.awt.datatransfer Clipboard DataFlavor StringSelection])
   (:refer-clojure :exclude [slurp spit]))
 
 ; Suppress the Java icon from popping up and grabbing focus on MacOS.
@@ -15,7 +15,9 @@
 ;; This was a simple var at one point but that broke CI builds, which run on
 ;; headless machines; therefore this needs to be a function and it shouldn’t be
 ;; called during CI test runs.
-(defn clipboard [] (.getSystemClipboard (Toolkit/getDefaultToolkit)))
+(defn clipboard ^Clipboard
+  []
+  (.getSystemClipboard (Toolkit/getDefaultToolkit)))
 
 ;; based on code found at https://gist.github.com/Folcon/1167903
 (def string-flavor (DataFlavor/stringFlavor))
