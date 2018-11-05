@@ -20,30 +20,18 @@ As explained in
 
 ## Setup
 
-1. Install Clojure as per [this guide](https://clojure.org/guides/getting_started)
-   1. This project uses the new Clojure CLI (`clj`) and
-      [tools.deps](https://clojure.org/guides/deps_and_cli), both of which are installed by
-      [the new official Clojure installers](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
-      released alongside Clojure 1.9. If you’ve been working with Clojure for awhile, you might
-      not have these tools installed. Try `which clj` to check, and if that prints a blank line,
-      try running the appropriate
-      [installer](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools).
-2. Clone [this repo](https://github.com/FundingCircle/fc4-framework)
-3. `cd` into the repo and then `cd tool`
-4. To install the dependencies, run: `clojure -Sdescribe'`
+1. Have a Java Runtime Environment (JRE) or Java Development Kit (JDK) installed
+   1. On MacOS if you have [Homebrew](https://brew.sh/) you can run `brew cask install adoptopenjdk`
+1. Download `fc4.jar` from the latest release on [the releases page](https://github.com/FundingCircle/fc4-framework/releases)
 
-## Basic Usage
 
-1. Have `clj` installed ([guide](https://clojure.org/guides/getting_started))
-1. Run in your shell, from the root of the repo: `cd tool && ./wcb`
-
-## Full Usage Workflow
+## Basic Usage Workflow
 
 As explained in [The Authoring Workflow](https://fundingcircle.github.io/fc4-framework/methodology/authoring_workflow.html) section of
 [the FC4 Methodology](https://fundingcircle.github.io/fc4-framework/methodology/):
 
 > 1. In your text editor: either create a new diagram source file or open an existing diagram source file
-> 1. In a terminal, in your `fc4` working dir, run `cd tool && ./wcb`
+> 1. In a terminal run `java -jar path/to/fc4.jar`
 >    1. This starts the tool in a mode wherein it will watch your clipboard for diagram source YAML and process (clean up) that YAML when it sees that it’s been changed.
 > 1. In your text editor, add/revise elements and relationships, then select-all and cut the diagram source from your editor into your system clipboard.
 >    1. This will cause fc4-tool to process the contents of your clipboard.
@@ -55,6 +43,18 @@ As explained in [The Authoring Workflow](https://fundingcircle.github.io/fc4-fra
 >    1. This will cause fc4-tool to process the contents of your clipboard.
 > 1. Paste the diagram source back into the SE YAML textarea so as to re-render the diagram, now that the elements have been “snapped” to a virtual grid.
 > 1. Continue to cut and past the diagram source between your text editor and SE, using SE to preview and adjust the rendered diagram, while fc4-tool cleans up the diagram as you work.
+
+## Requirements and Prerequisites for Development and Testing
+
+### Required
+
+* Java 8/9/10
+  * The tool cannot currently compile on Java 11 due to [an incompatibility](https://github.com/circleci/clj-yaml/issues/22) in a dependency of a dependency. Therefore you are recommended to use Java 8, 9, or 10 to develop and/or test the tool.
+
+### Recommended
+
+* [Docker](https://www.docker.com/)
+  * For [running the tests](#running-the-tests)
 
 ## Running the Tests
 
