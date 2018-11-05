@@ -1,30 +1,31 @@
 version: 2
 
-# In many of the jobs below, you’ll see `working_directory` specified, and that
-# the `checkout` step has a different path specified (the default path). This is
-# because it’s a little tricky to get `working_directory` and `checkout` to work
-# together when I want the working directory for all steps *except*
-# `checkout` to be a subdirectory of the project — because by default,
-# `checkout` checks out into the specified `working_directory`. I found this
-# solution here: https://stackoverflow.com/a/50570581/7012
+# All the tool_* jobs specify the checkout path, and then set a
+# `working_directory` that’s different than the default and is _underneath_ the
+# checkout path. This is because it’s a little tricky to get `working_directory`
+# and `checkout` to work together when I want the working directory for all
+# steps *except* `checkout` to be a subdirectory of the project — because by
+# default, `checkout` checks out into the specified `working_directory`. I found
+# this solution here: https://stackoverflow.com/a/50570581/7012
+tool_job_defaults: &tool_job_defaults
+  working_directory: ~/project/tool
+  docker:
+    - image: clojure:tools-deps-alpine
+
+restore_cache_keys: &restore_cache_keys
+  keys:
+  - deps-{{ checksum "deps.edn" }}
+  # fallback to using the latest cache if no exact match is found
+  - deps-
 
 jobs:
    tool_deps:
-     docker:
-       - image: clojure:tools-deps-alpine
-
-     working_directory: ~/project/tool
-
+     <<: *tool_job_defaults
      steps:
        - checkout:
            path: ~/project
-
        - restore_cache:
-           keys:
-           - deps-{{ checksum "deps.edn" }}
-           # fallback to using the latest cache if no exact match is found
-           - deps-
-
+           <<: *restore_cache_keys
        - run:
           name: Download dependencies (if necessary)
           # Clojure automatically downloads deps if necessary
@@ -38,20 +39,12 @@ jobs:
            - ~/.gitlibs
 
    tool_test:
-     docker:
-       - image: clojure:tools-deps-alpine
-
-     working_directory: ~/project/tool
-
+     <<: *tool_job_defaults
      steps:
        - checkout:
            path: ~/project
-
        - restore_cache:
-           keys:
-           - deps-{{ checksum "deps.edn" }}
-           # fallback to using the latest cache if no exact match is found
-           - deps-
+           <<: *restore_cache_keys
 
        - run:
           name: Run tests and measure test coverage
@@ -71,33 +64,62 @@ jobs:
           command: bash <(curl -s https://codecov.io/bash)
 
    tool_lint:
-     docker:
-       - image: clojure:tools-deps-alpine
-
-     working_directory: ~/project/tool
-
+     <<: *tool_job_defaults
      steps:
        - checkout:
            path: ~/project
-
        - restore_cache:
-           keys:
-           - deps-{{ checksum "deps.edn" }}
-           # fallback to using the latest cache if no exact match is found
-           - deps-
-
+           <<: *restore_cache_keys
        - run:
           name: lint
           command: clojure -A:lint
+
+   tool_publish_jar:
+     <<: *tool_job_defaults
+     steps:
+       - checkout:
+           path: ~/project
+       - restore_cache:
+           <<: *restore_cache_keys
+       - run:
+           name: Download and unpack ghr
+           command: |
+             wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_amd64.tar.gz
+             tar -xzf ghr_v0.12.0_linux_amd64.tar.gz --strip-components 1 ghr_v0.12.0_linux_amd64/ghr
+       - run:
+           name: Build Uberjar
+           command: bin/uberjar
+       - run:
+           name: Create GitHub Release and upload uberjar to it
+           command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG:-CIRCLE_TAG_NOT_SET} target/fc4.jar
 
 workflows:
   version: 2
   tool:
     jobs:
-      - tool_deps
+      - tool_deps:
+          filters:
+            tags:
+              only: /.*/
       - tool_test:
           requires:
             - tool_deps
+          filters:
+            tags:
+              only: /.*/
       - tool_lint:
           requires:
             - tool_deps
+          filters:
+            tags:
+              only: /.*/
+      - tool_publish_jar:
+          requires:
+            - tool_deps
+            - tool_test
+            - tool_lint
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
