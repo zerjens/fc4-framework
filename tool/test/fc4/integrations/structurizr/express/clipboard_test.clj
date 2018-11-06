@@ -42,6 +42,5 @@
     (testing "processing a file that’s valid and has been cleaned"
       (let [fp  "test/data/structurizr/express/diagram_valid_cleaned.yaml"
             in  (slurp fp)
-            out (binding [*out* (java.io.StringWriter.)]
-                  (c/try-process in))]
+            out (c/try-process in)]
         (is (= in out))))))
