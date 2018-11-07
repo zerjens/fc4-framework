@@ -1,0 +1,24 @@
+#!/bin/sh
+
+## Run this from <project-root>/tool/
+
+set -e
+
+# We don’t want this source tree src/test_utils to be included in the set of
+# source files that will be compiled, mainly because they can only compile
+# successfully if certain test dependencies are included, such as eftest and
+# cloverage. We don’t want those dependencies to be included in the deployment
+# artifact (uberjar) because they’d wastefully inflate its size, so right now,
+# unless and until we modify Cambada or switch to a different tool for building
+# the uberjar, this hack suffices.
+tmp_src_dir=$(mktemp -d)
+mv src/test_utils "$tmp_src_dir/"
+trap 'mv $tmp_src_dir/test_utils src/' EXIT
+
+clojure -A:uberjar
+
+target_path="target/fc4.jar"
+
+mv target/tool-1.0.0-SNAPSHOT-standalone.jar "$target_path"
+
+echo "Successfully created $target_path"

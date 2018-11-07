@@ -112,10 +112,8 @@ source code is formatted incorrectly. Coming soon!
 You’ll need to be using Java 9 or 10; 11 or higher cannot currently compile the project (see [issue #85](https://github.com/FundingCircle/fc4-framework/issues/85)).
 
 ```shell
-rm -Rf src/test_utils
-clojure -A:uberjar
-git reset --hard HEAD # undo the deletion above BE CAREFUL NOT TO LOSE CHANGES
-mv target/tool-1.0.0-SNAPSHOT-standalone.jar target/fc4.jar
+# From <repo-root>/tool/ run:
+bin/uberjar
 ```
 
 Since you need to use Java 8/9/10 to compile the project but then Java 11 to validate the uberjar, you might find [jenv](http://www.jenv.be/) useful. (I discovered it via [Multiple JVM versions on macOS](https://pete-woods.com/2018/01/multiple-jvm-versions-on-macos/) by Pete Woods.)
