@@ -37,7 +37,21 @@
 
            :lint/fix      {:main-opts   ["-m" "cljfmt-runner.fix"]}
 
-           :outdated      {:extra-deps  {olical/depot               {:mvn/version "1.2.0"}}
-                           :main-opts   ["-m" "depot.outdated.main"]}
+           :uberjar       {:extra-deps  {luchiniatwork/cambada {:mvn/version "1.0.0"}
+                                         ;; NB before you run this alias you’ll need to either
+                                         ;; temporarily delete src/test_utils or un-comment-out the
+                                         ;; two following deps.
+                                         ;; This is because Cambada includes all
+                                         ;; source files under `src` which unfortunately includes
+                                         ;; `src/test_utils` and the source files in that dir require
+                                         ;; these deps.
+                                         ; cloverage                  {:mvn/version "1.0.13"}
+                                         ; eftest                     {:mvn/version "0.5.3"}
+                                        }
+                           :main-opts   ["-m" "cambada.uberjar"
+                                         "-m" "fc4.cli.wcb"
+                                         "--aot" "all"
+                                         "--no-copy-source"
+                                         "--out" "target"]}
 
-           :clj-next      {:override-deps {org.clojure/clojure      {:mvn/version "1.10.0-beta4"}}}}}
+           :clj-next      {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-beta4"}}}}}
