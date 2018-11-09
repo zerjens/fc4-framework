@@ -1,7 +1,5 @@
 #!/bin/sh
-
 ## Run this from <project-root>/tool/
-
 set -e
 
 # We don’t want this source tree src/test_utils to be included in the set of
@@ -17,8 +15,11 @@ trap 'mv $tmp_src_dir/test_utils src/' EXIT
 
 clojure -A:uberjar
 
-target_path="target/fc4.jar"
 
+target_dir="target/pkg"
+target_path="$target_dir/fc4.jar"
+
+mkdir -p $target_dir
 mv target/tool-1.0.0-SNAPSHOT-standalone.jar "$target_path"
 
 echo "Successfully created $target_path"

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+## This script is for running fc4 FROM SOURCE.
+
 set -e
 
 # Apparently when people execute scripts in bash the script gets executed with

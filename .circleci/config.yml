@@ -117,11 +117,11 @@ jobs:
              wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_amd64.tar.gz
              tar -xzf ghr_v0.12.0_linux_amd64.tar.gz --strip-components 1 ghr_v0.12.0_linux_amd64/ghr
        - run:
-           name: Build Uberjar
-           command: bin/uberjar
+           name: Create distribution packages
+           command: bin/pkg-all
        - run:
            name: Create GitHub Release and upload uberjar to it
-           command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG:-CIRCLE_TAG_NOT_SET} target/fc4.jar
+           command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG:-CIRCLE_TAG_NOT_SET} target/pkg/*.gz
 
 workflows:
   version: 2
