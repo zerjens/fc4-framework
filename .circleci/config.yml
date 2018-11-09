@@ -10,13 +10,19 @@ version: 2
 tool_job_defaults: &tool_job_defaults
   working_directory: ~/project/tool
   docker:
-    - image: clojure:tools-deps-alpine
+    - image: quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-10.12_alpine-3.8
 
-restore_cache_keys: &restore_cache_keys
+restore_clj_cache_keys: &restore_clj_cache_keys
   keys:
-  - deps-{{ checksum "deps.edn" }}
+  - clj-deps-{{ checksum "deps.edn" }}
   # fallback to using the latest cache if no exact match is found
-  - deps-
+  - clj-deps-
+
+restore_node_cache_keys: &restore_node_cache_keys
+  keys:
+  - node-deps-{{ checksum "renderer/package.json" }}
+  # fallback to using the latest cache if no exact match is found
+  - node-deps-
 
 jobs:
    tool_deps:
@@ -25,18 +31,33 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_cache_keys
+           <<: *restore_clj_cache_keys
+           name: Restore cached Clojure dependencies
+       - restore_cache:
+           <<: *restore_node_cache_keys
+           name: Restore cached Node dependencies
+
        - run:
-          name: Download dependencies (if necessary)
-          # Clojure automatically downloads deps if necessary
-          command: clojure -R:test:test/coverage:lint -Stree
+          name: Download Clojure Dependencies (if necessary)
+          command: bin/download-clojure-deps
+
+       - run:
+          name: Download Node Dependencies (if necessary)
+          command: bin/download-node-deps
 
        - save_cache:
-           key: deps-{{ checksum "deps.edn" }}
+           name: Save Clojure Dependencies (if changed)
+           key: clj-deps-{{ checksum "deps.edn" }}
            paths:
            - .cpcache
            - ~/.m2
            - ~/.gitlibs
+
+       - save_cache:
+           name: Save Node Dependencies (if changed)
+           key: node-deps-{{checksum "renderer/package.json"}}
+           paths:
+           - renderer/node_modules
 
    tool_test:
      <<: *tool_job_defaults
@@ -44,14 +65,15 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_cache_keys
+           <<: *restore_clj_cache_keys
+           name: Restore cached Clojure dependencies
+       - restore_cache:
+           <<: *restore_node_cache_keys
+           name: Restore cached Node dependencies
 
        - run:
           name: Run tests and measure test coverage
-          # The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8
-          # defaults to setting the max heap to ¼ of the total RAM, and CI containers frequently have
-          # <= 4GB RAM.)
-          command: clojure -J-Xmx2g -A:test:test/coverage
+          command: bin/tests-with-coverage
 
        - store_test_results:
           path: target/test-results
@@ -69,7 +91,11 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_cache_keys
+           <<: *restore_clj_cache_keys
+           name: Restore cached Clojure dependencies
+       - restore_cache:
+           <<: *restore_node_cache_keys
+           name: Restore cached Node dependencies
        - run:
           name: lint
           command: clojure -A:lint
@@ -80,7 +106,11 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_cache_keys
+           <<: *restore_clj_cache_keys
+           name: Restore cached Clojure dependencies
+       - restore_cache:
+           <<: *restore_node_cache_keys
+           name: Restore cached Node dependencies
        - run:
            name: Download and unpack ghr
            command: |
