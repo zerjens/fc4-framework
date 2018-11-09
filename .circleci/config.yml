@@ -96,7 +96,7 @@ jobs:
           name: lint
           command: clojure -A:lint
 
-   tool_publish_jar:
+   tool_build_dist_pkg:
      <<: *tool_job_defaults
      steps:
        - checkout:
@@ -106,16 +106,30 @@ jobs:
        - restore_cache:
            <<: *restore_cache_node
        - run:
+           name: Create distribution packages
+           command: bin/pkg-all
+       - run: mkdir -p /workspace/packages && mv target/pkg/*.gz packages/
+       - store_artifacts:
+           path: /workspace/packages
+       - persist_to_workspace:
+           root: /workspace
+           paths: [packages]
+
+   tool_publish_dist_pkg:
+     <<: *tool_job_defaults
+     steps:
+       - attach_workspace:
+            at: /workspace
+       - run:
            name: Download and unpack ghr
            command: |
              wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_amd64.tar.gz
              tar -xzf ghr_v0.12.0_linux_amd64.tar.gz --strip-components 1 ghr_v0.12.0_linux_amd64/ghr
        - run:
-           name: Create distribution packages
-           command: bin/pkg-all
-       - run:
-           name: Create GitHub Release and upload uberjar to it
-           command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG:-CIRCLE_TAG_NOT_SET} target/pkg/*.gz
+           name: Create GitHub Release and upload distribution packages to it
+           # command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG:-CIRCLE_TAG_NOT_SET} /workspace/packages/*.gz
+           # TODO BEFORE MERGING TO MASTER: un-comment-out the above and delete the below
+           command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete "$CIRCLE_BRANCH_$CIRCLE_SHA1" /workspace/packages/*.gz
 
 workflows:
   version: 2
@@ -137,13 +151,19 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - tool_publish_jar:
+      - tool_build_dist_pkg:
           requires:
-            - tool_deps
             - tool_test
             - tool_lint
           filters:
             tags:
               only: /.*/
-            branches:
-              ignore: /.*/
+      - tool_publish_dist_pkg:
+          requires:
+            - tool_build_dist_pkg
+          # TODO BEFORE MERGING TO MASTER: un-comment-out the below
+          # filters:
+          #   tags:
+          #     only: /.*/
+          #   branches:
+          #     ignore: /.*/
