@@ -4,7 +4,7 @@
 // renderer $ cat ../test/data/structurizr/express/diagram_valid_cleaned.yaml | time ./render.js | open -a Preview.app -f
 
 const dataUriToBuffer = require('data-uri-to-buffer');
-const {existsSync} = require('fs');
+const {existsSync, readFileSync} = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
@@ -21,13 +21,6 @@ log.next = function(step) {
   this(step + '...');
 }
 
-async function readEntireTextStream(stream) {
-  let str = '';
-  stream.setEncoding('utf8');
-  for await (const chunk of stream) {
-    str += chunk;
-  }
-  return str;
 function chromiumPath() {
   // TODO: accept a path as a command-line argument
   const possiblePaths = [
@@ -150,7 +143,7 @@ async function closeBrowser(browser, debugMode) {
 
 async function main(url, debugMode) {
   // Read stdin first; if it fails or blocks, no sense in launching the browser
-  const theYaml = await readEntireTextStream(process.stdin);
+  const theYaml = readFileSync("/dev/stdin", "utf-8");
 
   log.next('launching browser');
   const opts = puppeteerOpts(debugMode);
