@@ -10,13 +10,19 @@ version: 2
 tool_job_defaults: &tool_job_defaults
   working_directory: ~/project/tool
   docker:
-    - image: clojure:tools-deps-alpine
+    - image: quay.io/aviflax/clojure-node:clojure-1.9.0.394_node-10.12
 
-restore_cache_keys: &restore_cache_keys
+restore_clj_cache_keys: &restore_clj_cache_keys
   keys:
-  - deps-{{ checksum "deps.edn" }}
+  - clj-deps-{{ checksum "deps.edn" }}
   # fallback to using the latest cache if no exact match is found
-  - deps-
+  - clj-deps-
+
+restore_node_cache_keys: &restore_node_cache_keys
+  keys:
+  - node-deps-{{ checksum "renderer/package.json" }}
+  # fallback to using the latest cache if no exact match is found
+  - node-deps-
 
 jobs:
    tool_deps:
@@ -25,18 +31,33 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_cache_keys
+           <<: *restore_clj_cache_keys
+           name: Restore cached Clojure dependencies
+       - restore_cache:
+           <<: *restore_node_cache_keys
+           name: Restore cached Node dependencies
+
        - run:
-          name: Download dependencies (if necessary)
+          name: Download Clojure Dependencies (if necessary)
           # Clojure automatically downloads deps if necessary
           command: clojure -R:test:test/coverage:lint -Stree
 
+       - run:
+          name: Download Node.js Dependencies (if necessary)
+          working_directory: ~/project/tool/renderer
+          command: npm install
+
        - save_cache:
-           key: deps-{{ checksum "deps.edn" }}
+           key: clj-deps-{{ checksum "deps.edn" }}
            paths:
            - .cpcache
            - ~/.m2
            - ~/.gitlibs
+
+       - save_cache:
+           key: node-deps-{{checksum "renderer/package.json"}}
+           paths:
+           - ~/project/tool/renderer/node_modules
 
    tool_test:
      <<: *tool_job_defaults
@@ -44,7 +65,11 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_cache_keys
+           <<: *restore_clj_cache_keys
+           name: Restore cached Clojure dependencies
+       - restore_cache:
+           <<: *restore_node_cache_keys
+           name: Restore cached Node dependencies
 
        - run:
           name: Run tests and measure test coverage
@@ -69,7 +94,11 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_cache_keys
+           <<: *restore_clj_cache_keys
+           name: Restore cached Clojure dependencies
+       - restore_cache:
+           <<: *restore_node_cache_keys
+           name: Restore cached Node dependencies
        - run:
           name: lint
           command: clojure -A:lint
@@ -80,7 +109,11 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_cache_keys
+           <<: *restore_clj_cache_keys
+           name: Restore cached Clojure dependencies
+       - restore_cache:
+           <<: *restore_node_cache_keys
+           name: Restore cached Node dependencies
        - run:
            name: Download and unpack ghr
            command: |
