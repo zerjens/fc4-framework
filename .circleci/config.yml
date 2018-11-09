@@ -12,13 +12,15 @@ tool_job_defaults: &tool_job_defaults
   docker:
     - image: quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-10.12_alpine-3.8
 
-restore_clj_cache_keys: &restore_clj_cache_keys
+restore_cache_clj: &restore_cache_clj
+  name: Restore cached Clojure dependencies
   keys:
   - clj-deps-{{ checksum "deps.edn" }}
   # fallback to using the latest cache if no exact match is found
   - clj-deps-
 
-restore_node_cache_keys: &restore_node_cache_keys
+restore_cache_node: &restore_cache_node
+  name: Restore cached Node dependencies
   keys:
   - node-deps-{{ checksum "renderer/package.json" }}
   # fallback to using the latest cache if no exact match is found
@@ -31,11 +33,9 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_clj_cache_keys
-           name: Restore cached Clojure dependencies
+           <<: *restore_cache_clj
        - restore_cache:
-           <<: *restore_node_cache_keys
-           name: Restore cached Node dependencies
+           <<: *restore_cache_node
 
        - run:
           name: Download Clojure Dependencies (if necessary)
@@ -65,11 +65,9 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_clj_cache_keys
-           name: Restore cached Clojure dependencies
+           <<: *restore_cache_clj
        - restore_cache:
-           <<: *restore_node_cache_keys
-           name: Restore cached Node dependencies
+           <<: *restore_cache_node
 
        - run:
           name: Run tests and measure test coverage
@@ -91,11 +89,9 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_clj_cache_keys
-           name: Restore cached Clojure dependencies
+           <<: *restore_cache_clj
        - restore_cache:
-           <<: *restore_node_cache_keys
-           name: Restore cached Node dependencies
+           <<: *restore_cache_node
        - run:
           name: lint
           command: clojure -A:lint
@@ -106,11 +102,9 @@ jobs:
        - checkout:
            path: ~/project
        - restore_cache:
-           <<: *restore_clj_cache_keys
-           name: Restore cached Clojure dependencies
+           <<: *restore_cache_clj
        - restore_cache:
-           <<: *restore_node_cache_keys
-           name: Restore cached Node dependencies
+           <<: *restore_cache_node
        - run:
            name: Download and unpack ghr
            command: |
