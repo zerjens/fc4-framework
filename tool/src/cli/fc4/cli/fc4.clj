@@ -1,5 +1,6 @@
 (ns fc4.cli.fc4
   "Main CLI command that invokes subcommands."
+  (:gen-class)
   (:require
    [clojure.string   :as str     :refer [join]]
    [fc4.cli.export   :as export]
