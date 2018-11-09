@@ -1,6 +1,17 @@
 (ns fc4.integrations.structurizr.express.render
-  (:require [clojure.java.shell :as shell :refer [sh]]
+  (:require [clojure.java.io    :as io    :refer [file]]
+            [clojure.java.shell :as shell :refer [sh]]
             [clojure.spec.alpha :as s]))
+
+(defn renderer-command
+  []
+  (let [relative-paths ["render"
+                        "renderer/render.js"
+                        "target/pkg/renderer/render-macos"
+                        "target/pkg/renderer/render-linux"]
+        hopefully-on-path "fc4-render"]
+    (or (some #(when (.canExecute (file %)) %) relative-paths)
+        hopefully-on-path)))
 
 (defn render
   "Renders a Structurizr Express diagram as a PNG file, returning a PNG
@@ -13,7 +24,7 @@
   ;; TODO: should this really throw an exception on any and all errors? Since
   ;; we’re returning a map in the success case, how about instead we return an
   ;; “anomaly” map?
-  (let [result (sh "renderer/render.js"
+  (let [result (sh (renderer-command)
                    :in diagram-yaml
                    :out-enc :bytes)
         {:keys [exit out err]} result]

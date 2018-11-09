@@ -1,0 +1,13 @@
+#!/bin/sh
+## Run this from <project-root>/tool/
+set -e
+
+command -v pkg > /dev/null || npm install -g pkg
+
+mkdir -p target/pkg
+
+cd renderer
+
+pkg render.js \
+     --targets node10-macos-x64,node10-linux-x64 \
+     --out-path ../target/pkg/renderer
