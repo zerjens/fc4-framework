@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+# Run commands using ../Dockerfile.test
+# e.g. from <repo-root>/tool:  bin/run bin/tests ... not super elegant but what
+# can I do.
+# alternatively:
+# $ export PATH=$PATH:$(pwd)/bin
+# $ run bin/tests
+
+set -ex
+docker build -f Dockerfile.test -t fc4-test .
+
+# You might think this command should include --rm so as not to litter the system with containers,
+# and that’d be reasonable, BUT it can also make debugging harder. Sometimes when the tests fail
+# they write out files that are meant to help with debugging; if the container is deleted as soon
+# as it exits then those files are gone. So you might want to run `docker container prune` every
+# once in awhile ;)
+docker run fc4-test "$@"

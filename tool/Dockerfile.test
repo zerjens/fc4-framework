@@ -1,0 +1,26 @@
+# This Dockerfile is intended only for running the tests. It isn’t useful for
+# using the tool because the tool requires access to your clipboard, which is
+# very tricky from within a Docker container.
+
+FROM quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-10.12_alpine-3.8
+LABEL maintainer="Avi Flax <avi.flax@fundingcircle.com>"
+
+WORKDIR /tool
+
+# Copy Clojure’s deps.edn and Node’s package files then download the deps
+# separately from and prior to copying the app code so that we don’t have to
+# re-download deps every time the app code changes.
+
+COPY deps.edn ./
+COPY bin/download-clojure-deps bin/
+RUN bin/download-clojure-deps
+
+COPY renderer/package*.json ./renderer/
+COPY bin/download-node-deps bin/
+RUN bin/download-node-deps
+
+# rlwrap is handy in case we need to run a REPL in a container
+RUN apk add --no-cache --repository=http://nl.alpinelinux.org/alpine/edge/testing rlwrap
+
+# Now copy *all* the code.
+COPY . ./
