@@ -1,6 +1,10 @@
-# This Dockerfile is intended only for running the tests. It isn’t useful for
-# using the tool because the tool requires access to your clipboard, which is
-# very tricky from within a Docker container.
+# This Dockerfile is intended mainly for running the tests and building
+# distribution packages/artifacts. It isn’t currently useful for using the tool
+# because the tool requires access to your clipboard, which is very tricky from
+# within a Docker container. That might be changing soon though; we may be
+# adding a new file-based workflow soon as our main recommended workflow. If so,
+# we could use docker-compose to mount a data directory and run the tool from
+# within a container.
 
 FROM quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-10.12_alpine-3.8
 LABEL maintainer="Avi Flax <avi.flax@fundingcircle.com>"

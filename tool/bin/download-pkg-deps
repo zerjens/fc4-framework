@@ -1,0 +1,6 @@
+#!/bin/sh
+## Run this from <project-root>/tool/
+set -e
+
+command -v pkg > /dev/null || npm install -g pkg@4.3.4
+clojure -R:uberjar -Stree

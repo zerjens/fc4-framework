@@ -105,15 +105,48 @@ jobs:
            <<: *restore_cache_clj
        - restore_cache:
            <<: *restore_cache_node
+       - restore_cache:
+           name: Restore cached Clojure dependencies needed for building uberjar
+           keys:
+           - clj-uberjar-deps-{{ checksum "deps.edn" }}
+           - clj-uberjar-deps-
+       - restore_cache:
+           name: Restore cached Node dependencies needed for packaging renderer
+           keys:
+           - node-package-deps-{{ checksum "renderer/package.json" }}
+           - node-package-deps-
+       - run:
+           name: Download dependencies needed for building dist package
+           command: bin/download-pkg-deps
+           environment:
+             # Workaround for https://github.com/nodejs/docker-node/issues/813
+             npm_config_unsafe_perm: true
        - run:
            name: Create distribution packages
            command: bin/pkg-all
-       - run: mkdir -p /workspace/packages && mv target/pkg/*.gz packages/
-       - store_artifacts:
-           path: /workspace/packages
+       - run: mkdir -p /workspace/packages && mv target/pkg/*.gz /workspace/packages/
        - persist_to_workspace:
            root: /workspace
            paths: [packages]
+       - store_artifacts:
+           # Not entirely sure we need these artifacts but seems like a good idea just in case.
+           path: /workspace/packages
+       - save_cache:
+           name: Cache the Clojure dependencies needed for building uberjar
+           key: clj-uberjar-deps-{{ checksum "deps.edn" }}
+           paths:
+           # I *guess* this will end up overwriting the deps restored via
+           # restore_cache_clj but I’m hoping that’s OK.
+           - .cpcache
+           - ~/.m2
+           - ~/.gitlibs
+       - save_cache:
+           name: Cache the Node Dependencies needed for packaging renderer
+           key: node-package-deps-{{checksum "renderer/package.json"}}
+           paths:
+           # This might be OS (distribution) specific!
+           - /usr/local/lib/node_modules
+           - ~/.npm
 
    tool_publish_dist_pkg:
      <<: *tool_job_defaults
@@ -121,15 +154,19 @@ jobs:
        - attach_workspace:
             at: /workspace
        - run:
+           name: Check crucial environment variables
+           command: |
+             [ "$GITHUB_TOKEN" ] || { echo 'GITHUB_TOKEN is not set!' && exit 1; }
+             [ "$CIRCLE_TAG" ] || { echo 'CIRCLE_TAG is not set!' && exit 1; }
+       - run:
+           ## TODO: cache ghr
            name: Download and unpack ghr
            command: |
              wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_amd64.tar.gz
              tar -xzf ghr_v0.12.0_linux_amd64.tar.gz --strip-components 1 ghr_v0.12.0_linux_amd64/ghr
        - run:
            name: Create GitHub Release and upload distribution packages to it
-           # command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG:-CIRCLE_TAG_NOT_SET} /workspace/packages/*.gz
-           # TODO BEFORE MERGING TO MASTER: un-comment-out the above and delete the below
-           command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete "$CIRCLE_BRANCH_$CIRCLE_SHA1" /workspace/packages/*.gz
+           command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} /workspace/packages
 
 workflows:
   version: 2
@@ -161,9 +198,8 @@ workflows:
       - tool_publish_dist_pkg:
           requires:
             - tool_build_dist_pkg
-          # TODO BEFORE MERGING TO MASTER: un-comment-out the below
-          # filters:
-          #   tags:
-          #     only: /.*/
-          #   branches:
-          #     ignore: /.*/
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/

@@ -3,4 +3,8 @@
 set -ex
 
 # Clojure automatically downloads deps if necessary
+# I don’t know why, but including the :uberjar profile in the below list actually breaks the ability
+# to build an uberjar. Something to do with the joda-time or clj-time jar(s) being missing -- I
+# guess there’s some kind of conflict between the dependencies of Cambada and one or more of the
+# dependencies included in one of the below profiles.
 clojure -R:test:test/coverage:lint -Stree
