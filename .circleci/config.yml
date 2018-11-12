@@ -166,40 +166,23 @@ jobs:
              tar -xzf ghr_v0.12.0_linux_amd64.tar.gz --strip-components 1 ghr_v0.12.0_linux_amd64/ghr
        - run:
            name: Create GitHub Release and upload distribution packages to it
-           command: ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} /workspace/packages
+           command: |
+             export TAG="${CIRCLE_BRANCH}_$(date "+%Y-%m-%d")_${CIRCLE_BUILD_NUM}"
+             ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} \
+                   -u ${CIRCLE_PROJECT_USERNAME} \
+                   -r ${CIRCLE_PROJECT_REPONAME} \
+                   -c ${CIRCLE_SHA1} \
+                   $TAG \
+                   /workspace/packages
 
 workflows:
   version: 2
   tool:
     jobs:
-      - tool_deps:
-          filters:
-            tags:
-              only: /.*/
-      - tool_test:
-          requires:
-            - tool_deps
-          filters:
-            tags:
-              only: /.*/
-      - tool_lint:
-          requires:
-            - tool_deps
-          filters:
-            tags:
-              only: /.*/
-      - tool_build_dist_pkg:
-          requires:
-            - tool_test
-            - tool_lint
-          filters:
-            tags:
-              only: /.*/
+      - tool_deps
+      - tool_test: {requires: [tool_deps]}
+      - tool_lint: {requires: [tool_deps]}
+      - tool_build_dist_pkg: {requires: [tool_test, tool_lint]}
       - tool_publish_dist_pkg:
-          requires:
-            - tool_build_dist_pkg
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
+          requires: [tool_build_dist_pkg]
+          filters: {branches: {only: master}}
