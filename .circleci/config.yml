@@ -123,8 +123,10 @@ jobs:
              npm_config_unsafe_perm: true
        - run:
            name: Create distribution packages
-           command: bin/pkg-all
-       - run: mkdir -p /workspace/packages && mv target/pkg/*.gz /workspace/packages/
+           command: |
+             bin/pkg-all
+             mkdir -p /workspace/packages
+             mv target/pkg/*.gz /workspace/packages/
        - persist_to_workspace:
            root: /workspace
            paths: [packages]
@@ -165,12 +167,13 @@ jobs:
              tar -xzf ghr_v0.12.0_linux_amd64.tar.gz --strip-components 1 ghr_v0.12.0_linux_amd64/ghr
        - run:
            name: Create GitHub Release and upload distribution packages to it
+           # Docs for ghr’s options: https://github.com/tcnksm/ghr/#options
            command: |
-             export TAG="${CIRCLE_BRANCH}_$(date "+%Y-%m-%d")_${CIRCLE_BUILD_NUM}"
-             ./ghr -t ${GITHUB_TOKEN:-GITHUB_TOKEN_NOT_SET} \
-                   -u ${CIRCLE_PROJECT_USERNAME} \
-                   -r ${CIRCLE_PROJECT_REPONAME} \
-                   -c ${CIRCLE_SHA1} \
+             TAG="${CIRCLE_BRANCH}_$(date "+%Y-%m-%d")_${CIRCLE_BUILD_NUM}"
+             ./ghr -t $GITHUB_TOKEN \
+                   -u $CIRCLE_PROJECT_USERNAME \
+                   -r $CIRCLE_PROJECT_REPONAME \
+                   -c $CIRCLE_SHA1 \
                    $TAG \
                    /workspace/packages
 
