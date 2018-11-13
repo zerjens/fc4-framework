@@ -15,6 +15,7 @@ const logStream = process.stderr;
 const args = process.argv.join();
 const verboseMode = args.includes('--verbose');
 const quietMode = args.includes('--quiet');
+const debugMode = args.includes('--debug');
 
 // top-level const so we don’t have to thread it through everything.
 const log = step => {
@@ -123,5 +124,4 @@ async function main(url, debugMode) {
 }
 
 const url = 'https://structurizr.com/express?autoLayout=false';
-const debugMode = false;
 main(url, debugMode);
