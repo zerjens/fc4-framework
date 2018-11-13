@@ -1,0 +1,63 @@
+links:
+  The FC4 Framework: https://fundingcircle.github.io/fc4-framework/
+  Structurizr Express: https://structurizr.com/express
+---
+type: Container
+scope: fc4-tool
+description: https://fundingcircle.github.io/fc4-framework/ • last edited 2018-11-13 by Avi Flax (avi.flax@fundingcircle.com)
+
+elements:
+- type: Person
+  name: User
+  position: '125,50'
+- type: Software System
+  name: Structurizr Express
+  position: '1300,900'
+  description: Web app that renders diagrams from YAML
+- type: Software System
+  name: fc4-tool
+  containers:
+  - name: Main Executable
+    description: Processes YAML, invokes Renderer, etc.
+    technology: Clojure/Java/JVM
+    position: '100,500'
+    type: Container
+  - name: Renderer
+    description: Invokes and controls Chromium to render diagrams using Structurizr Express
+    technology: JavaScript/Node
+    position: '700,500'
+    type: Container
+  - name: Chromium
+    description: or Chrome; Web browser; runs in headless mode
+    position: '1300,500'
+    type: Container
+
+relationships:
+- source: Chromium
+  destination: Structurizr Express
+- source: Main Executable
+  destination: Renderer
+- source: Renderer
+  destination: Chromium
+- source: User
+  destination: Main Executable
+
+styles:
+- type: element
+  tag: Element
+  shape: RoundedBox
+  width: '400'
+  height: '250'
+  background: '#2486DC'
+  color: '#ffffff'
+  fontSize: '26'
+- type: element
+  tag: Person
+  shape: Person
+  width: '350'
+- type: relationship
+  tag: Relationship
+  dashed: 'false'
+
+size: A6_Landscape
+name: fc4-tool
