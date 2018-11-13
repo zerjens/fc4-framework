@@ -157,7 +157,6 @@ jobs:
            name: Check crucial environment variables
            command: |
              [ "$GITHUB_TOKEN" ] || { echo 'GITHUB_TOKEN is not set!' && exit 1; }
-             [ "$CIRCLE_TAG" ] || { echo 'CIRCLE_TAG is not set!' && exit 1; }
        - run:
            ## TODO: cache ghr
            name: Download and unpack ghr
