@@ -41,7 +41,7 @@
 
            :uberjar       {:extra-deps  {luchiniatwork/cambada {:mvn/version "1.0.0"}}
                            :main-opts   ["-m" "cambada.uberjar"
-                                         "-m" "fc4.cli.wcb"
+                                         "-m" "fc4.cli.fc4"
                                          "--aot" "all"
                                          "--no-copy-source"
                                          "--out" "target"]}

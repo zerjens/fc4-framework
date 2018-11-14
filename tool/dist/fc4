@@ -1,0 +1,9 @@
+#!/bin/bash
+
+## This script is meant to be included in distribution packages and installed on
+## end-users’ systems. It is for running compiled and packaged versions of fc4.
+
+set -e
+
+SCRIPT_DIR="${BASH_SOURCE%/*}"
+java -jar $SCRIPT_DIR/fc4.jar "$@"

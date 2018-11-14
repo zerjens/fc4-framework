@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 set -ex
 
 # The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8

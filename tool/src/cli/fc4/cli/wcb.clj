@@ -1,6 +1,5 @@
 (ns fc4.cli.wcb
   "wcb = Watch ClipBoard"
-  (:gen-class)
   (:require [fc4.integrations.structurizr.express.clipboard :refer [wcb]]
             [clojure.core.async :as ca :refer [<!!]]))
 

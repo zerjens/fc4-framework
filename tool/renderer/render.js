@@ -4,7 +4,7 @@
 // renderer $ cat ../test/data/structurizr/express/diagram_valid_cleaned.yaml | time ./render.js | open -a Preview.app -f
 
 const dataUriToBuffer = require('data-uri-to-buffer');
-const {existsSync} = require('fs');
+const {existsSync, readFileSync} = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
@@ -21,22 +21,18 @@ log.next = function(step) {
   this(step + '...');
 }
 
-async function readEntireTextStream(stream) {
-  let str = '';
-  stream.setEncoding('utf8');
-  for await (const chunk of stream) {
-    str += chunk;
-  }
-  return str;
+function chromiumPath() {
+  // TODO: accept a path as a command-line argument
+  const possiblePaths = [
+    '/usr/bin/chromium-browser', // Alpine
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
+
+  return possiblePaths.find(path => existsSync(path)) || null;
 }
 
 function puppeteerOpts(debugMode) {
   const args = [
-    // We need to disable web security to enable the main SE page to communicate
-    // with the export page (pop-up window, tab, etc) without being blocked by
-    // cross-origin restrictions.
-    '--disable-web-security',
-
     // We need this because we’re using the default user in our local Docker-based
     // test running environment, which is apparently root, and Chromium won’t
     // run as root unless this arg is passed.
@@ -46,19 +42,11 @@ function puppeteerOpts(debugMode) {
     '--disable-dev-shm-usage'
   ];
 
-  const opts = {headless: !debugMode, args: args};
-
-  // If we’re running on Alpine Linux and Chromium has been installed via apk
-  // (the Alpine package manager) then we want to use that install of Chromium
-  // rather than the Chromium that Puppeteer downloads itself by default.
-  // See <project-root>/.circleci/images/tool/Dockerfile
-  // and https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-on-alpine
-  const ciChromiumPath = '/usr/bin/chromium-browser';
-  if (existsSync(ciChromiumPath)) {
-    opts.executablePath = ciChromiumPath;
-  }
-
-  return opts;
+  return {
+    args: args,
+    executablePath: chromiumPath(),
+    headless: !debugMode
+  };
 }
 
 function abit(ms) {
@@ -106,15 +94,14 @@ async function doExport(mainPage) {
   log.next('calling export function');
 
   // from https://github.com/GoogleChrome/puppeteer/issues/386#issuecomment-343059315
-  const browser = mainPage.browser();
-  const newPagePromise = new Promise(r => browser.once('targetcreated', target => r(target.page())));
+  const newPagePromise = new Promise(resolve => {
+    mainPage.browser().once('targetcreated', target => resolve(target.page()));
+  });
 
-  // On my system, if this is any shorter than 300ms then the Structurizr logo
-  // doesn’t reliably show up on the exported image. Which I think it should,
-  // because Simon Brown wants it included in the images that Structurizr
-  // Express exports, and it’s his software.
-  await abit(300);
-  await mainPage.evaluate(() => Structurizr.diagram.exportCurrentView(1, true, false, false, false));
+  await abit(200);
+  await mainPage.evaluate(() => {
+    Structurizr.diagram.exportCurrentView(1, true, false, false, false);
+  });
 
   log.next('getting export page');
   const exportPage = await newPagePromise;
@@ -156,7 +143,7 @@ async function closeBrowser(browser, debugMode) {
 
 async function main(url, debugMode) {
   // Read stdin first; if it fails or blocks, no sense in launching the browser
-  const theYaml = await readEntireTextStream(process.stdin);
+  const theYaml = readFileSync("/dev/stdin", "utf-8");
 
   log.next('launching browser');
   const opts = puppeteerOpts(debugMode);
