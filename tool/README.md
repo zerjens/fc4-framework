@@ -1,6 +1,6 @@
 # fc4-tool
 
-A tool for reorganizing, restructuring, and reformatting
+A tool for reorganizing, restructuring, reformatting, and rendering
 [FC4](https://fundingcircle.github.io/fc4-framework/) diagrams.
 
 [![CircleCI](https://circleci.com/gh/FundingCircle/fc4-framework.svg?style=shield)](https://circleci.com/gh/FundingCircle/fc4-framework)
@@ -16,33 +16,50 @@ As explained in
 >
 > So fc4-tool processes the YAML: cleans it up, applies a stable sort to all properties, removes empty properties, etc — so as to ensure that the changes applied in each revision are very small and specific and all extraneous changes are filtered out. This will hopefully enable effective peer review of revisions to the diagrams.
 >
-> fc4-tool also “snaps” the elements and vertices in a diagram to a virtual grid.
+> fc4-tool also:
+>
+> * “Snaps” the elements and vertices in a diagram to a virtual grid
+> * Renders diagrams
+
 
 ## Setup
 
-1. Have a Java Runtime Environment (JRE) or Java Development Kit (JDK) installed
+### Requirements
+
+1. A [Java Runtime Environment (JRE)](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) or [Java Development Kit (JDK)](https://adoptopenjdk.net/)
    1. On MacOS if you have [Homebrew](https://brew.sh/) you can run `brew cask install adoptopenjdk`
-1. Download `fc4.jar` from the latest release on [the releases page](https://github.com/FundingCircle/fc4-framework/releases)
+1. An installation of [Chrome](https://www.google.com/chrome/browser/) or [Chromium](https://www.chromium.org/Home) **68**
+   1. **Must be version 68**
+      1. Direct download links for Chromium: [MacOS](https://storage.googleapis.com/chromium-browser-snapshots/Mac/555668/chrome-mac.zip), [Linux](https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/555668/chrome-linux.zip)
+   1. On MacOS:
+      1. Chromium/Chrome must be at either `/Applications/Chromium.app` or `/Applications/Google Chrome.app`
+      1. Chromium takes precedence, so if you have Chromium and Chrome installed, only Chromium needs to be version 68
+   1. On Linux, Chromium/Chrome must be at `/usr/bin/chromium-browser`
+      1. If this is too rigid, please [let us know](https://github.com/FundingCircle/fc4-framework/issues/new)
+
+### Download and Install
+
+1. Download the archive from your platform from the latest release on [the releases page](https://github.com/FundingCircle/fc4-framework/releases)
+1. Expand the archive then move the extracted files to somewhere on your $PATH
+   1. e.g. `mv ~/Downloads/fc4/fc4* ~/bin/`
 
 
-## Basic Usage Workflow
+## Editing and Rendering Diagrams
 
-As explained in [The Authoring Workflow](https://fundingcircle.github.io/fc4-framework/methodology/authoring_workflow.html) section of
-[the FC4 Methodology](https://fundingcircle.github.io/fc4-framework/methodology/):
+### Basic Workflow
 
-> 1. In your text editor: either create a new diagram source file or open an existing diagram source file
-> 1. In a terminal run `java -jar path/to/fc4.jar`
->    1. This starts the tool in a mode wherein it will watch your clipboard for diagram source YAML and process (clean up) that YAML when it sees that it’s been changed.
-> 1. In your text editor, add/revise elements and relationships, then select-all and cut the diagram source from your editor into your system clipboard.
->    1. This will cause fc4-tool to process the contents of your clipboard.
-> 1. Switch to [Structurizr Express](https://structurizr.com/help/express) (SE) » paste the source into the YAML textarea » press tab to blur the textarea
->    1. SE will either render the diagram, or display a red error indicator in its toolbar
->    2. If SE shows its red error indicator, click the indicator button to bring up a dialog listing the errors
-> 1. Use SE to arrange the elements and edges as desired
-> 1. Cut the diagram source from the SE YAML textarea into your system clipboard.
->    1. This will cause fc4-tool to process the contents of your clipboard.
-> 1. Paste the diagram source back into the SE YAML textarea so as to re-render the diagram, now that the elements have been “snapped” to a virtual grid.
-> 1. Continue to cut and past the diagram source between your text editor and SE, using SE to preview and adjust the rendered diagram, while fc4-tool cleans up the diagram as you work.
+1. Run in your terminal: `fc4 wcb`
+1. Copy-and-paste YAML diagram definitions between [Structurizr Express](https://structurizr.com/help/express) (SE) and an open file in your text editor.
+1. When done, ensure the YAML in your editor is the latest version, copy-and-pasting from SE one last time if necessary, then save the file.
+1. Switch to your terminal and hit ctrl-c to stop fc4-tool
+1. Run `fc4 render path/to/diagram.yaml` to generate a `.png` file alongside the `.yaml` file
+1. Commit both files
+
+### Full Workflow
+
+Please see [The Authoring Workflow](https://fundingcircle.github.io/fc4-framework/methodology/authoring_workflow.html) section of
+[the FC4 Methodology](https://fundingcircle.github.io/fc4-framework/methodology/).
+
 
 ## Requirements and Prerequisites for Development and Testing
 
@@ -67,15 +84,18 @@ As explained in [The Authoring Workflow](https://fundingcircle.github.io/fc4-fra
 Run this in your shell:
 
 ```bash
-docker run --rm `docker build -q .`
+bin/run bin/tests
 ```
 
 ### Without Docker
 
 If you’re old-school and prefer to run tests on bare metal:
 
-1. Have `clojure` installed ([guide](https://clojure.org/guides/getting_started))
-1. Run in your shell: `clojure -A:test:test/run`
+1. Ensure that Clojure, Node, and Chromium/Chrome are installed
+   1. On Macos with Homebrew: `brew cask install adoptopenjdk chromium && brew install clojure npm`
+1. Run:
+   1. `bin/download-all-deps`
+   1. `bin/tests`
 
 ## Starting a REPL for Dev/Test
 
@@ -104,9 +124,6 @@ via [cljfmt-runner](https://github.com/JamesLaverack/cljfmt-runner).
     them into the git index. This way you can review the changes that were
     applied and decide which to keep and which to discard.
 
-We’ll soon be integrating a lint run into our CI builds so they’ll fail if any
-source code is formatted incorrectly. Coming soon!
-
 ## Building an Uberjar
 
 You’ll need to be using Java 9 or 10; 11 or higher cannot currently compile the project (see [issue #85](https://github.com/FundingCircle/fc4-framework/issues/85)).
@@ -120,11 +137,12 @@ Since you need to use Java 8/9/10 to compile the project but then Java 11 to val
 
 ## Contributors
 
-* @99-not-out
-* @arrdem
-* @matthias-margush
-* @sgerrand
-* @timgilbert
+* [99-not-out](https://github.com/99-not-out)
+* [arrdem](https://github.com/arrdem)
+* [matthias-margush](https://github.com/matthias-margush)
+* [sgerrand](https://github.com/sgerrand)
+* [sldblog](https://github.com/sldblog)
+* [timgilbert](https://github.com/timgilbert)
 
 Thank you all!
 
