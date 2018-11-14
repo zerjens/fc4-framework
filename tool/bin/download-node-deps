@@ -1,6 +1,0 @@
-#!/bin/sh
-
-set -ex
-
-# npm install automaticaly downloads deps if necessary
-cd renderer && npm install
