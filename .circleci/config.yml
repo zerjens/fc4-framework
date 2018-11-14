@@ -108,12 +108,12 @@ jobs:
        - restore_cache:
            name: Restore cached Clojure dependencies needed for building uberjar
            keys:
-           - clj-uberjar-deps-{{ checksum "deps.edn" }}
+           - clj-uberjar-deps-{{ checksum "deps.edn" }}-{{checksum "bin/download-pkg-deps"}}
            - clj-uberjar-deps-
        - restore_cache:
            name: Restore cached Node dependencies needed for packaging renderer
            keys:
-           - node-package-deps-{{ checksum "renderer/package.json" }}
+           - node-package-deps-{{ checksum "renderer/package.json" }}-{{checksum "bin/download-pkg-deps"}}
            - node-package-deps-
        - run:
            name: Download dependencies needed for building dist package
@@ -135,7 +135,7 @@ jobs:
            path: /workspace/packages
        - save_cache:
            name: Cache the Clojure dependencies needed for building uberjar
-           key: clj-uberjar-deps-{{ checksum "deps.edn" }}
+           key: clj-uberjar-deps-{{ checksum "deps.edn" }}-{{checksum "bin/download-pkg-deps"}}
            paths:
            # I *guess* this will end up overwriting the deps restored via
            # restore_cache_clj but I’m hoping that’s OK.
@@ -144,11 +144,10 @@ jobs:
            - ~/.gitlibs
        - save_cache:
            name: Cache the Node Dependencies needed for packaging renderer
-           key: node-package-deps-{{checksum "renderer/package.json"}}
-           paths:
-           # This might be OS (distribution) specific!
-           - /usr/local/lib/node_modules
-           - ~/.npm
+           key: node-package-deps-{{checksum "renderer/package.json"}}-{{checksum "bin/download-pkg-deps"}}
+           # ~/.npm is needed here because that is (or includes) npm’s cache, and that’s where pkg
+           # downloads the built node runtimes for various platforms.
+           paths: [~/.npm, ~/node_modules]
 
    tool_publish_dist_pkg:
      <<: *tool_job_defaults
