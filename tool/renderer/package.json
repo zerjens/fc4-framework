@@ -1,11 +1,10 @@
 {
   "name": "fc4-se-renderer",
-  "version": "1.0.0",
   "description": "Renders Structurizr Express diagrams in a headless browser using Puppeteer.",
   "main": "render.js",
   "dependencies": {
-    "data-uri-to-buffer": "^2.0.0",
-    "puppeteer": "^1.4.0"
+    "data-uri-to-buffer": "2.0.0",
+    "puppeteer": "1.8.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

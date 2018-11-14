@@ -10,7 +10,7 @@ version: 2
 tool_job_defaults: &tool_job_defaults
   working_directory: ~/project/tool
   docker:
-    - image: quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-10.12_alpine-3.8
+    - image: quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-11.1_debian-stretch
 
 restore_cache_clj: &restore_cache_clj
   name: Restore cached Clojure dependencies
@@ -118,9 +118,6 @@ jobs:
        - run:
            name: Download dependencies needed for building dist package
            command: bin/download-pkg-deps
-           environment:
-             # Workaround for https://github.com/nodejs/docker-node/issues/813
-             npm_config_unsafe_perm: true
        - run:
            name: Create distribution packages
            command: |
