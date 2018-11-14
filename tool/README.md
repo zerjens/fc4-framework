@@ -21,7 +21,10 @@ As explained in
 > * “Snaps” the elements and vertices in a diagram to a virtual grid
 > * Renders diagrams
 
-## Requirements
+
+## Setup
+
+### Requirements
 
 1. A [Java Runtime Environment (JRE)](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) or [Java Development Kit (JDK)](https://adoptopenjdk.net/)
    1. On MacOS if you have [Homebrew](https://brew.sh/) you can run `brew cask install adoptopenjdk`
@@ -34,7 +37,7 @@ As explained in
    1. On Linux, Chromium/Chrome must be at `/usr/bin/chromium-browser`
       1. If this is too rigid, please [let us know](https://github.com/FundingCircle/fc4-framework/issues/new)
 
-## Download and Install
+### Download and Install
 
 1. Download the archive from your platform from the latest release on [the releases page](https://github.com/FundingCircle/fc4-framework/releases)
 1. Expand the archive then move the extracted files to somewhere on your $PATH
@@ -43,7 +46,7 @@ As explained in
 
 ## Editing and Rendering Diagrams
 
-### Basic Usage Workflow
+### Basic Workflow
 
 1. Run in your terminal: `fc4 wcb`
 1. Copy-and-paste YAML diagram definitions between [Structurizr Express](https://structurizr.com/help/express) (SE) and an open file in your text editor.
@@ -52,19 +55,11 @@ As explained in
 1. Run `fc4 render path/to/diagram.yaml` to generate a `.png` file alongside the `.yaml` file
 1. Commit both files
 
-### Full Usage Workflow
-
-1. Run in your terminal: `fc4 wcb`
-1. Copy-and-paste YAML diagram definitions between [Structurizr Express](https://structurizr.com/help/express) (SE) and an open file in your text editor.
-1. When done, ensure the YAML in your editor is the latest version, copy-and-pasting from SE one last time if necessary, then save the file.
-1. Switch to your terminal and hit ctrl-c to stop fc4-tool
-1. Run `fc4 render <path-to-yaml-file>` to generate a `.png` file alongside the `.yaml` file
-1. Commit both files
-
-## Full Usage Workflow
+### Full Workflow
 
 Please see [The Authoring Workflow](https://fundingcircle.github.io/fc4-framework/methodology/authoring_workflow.html) section of
 [the FC4 Methodology](https://fundingcircle.github.io/fc4-framework/methodology/).
+
 
 ## Requirements and Prerequisites for Development and Testing
 
