@@ -9,18 +9,21 @@ const pageFunctions = require('./page-functions');
 const path = require('path');
 const puppeteer = require('puppeteer-core');
 
-const log = function(msg) {
-  // This program must log to stderr rather than stdout because it outputs its
-  // result to stdout.
-  process.stderr.write(msg);
-  // Calling process.stderr.write twice might be slightly more efficient than
-  // concatenating the newline to msg.
-  process.stderr.write('\n');
-}
+// This program must log to stderr rather than stdout because it outputs its
+// result to stdout.
+const logStream = process.stderr;
+const args = process.argv.join();
+const verboseMode = args.includes('--verbose');
+const quietMode = args.includes('--quiet');
 
-log.next = function(step) {
-  this(step + '...');
-}
+// top-level const so we don’t have to thread it through everything.
+const log = step => {
+  if (!quietMode) {
+    logStream.write(verboseMode ? `${step}...\n` : '.');
+  }
+};
+
+log.finish = () => !quietMode && !verboseMode ? logStream.write('\n') : null;
 
 function chromiumPath() {
   // TODO: accept a path as a command-line argument
@@ -52,7 +55,7 @@ function puppeteerOpts(debugMode) {
 }
 
 async function loadStructurizrExpress(browser, url) {
-  log.next(`loading Structurizr Express from ${url}`);
+  log.(`loading Structurizr Express from ${url}`);
   const page = await browser.newPage();
   await page.goto(url);
 
@@ -64,12 +67,12 @@ async function loadStructurizrExpress(browser, url) {
 }
 
 async function setYamlAndUpdateDiagram(page, diagramYaml) {
-  log.next('setting YAML and updating diagram');
+  log.('setting YAML and updating diagram');
   await page.evaluate(pageFunctions.renderExpressDefinition, diagramYaml);
 }
 
 async function exportDiagram(page) {
-  log.next('calling export function');
+  log.('calling export function');
   const diagramImageBase64DataURI = await page.evaluate(pageFunctions.exportCurrentDiagramToPNG);
 
   // TODO: add some error handling: check that it actually is a data URI,
@@ -87,9 +90,9 @@ async function render(diagramYaml, browser, url, debugMode) {
 
 async function closeBrowser(browser, debugMode) {
   if (debugMode) {
-    log.next('DEBUG MODE: leaving browser open; script may be blocked until the browser quits.');
+    log('DEBUG MODE: leaving browser open; script may be blocked until the browser quits.');
   } else {
-    log.next('closing browser');
+    log('closing browser');
     await browser.close();
   }
 }
@@ -107,7 +110,7 @@ async function main(url, debugMode) {
   const rawYaml = readFileSync("/dev/stdin", "utf-8");
   const preppedYaml = prepYaml(rawYaml);
 
-  log.next('launching browser');
+  log('launching browser');
   const opts = puppeteerOpts(debugMode);
   const browser = await puppeteer.launch(opts);
 
@@ -115,6 +118,8 @@ async function main(url, debugMode) {
   closeBrowser(browser, debugMode);
 
   process.stdout.write(imageBuffer);
+
+  log.finish();
 }
 
 const url = 'https://structurizr.com/express?autoLayout=false';

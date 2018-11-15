@@ -42,8 +42,8 @@
         yaml-out (::se-edit/str-processed process-result)]
     (cb/spit yaml-out)
     (spit file yaml-out)
-    (println "processed YAML written to file and clipboard.\nstarting rendering...")
-    (println (render-diagram-file file))
+    (print "processed YAML written to file and clipboard.\nrendering...")
+    (print (render-diagram-file file))
     (println "rendering complete.\nEND" (.getName file) "\n")
     ; Return an updated context value so that process? will be able to filter out
     ; the fs modify event that will be dispatched immediately because we wrote to
