@@ -7,7 +7,7 @@ const dataUriToBuffer = require('data-uri-to-buffer');
 const {existsSync, readFileSync} = require('fs');
 const pageFunctions = require('./page-functions');
 const path = require('path');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 
 const log = function(msg) {
   // This program must log to stderr rather than stdout because it outputs its
