@@ -10,7 +10,7 @@ version: 2
 tool_job_defaults: &tool_job_defaults
   working_directory: ~/project/tool
   docker:
-    - image: quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-11.1_debian-stretch
+    - image: quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-10.13_debian-stretch
 
 restore_cache_clj: &restore_cache_clj
   name: Restore cached Clojure dependencies

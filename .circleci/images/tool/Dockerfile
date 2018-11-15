@@ -1,7 +1,7 @@
-FROM node:11.1.0-stretch
+FROM node:10.13.0-stretch
 
 LABEL maintainer="Avi Flax <avi.flax@fundingcircle.com>"
-LABEL description="Node 11, Clojure 1.9, and Chromium 70 on Debian Stretch"
+LABEL description="Node 10 (LTS), Clojure 1.9, and Chromium 70 on Debian Stretch"
 
 ENV JRE_VERSION=8u181-b13-2~deb9u1
 ENV CLOJURE_VERSION=1.9.0.394
