@@ -17,26 +17,17 @@ jobs:
    tool_test:
      <<: *tool_job_defaults
      steps:
-       - checkout:
-           path: ~/project
-
+       - checkout: {path: ~/project}
        - restore_cache:
            keys:
              - test-deps-{{checksum "deps.edn"}}-{{checksum "renderer/package.json"}}-{{checksum "bin/download-test-deps"}}
-
        - run: bin/download-test-deps
        - run: bin/tests-with-coverage
-
        - save_cache:
           key: test-deps-{{checksum "deps.edn"}}-{{checksum "renderer/package.json"}}-{{checksum "bin/download-test-deps"}}
           paths: [.cpcache, ~/.m2, ~/.gitlibs, renderer/node_modules]
-
-       - store_test_results:
-          path: target/test-results
-
-       - store_artifacts:
-          path: target/coverage
-
+       - store_test_results: {path: target/test-results}
+       - store_artifacts: {path: target/coverage}
        - run:
           name: Upload test coverage report to Codecov
           command: bash <(curl -s https://codecov.io/bash)
@@ -44,12 +35,9 @@ jobs:
    tool_clj_lint:
      <<: *tool_job_defaults
      steps:
-       - checkout:
-           path: ~/project
+       - checkout: {path: ~/project}
        - restore_cache: {keys: ['clj-lint-deps-{{checksum "deps.edn"}}']}
-       - run:
-          name: Lint Clojure source code
-          command: clojure -A:lint # downloads deps if needed
+       - run: clojure -A:lint # downloads deps if needed
        - save_cache:
           key: clj-lint-deps-{{checksum "deps.edn"}}
           paths: [.cpcache, ~/.m2, ~/.gitlibs]
@@ -57,8 +45,7 @@ jobs:
    tool_build_dist_pkg:
      <<: *tool_job_defaults
      steps:
-       - checkout:
-           path: ~/project
+       - checkout: {path: ~/project}
        - restore_cache:
            keys:
              - pkg-deps-{{checksum "deps.edn"}}-{{ checksum "renderer/package.json" }}-{{checksum "bin/download-pkg-deps"}}
@@ -77,9 +64,7 @@ jobs:
              mkdir test-renders
              cat test/data/structurizr/express/diagram_valid_messy.yaml \
                | target/pkg/renderer/render-linux --verbose > test-renders/1.png
-       - persist_to_workspace:
-           root: /workspace
-           paths: [packages]
+       - persist_to_workspace: {root: /workspace, paths: [packages]}
        - store_artifacts: {path: /workspace/packages}
        - store_artifacts: {path: test-renders}
        - save_cache:
@@ -91,12 +76,9 @@ jobs:
    tool_publish_dist_pkg:
      <<: *tool_job_defaults
      steps:
-       - attach_workspace:
-            at: /workspace
-       - run:
-           name: Check crucial environment variables
-           command: |
-             [ "$GITHUB_TOKEN" ] || { echo 'GITHUB_TOKEN is not set!' && exit 1; }
+       - attach_workspace: {at: /workspace}
+       - run: |
+           [ "$GITHUB_TOKEN" ] || { echo 'GITHUB_TOKEN is not set!' && exit 1; }
        - run:
            ## TODO: cache ghr
            name: Download and unpack ghr
