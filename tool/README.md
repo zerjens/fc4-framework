@@ -28,14 +28,13 @@ As explained in
 
 1. A [Java Runtime Environment (JRE)](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) or [Java Development Kit (JDK)](https://adoptopenjdk.net/)
    1. On MacOS if you have [Homebrew](https://brew.sh/) you can run `brew cask install adoptopenjdk`
-1. An installation of [Chrome](https://www.google.com/chrome/browser/) or [Chromium](https://www.chromium.org/Home) **68**
-   1. **Must be version 68**
-      1. Direct download links for Chromium: [MacOS](https://storage.googleapis.com/chromium-browser-snapshots/Mac/555668/chrome-mac.zip), [Linux](https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/555668/chrome-linux.zip)
+1. An installation of [Chrome](https://www.google.com/chrome/browser/) or [Chromium](https://www.chromium.org/Home) **70–72** (inclusive)
    1. On MacOS:
+      1. If you have [Homebrew](https://brew.sh/) you can run `brew cask install chromium`
       1. Chromium/Chrome must be at either `/Applications/Chromium.app` or `/Applications/Google Chrome.app`
-      1. Chromium takes precedence, so if you have Chromium and Chrome installed, only Chromium needs to be version 68
-   1. On Linux, Chromium/Chrome must be at `/usr/bin/chromium-browser`
-      1. If this is too rigid, please [let us know](https://github.com/FundingCircle/fc4-framework/issues/new)
+
+MacOS quick-start for [Homebrew](https://brew.sh/) users: `brew cask install adoptopenjdk chromium`
+
 
 ### Download and Install
 

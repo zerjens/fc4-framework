@@ -24,9 +24,10 @@ log.next = function(step) {
 function chromiumPath() {
   // TODO: accept a path as a command-line argument
   const possiblePaths = [
-    '/usr/bin/chromium-browser', // Alpine
     '/Applications/Chromium.app/Contents/MacOS/Chromium',
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/usr/bin/chromium', // Debian
+    '/usr/bin/chromium-browser']; // Alpine
 
   return possiblePaths.find(path => existsSync(path)) || null;
 }
