@@ -95,11 +95,19 @@ jobs:
            name: Create GitHub Release and upload distribution packages to it
            # Docs for ghr’s options: https://github.com/tcnksm/ghr/#options
            command: |
-             TAG="${CIRCLE_BRANCH}_$(date "+%Y-%m-%d")_${CIRCLE_BUILD_NUM}"
+             if [[ $CIRCLE_BRANCH == "master" ]]; then
+               # Tag has build num suffix in case we do multiple releases on a given day.
+               TAG="release_$(date "+%Y-%m-%d")_${CIRCLE_BUILD_NUM}"
+             else
+               # We need this to be the same across all builds for a branch so we only ever keep the
+               # latest tag+release for a given branch, or we’d have way too many tags+branches.
+               TAG="prerelease_${CIRCLE_BRANCH}"
+             fi
              ~/bin/ghr -t $GITHUB_TOKEN \
                        -u $CIRCLE_PROJECT_USERNAME \
                        -r $CIRCLE_PROJECT_REPONAME \
                        -c $CIRCLE_SHA1 \
+                       $(if [[ ! $CIRCLE_BRANCH == "master" ]]; then echo -prerelease -recreate; fi) \
                        $TAG \
                        /workspace/packages
 
@@ -110,6 +118,4 @@ workflows:
       - tool_test
       - tool_clj_lint
       - tool_build_dist_pkg: {requires: [tool_test, tool_clj_lint]}
-      - tool_publish_dist_pkg:
-          requires: [tool_build_dist_pkg]
-          filters: {branches: {only: master}}
+      - tool_publish_dist_pkg: {requires: [tool_build_dist_pkg]}
