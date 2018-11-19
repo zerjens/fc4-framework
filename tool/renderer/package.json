@@ -1,6 +1,7 @@
 {
   "name": "render",
   "description": "Renders Structurizr Express diagrams in a headless browser using Puppeteer.",
+  "private": true,
   "bin": "render.js",
   "main": "render.js",
   "dependencies": {
