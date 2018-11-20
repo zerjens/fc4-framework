@@ -18,6 +18,10 @@
   ;; the tests and building a distribution package (uberjar).
   joda-time/joda-time         {:mvn/version "2.7"}
 
+  ;; Conflicting versions of jna are resolved via org.clojure/tools.gitlibs and hawk.
+  net.java.dev.jna/jna          {:mvn/version "4.1.0"}
+  net.java.dev.jna/jna-platform {:mvn/version "4.1.0"}
+
   ;; test.chuck is in the main dependency list, rather than in the test profile,
   ;; because we’re using one of its generators in a spec in a source file.
   ;; This means we’ll also need org.clojure/test.check at runtime. Not ideal,
