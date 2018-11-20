@@ -56,7 +56,7 @@ function puppeteerOpts(debugMode) {
 }
 
 async function loadStructurizrExpress(browser, url) {
-  log.(`loading Structurizr Express from ${url}`);
+  log(`loading Structurizr Express from ${url}`);
   const page = await browser.newPage();
   await page.goto(url);
 
@@ -68,12 +68,12 @@ async function loadStructurizrExpress(browser, url) {
 }
 
 async function setYamlAndUpdateDiagram(page, diagramYaml) {
-  log.('setting YAML and updating diagram');
+  log('setting YAML and updating diagram');
   await page.evaluate(pageFunctions.renderExpressDefinition, diagramYaml);
 }
 
 async function exportDiagram(page) {
-  log.('calling export function');
+  log('calling export function');
   const diagramImageBase64DataURI = await page.evaluate(pageFunctions.exportCurrentDiagramToPNG);
 
   // TODO: add some error handling: check that it actually is a data URI,
