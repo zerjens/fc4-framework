@@ -50,86 +50,40 @@ function puppeteerOpts(debugMode) {
   };
 }
 
-function abit(ms) {
-  log.next(`pausing ${ms}ms`);
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 async function loadStructurizrExpress(browser, url) {
   log.next(`loading Structurizr Express from ${url}`);
-  const mainPage = await browser.newPage();
-  await mainPage.goto(url, {'waitUntil' : 'networkidle2'});
-  return mainPage;
+  const page = await browser.newPage();
+  await page.goto(url);
+
+  // I copied this step from
+  // https://github.com/structurizr/puppeteer/blob/d8b625aef77b404de42199a1ff9a9f6730795913/export-express-diagram.js#L24
+  await page.waitForXPath("//*[name()='svg']");
+
+  return page;
 }
 
 async function setYamlAndUpdateDiagram(page, diagramYaml) {
   log.next('setting YAML and updating diagram');
-  await page.evaluate(theYaml => {
-    // This might shadow the outer context’s function of the same name, but
-    // that’s OK because that function doesn’t cross the boundary to the browser
-    // successfully. I guess maybe this isn’t a closure… honestly I’m not sure.
-    function abit(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    (async () => {
-      // helps with debugging, screenshots, etc
-      document.getElementById('expressIntroductionModal').style.display = 'none';
-
-      // Show the YAML tab. Not sure why but without this the diagram doesn’t render.
-      document.querySelector('a[href="#yaml"]').dispatchEvent(
-        new MouseEvent('click', {view: window, bubbles: true, cancelable: true})
-      );
-
-      const yamlTextArea = document.getElementById('yamlDefinition');
-      yamlTextArea.value = theYaml;
-      changes = true;
-
-      await abit(200);
-      structurizrExpressToDiagram();
-    })();
+  await page.evaluate(diagramYaml => {
+    structurizr.scripting.renderExpressDefinition(diagramYaml);
   }, diagramYaml);
 }
 
-async function doExport(mainPage) {
-  log.next('calling export function');
-
-  // from https://github.com/GoogleChrome/puppeteer/issues/386#issuecomment-343059315
-  const newPagePromise = new Promise(resolve => {
-    mainPage.browser().once('targetcreated', target => resolve(target.page()));
+async function exportDiagram(page) {
+  const diagramImageBase64DataURI = await page.evaluate(() => {
+    return structurizr.scripting.exportCurrentDiagramToPNG();
   });
 
-  await abit(200);
-  await mainPage.evaluate(() => {
-    Structurizr.diagram.exportCurrentView(1, true, false, false, false);
-  });
-
-  log.next('getting export page');
-  const exportPage = await newPagePromise;
-
-  const exportPageTitle = await exportPage.title();
-  log(`export page opened with title: ${exportPageTitle}.`);
-
-  return exportPage;
-};
-
-async function getImageBuffer(exportPage) {
-  log.next('getting image');
-  const image = await exportPage.waitForSelector('#exportedContent > img');
-
-  log.next('getting image source');
-  const imageSourceHandle = await image.getProperty('src');
-  const imageSource = await imageSourceHandle.jsonValue();
-  const imageBuffer = dataUriToBuffer(imageSource);
-
-  return imageBuffer;
+  // TODO: add some error handling: check that it actually is a data URI,
+  // call the Structurizr Express predicate function that checks whether there
+  // were any errors, etc.
+  return dataUriToBuffer(diagramImageBase64DataURI);
 }
 
 async function render(diagramYaml, browser, url, debugMode) {
-  const mainPage =    await loadStructurizrExpress(browser, url);
-                      await setYamlAndUpdateDiagram(mainPage, diagramYaml);
-  const exportPage =  await doExport(mainPage);
-  const imageBuffer = await getImageBuffer(exportPage)
+  const page = await loadStructurizrExpress(browser, url);
+  await setYamlAndUpdateDiagram(page, diagramYaml);
+  const imageBuffer = await exportDiagram(page);
   return imageBuffer;
 }
 
@@ -142,20 +96,29 @@ async function closeBrowser(browser, debugMode) {
   }
 }
 
+function prepYaml(yaml) {
+  // Structurizr Express will only recognize the YAML as YAML and parse it if
+  // it begins with the YAML document separator. If this isn’t present, it will
+  // assume that the diagram definition string is JSON and will fail.
+  const sepLoc = yaml.indexOf('---');
+  return sepLoc >= 0 ? yaml.substring(sepLoc) : `---\n${yaml}`;
+}
+
 async function main(url, debugMode) {
   // Read stdin first; if it fails or blocks, no sense in launching the browser
-  const theYaml = readFileSync("/dev/stdin", "utf-8");
+  const rawYaml = readFileSync("/dev/stdin", "utf-8");
+  const preppedYaml = prepYaml(rawYaml);
 
   log.next('launching browser');
   const opts = puppeteerOpts(debugMode);
   const browser = await puppeteer.launch(opts);
 
-  const imageBuffer = await render(theYaml, browser, url, debugMode);
+  const imageBuffer = await render(preppedYaml, browser, url, debugMode);
   closeBrowser(browser, debugMode);
 
   process.stdout.write(imageBuffer);
 }
 
-const url = 'https://structurizr.com/express';
+const url = 'https://structurizr.com/express?autoLayout=false';
 const debugMode = false;
 main(url, debugMode);
