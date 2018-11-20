@@ -5,6 +5,7 @@
 
 const dataUriToBuffer = require('data-uri-to-buffer');
 const {existsSync, readFileSync} = require('fs');
+const pageFunctions = require('./page-functions');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
@@ -64,15 +65,12 @@ async function loadStructurizrExpress(browser, url) {
 
 async function setYamlAndUpdateDiagram(page, diagramYaml) {
   log.next('setting YAML and updating diagram');
-  await page.evaluate(diagramYaml => {
-    structurizr.scripting.renderExpressDefinition(diagramYaml);
-  }, diagramYaml);
+  await page.evaluate(pageFunctions.renderExpressDefinition, diagramYaml);
 }
 
 async function exportDiagram(page) {
-  const diagramImageBase64DataURI = await page.evaluate(() => {
-    return structurizr.scripting.exportCurrentDiagramToPNG();
-  });
+  log.next('calling export function');
+  const diagramImageBase64DataURI = await page.evaluate(pageFunctions.exportCurrentDiagramToPNG);
 
   // TODO: add some error handling: check that it actually is a data URI,
   // call the Structurizr Express predicate function that checks whether there

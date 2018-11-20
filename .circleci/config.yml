@@ -124,12 +124,19 @@ jobs:
              bin/pkg-all
              mkdir -p /workspace/packages
              mv target/pkg/*.gz /workspace/packages/
+       - run:
+           # Packaging any node app with pkg can be tricky; that’s doubly true for an app that uses
+           # Puppeteer. So it’s a good idea to ensure that the packaged renderer actually works.
+           name: Test packaged renderer
+           command: |
+             mkdir test-renders
+             cat test/data/structurizr/express/diagram_valid_messy.yaml \
+               | target/pkg/renderer/render-linux --verbose > test-renders/1.png
        - persist_to_workspace:
            root: /workspace
            paths: [packages]
-       - store_artifacts:
-           # Not entirely sure we need these artifacts but seems like a good idea just in case.
-           path: /workspace/packages
+       - store_artifacts: {path: /workspace/packages}
+       - store_artifacts: {path: test-renders}
        - save_cache:
            name: Cache the Clojure dependencies needed for building uberjar
            key: clj-uberjar-deps-{{ checksum "deps.edn" }}-{{checksum "bin/download-pkg-deps"}}
