@@ -75,7 +75,7 @@ async function loadStructurizrExpress(browser) {
 // `message` property; the more detailed errors will be in its property `errors`. The value of
 // that property is described in the docs on `pageFunctions.getErrorMessages`.
 async function setYamlAndUpdateDiagram(page, diagramYaml) {
-  log.('setting YAML and updating diagram');
+  log('setting YAML and updating diagram');
   await page.evaluate(pageFunctions.renderExpressDefinition, diagramYaml);
   if (await page.evaluate(pageFunctions.hasErrorMessages)) {
     const err = new Error("Errors were found in the diagram definition");
@@ -85,7 +85,7 @@ async function setYamlAndUpdateDiagram(page, diagramYaml) {
 }
 
 async function exportDiagram(page) {
-  log.('calling export function');
+  log('calling export function');
   const diagramImageBase64DataURI = await page.evaluate(pageFunctions.exportCurrentDiagramToPNG);
 
   // TODO: add some error handling: check that it actually is a data URI,
