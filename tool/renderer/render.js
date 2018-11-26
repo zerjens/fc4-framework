@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // NB: here’s how I’ve been testing this on my Mac:
-// renderer $ cat ../test/data/structurizr/express/diagram_valid_cleaned.yaml | time ./render.js | open -a Preview.app -f
+// renderer $ cat ../test/data/structurizr/express/diagram_valid_cleaned.yaml | time ./render.js --verbose | open -a Preview.app -f
 
 const dataUriToBuffer = require('data-uri-to-buffer');
 const {existsSync, readFileSync} = require('fs');
@@ -111,10 +111,15 @@ async function main(url, debugMode) {
   const opts = puppeteerOpts(debugMode);
   const browser = await puppeteer.launch(opts);
 
-  const imageBuffer = await render(preppedYaml, browser, url, debugMode);
-  closeBrowser(browser, debugMode);
-
-  process.stdout.write(imageBuffer);
+  try {
+    const imageBuffer = await render(preppedYaml, browser, url, debugMode);
+    process.stdout.write(imageBuffer);
+  } catch (err) {
+    console.error(err);
+    process.exitCode = 1;
+  } finally {
+    closeBrowser(browser, debugMode);
+  }
 }
 
 const url = 'https://structurizr.com/express?autoLayout=false';
