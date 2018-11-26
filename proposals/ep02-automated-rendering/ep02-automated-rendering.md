@@ -1,9 +1,31 @@
 # FC4 Enhancement Proposal EP02: Automated Rendering
 
-This Enhancement Proposal is:
-
-* By [Avi Flax](https://github.com/aviflax/)
-* Part of [a batch of proposals](https://github.com/FundingCircle/fc4-framework/issues/72) being discussed and considered (initially) in October 2018
+<table>
+  <tr>
+    <th>EP:</th>
+    <td>2</td>
+  </tr>
+  <tr>
+    <th>Title:</th>
+    <td>Automated Rendering</td>
+  </tr>
+  <tr>
+    <th>Author:</th>
+    <td><a href="https://github.com/aviflax/">Avi Flax</a></td>
+  </tr>
+  <tr>
+    <th>Status:</th>
+    <td>Final</td>
+  </tr>
+  <tr>
+    <th>Created:</th>
+    <td>2018-10-09</td>
+  </tr>
+  <tr>
+    <th>Note:</th>
+    <td>Part of <a href="https://github.com/FundingCircle/fc4-framework/issues/72">a batch of proposals</a> being discussed and considered (initially) in October 2018</td>
+  </tr>
+</table>
 
 ## Summary
 
