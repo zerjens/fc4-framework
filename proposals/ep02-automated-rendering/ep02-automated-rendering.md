@@ -9,14 +9,18 @@ This Enhancement Proposal is:
 
 The [current workflow](https://fundingcircle.github.io/fc4-framework/methodology/authoring_workflow.html) for rendering diagram images from their YAML source with fc4-tool is completely manual, onerous, tedious, error-prone, hard to learn, and inefficient. We should replace it with a new workflow enabled by automated image rendering.
 
+## Status
+
+The [recommended approach](#recommended-implementation-approach) was implemented in mid-November 2018. Key pull requests are labeled with [EP02](https://github.com/FundingCircle/fc4-framework/pulls?utf8=%E2%9C%93&q=is%3Apr+label%3AEP02+).
+
+
 ## New User Experience (Workflow)
 
 1. The documentarian runs a command such as:
    1. `fc4 render diagrams/us/us_system_landscape.yaml path/to/another.yaml`
-   1. `fc4 render --watch diagrams/us/us_system_landscape.yaml`
+   1. `fc4 render diagrams/us/*.yaml`
 1. fc4-tool would then render each specified diagram into a PNG file
    1. Every specified view would be rendered to a PNG file in the same directory and with the same file name as the YAML file, except for the extension.
-1. If the `--watch` option is specified, then fc4-tool would stay up and running and watch all the specified view file(s) for changes, and re-render all relevant PNG files when any of the watched files change.
 
 ## Desired Implementation Properties
 
@@ -51,18 +55,15 @@ Here’s my evaluation of this approach against each of the properties listed ab
     <tr>
       <th align="left">A: Local Operation</th>
       <td>
-        <p>Might depend on Structurizr Express being reachable and “up”.
-        <p>(We might be able to use an “embedded” (i.e. “vendored”) instance of Structurizr Express, in which case the tool should not require Internet connectivity.)
+        <p>Would depend on Structurizr Express being reachable and “up”.
       </td>
       <td>N/A</td>
     </tr>
     <tr>
       <th align="left">B: System Dependencies</th>
       <td>
-        <p>Would add a single system dependency to fc4-tool: Node.
-        <p>(Puppeteer will by default automatically download an embedded Chromium when it’s installed.)
+        <p>Would add a single system dependency to fc4-tool: Chrome/Chromium. Which is no big deal since most users probably have it already anyway.</p>
       </td>
-      <td>…that would cancel this out, as that’d remove a Java runtime as a system dependency.</td>
     </tr>
     <tr>
       <th align="left">C: Single Process</th>
@@ -146,9 +147,9 @@ I found [in Paper’s README](https://github.com/paperjs/paper.js#installing-pap
   	</tr>
   	<tr>
   		<th align="left">Structurizr Express + Scripted Headless Browser</th>
-  		<td>✓ (Just Node)</td>
+  		<td>✓ (Just Chrome/Chromium)</td>
   		<td>✕</td>
-  		<td>~ (Maybe)</td>
+  		<td>✕</td>
       <td>✕</td>
   	</tr>
   	<tr>
