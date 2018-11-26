@@ -16,6 +16,6 @@ module.exports = {
   },
 
   exportCurrentDiagramToPNG: () => {
-    return structurizr.scripting.exportCurrentDiagramToPNG();
+    return structurizr.scripting.exportCurrentDiagramToPNG({ crop: false });
   }
 }

@@ -46,6 +46,7 @@ function puppeteerOpts(debugMode) {
 
   return {
     args: args,
+    ignoreHTTPSErrors: true,
     executablePath: chromiumPath(),
     headless: !debugMode
   };
@@ -122,6 +123,6 @@ async function main(url, debugMode) {
   }
 }
 
-const url = 'https://structurizr.com/express?autoLayout=false';
+const url = 'https://structurizr.com/express';
 const debugMode = false;
 main(url, debugMode);
