@@ -66,9 +66,18 @@ async function loadStructurizrExpress(browser) {
   return page;
 }
 
+// If successful, returns undefined. If unsuccessful or an error occurs, throws an exception. The
+// value of the exception will be an Error object, as such it will have a broad error message in its
+// `message` property; the more detailed errors will be in its property `errors`. The value of
+// that property is described in the docs on `pageFunctions.getErrorMessages`.
 async function setYamlAndUpdateDiagram(page, diagramYaml) {
   log.next('setting YAML and updating diagram');
   await page.evaluate(pageFunctions.renderExpressDefinition, diagramYaml);
+  if (await page.evaluate(pageFunctions.hasErrorMessages)) {
+    const err = new Error("Errors were found in the diagram definition");
+    err.errors = await page.evaluate(pageFunctions.getErrorMessages);
+    throw err;
+  }
 }
 
 async function exportDiagram(page) {
@@ -125,6 +134,25 @@ function parseArgs() {
   }
 }
 
+function printErrorMessages(err, preppedYaml) {
+  let humanOutput;
+  const machineOutput = { message: err.message };
+
+  if (err.errors) {
+    // If the error has a property `errors` then it’s an Error object that’s been thrown within
+    // `render`.
+    humanOutput = `RENDERING FAILED: ${err.message}:\n`
+    humanOutput += err.errors.map(errErr => `  💀 ${errErr.message}`).join('\n');
+    machineOutput.errors = err.errors;
+  } else {
+    // general failure
+    humanOutput = `RENDERING FAILED: ${err.stack}\nPrepped YAML:\n${preppedYaml}`
+  }
+
+  console.error(`🚨🚨🚨\n${humanOutput}\n🚨🚨🚨`);
+  console.error(`🤖🤖🤖\n${JSON.stringify(machineOutput)}\n🤖🤖🤖`);
+}
+
 async function main() {
   const args = parseArgs();
 
@@ -148,9 +176,7 @@ async function main() {
     const imageBuffer = await render(preppedYaml, browser, args);
     process.stdout.write(imageBuffer);
   } catch (err) {
-    console.error(
-      `RENDERING FAILED\n${err}\n${err.stack}\nPrepped YAML:\n${preppedYaml}`
-    );
+    printErrorMessages(err, preppedYaml);
     process.exitCode = 1;
   } finally {
     closeBrowser(browser, args);

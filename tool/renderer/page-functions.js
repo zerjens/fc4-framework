@@ -15,6 +15,17 @@ module.exports = {
     structurizr.scripting.renderExpressDefinition(diagramYaml);
   },
 
+  hasErrorMessages: () => {
+    return structurizrExpress.hasErrorMessages();
+  },
+
+  // Returns an array of objects with the guaranteed property message and the
+  // possible properties line and lineNumber. Message is generally a string
+  // while line and lineNumber may be undefined or null.
+  getErrorMessages: () => {
+    return structurizrExpress.getErrorMessages();
+  },
+
   exportCurrentDiagramToPNG: () => {
     return structurizr.scripting.exportCurrentDiagramToPNG({ crop: false });
   }
