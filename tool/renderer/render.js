@@ -9,6 +9,8 @@ const pageFunctions = require('./page-functions');
 const path = require('path');
 const puppeteer = require('puppeteer-core');
 
+const STRUCTURIZR_EXPRESS_URL = 'https://structurizr.com/express';
+
 const log = function(msg) {
   // This program must log to stderr rather than stdout because it outputs its
   // result to stdout.
@@ -46,15 +48,16 @@ function puppeteerOpts(debugMode) {
 
   return {
     args: args,
+    ignoreHTTPSErrors: true,
     executablePath: chromiumPath(),
     headless: !debugMode
   };
 }
 
-async function loadStructurizrExpress(browser, url) {
-  log.next(`loading Structurizr Express from ${url}`);
+async function loadStructurizrExpress(browser) {
+  log.next(`loading Structurizr Express from ${STRUCTURIZR_EXPRESS_URL}`);
   const page = await browser.newPage();
-  await page.goto(url);
+  await page.goto(STRUCTURIZR_EXPRESS_URL);
 
   // I copied this step from
   // https://github.com/structurizr/puppeteer/blob/d8b625aef77b404de42199a1ff9a9f6730795913/export-express-diagram.js#L24
@@ -78,11 +81,24 @@ async function exportDiagram(page) {
   return dataUriToBuffer(diagramImageBase64DataURI);
 }
 
-async function render(diagramYaml, browser, url, debugMode) {
-  const page = await loadStructurizrExpress(browser, url);
+async function render(diagramYaml, browser, debugMode) {
+  const page = await loadStructurizrExpress(browser);
   await setYamlAndUpdateDiagram(page, diagramYaml);
   const imageBuffer = await exportDiagram(page);
   return imageBuffer;
+}
+
+// On success: returns a Puppeteer browser object
+// On failure: logs an error then returns null
+async function launchBrowser(debugMode) {
+  try {
+    const opts = puppeteerOpts(debugMode);
+    log.next('launching browser');
+    return await puppeteer.launch(opts);
+  } catch (err) {
+    console.error(`Could not launch browser: ${err}\n${err.stack}`);
+    return null;
+  }
 }
 
 async function closeBrowser(browser, debugMode) {
@@ -102,21 +118,35 @@ function prepYaml(yaml) {
   return sepLoc >= 0 ? yaml.substring(sepLoc) : `---\n${yaml}`;
 }
 
-async function main(url, debugMode) {
+async function main(debugMode) {
   // Read stdin first; if it fails or blocks, no sense in launching the browser
   const rawYaml = readFileSync("/dev/stdin", "utf-8");
   const preppedYaml = prepYaml(rawYaml);
 
-  log.next('launching browser');
-  const opts = puppeteerOpts(debugMode);
-  const browser = await puppeteer.launch(opts);
+  // This is outside of the try block so that the binding will be visible to
+  // both the try block below and the finally block, because if an error occurs
+  // it’s really important to close the browser; if we don’t then the program
+  // will hang and not exit, even though rendering failed.
+  const browser = await launchBrowser(debugMode);
 
-  const imageBuffer = await render(preppedYaml, browser, url, debugMode);
-  closeBrowser(browser, debugMode);
+  if (!browser) {
+    // An error message will have been printed out by launchBrowser
+    process.exitCode = 1;
+    return;
+  }
 
-  process.stdout.write(imageBuffer);
+  try {
+    const imageBuffer = await render(preppedYaml, browser, debugMode);
+    process.stdout.write(imageBuffer);
+  } catch (err) {
+    console.error(
+      `RENDERING FAILED\n${err}\n${err.stack}\nPrepped YAML:\n${preppedYaml}`
+    );
+    process.exitCode = 1;
+  } finally {
+    closeBrowser(browser, debugMode);
+  }
 }
 
-const url = 'https://structurizr.com/express?autoLayout=false';
 const debugMode = false;
-main(url, debugMode);
+main(debugMode);
