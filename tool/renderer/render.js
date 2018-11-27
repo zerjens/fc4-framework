@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // NB: here’s how I’ve been testing this on my Mac:
-// renderer $ cat ../test/data/structurizr/express/diagram_valid_cleaned.yaml | time ./render.js --verbose | open -a Preview.app -f
+// renderer $ cat ../test/data/structurizr/express/diagram_valid_cleaned.yaml | time ./render.js | open -a Preview.app -f
 
 const dataUriToBuffer = require('data-uri-to-buffer');
 const {existsSync, readFileSync} = require('fs');
@@ -86,6 +86,19 @@ async function render(diagramYaml, browser, url, debugMode) {
   return imageBuffer;
 }
 
+// On success: returns a Puppeteer browser object
+// On failure: logs an error then returns null
+async function launchBrowser(debugMode) {
+  try {
+    const opts = puppeteerOpts(debugMode);
+    log.next('launching browser');
+    return await puppeteer.launch(opts);
+  } catch (err) {
+    console.error(`Could not launch browser: ${err}\n${err.stack}`);
+    return null;
+  }
+}
+
 async function closeBrowser(browser, debugMode) {
   if (debugMode) {
     log.next('DEBUG MODE: leaving browser open; script may be blocked until the browser quits.');
@@ -108,15 +121,25 @@ async function main(url, debugMode) {
   const rawYaml = readFileSync("/dev/stdin", "utf-8");
   const preppedYaml = prepYaml(rawYaml);
 
-  log.next('launching browser');
-  const opts = puppeteerOpts(debugMode);
-  const browser = await puppeteer.launch(opts);
+  // This is outside of the try block so that the binding will be visible to
+  // both the try block below and the finally block, because if an error occurs
+  // it’s really important to close the browser; if we don’t then the program
+  // will hang and not exit, even though rendering failed.
+  const browser = await launchBrowser(debugMode);
+
+  if (!browser) {
+    // An error message will have been printed out by launchBrowser
+    process.exitCode = 1;
+    return;
+  }
 
   try {
     const imageBuffer = await render(preppedYaml, browser, url, debugMode);
     process.stdout.write(imageBuffer);
   } catch (err) {
-    console.error(err);
+    console.error(
+      `RENDERING FAILED\n${err}\n${err.stack}\nPrepped YAML:\n${preppedYaml}`
+    );
     process.exitCode = 1;
   } finally {
     closeBrowser(browser, debugMode);
