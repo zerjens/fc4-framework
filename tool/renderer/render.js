@@ -9,6 +9,8 @@ const pageFunctions = require('./page-functions');
 const path = require('path');
 const puppeteer = require('puppeteer-core');
 
+const STRUCTURIZR_EXPRESS_URL = 'https://structurizr.com/express';
+
 const log = function(msg) {
   // This program must log to stderr rather than stdout because it outputs its
   // result to stdout.
@@ -52,10 +54,10 @@ function puppeteerOpts(debugMode) {
   };
 }
 
-async function loadStructurizrExpress(browser, url) {
-  log.next(`loading Structurizr Express from ${url}`);
+async function loadStructurizrExpress(browser) {
+  log.next(`loading Structurizr Express from ${STRUCTURIZR_EXPRESS_URL}`);
   const page = await browser.newPage();
-  await page.goto(url);
+  await page.goto(STRUCTURIZR_EXPRESS_URL);
 
   // I copied this step from
   // https://github.com/structurizr/puppeteer/blob/d8b625aef77b404de42199a1ff9a9f6730795913/export-express-diagram.js#L24
@@ -79,8 +81,8 @@ async function exportDiagram(page) {
   return dataUriToBuffer(diagramImageBase64DataURI);
 }
 
-async function render(diagramYaml, browser, url, debugMode) {
-  const page = await loadStructurizrExpress(browser, url);
+async function render(diagramYaml, browser, debugMode) {
+  const page = await loadStructurizrExpress(browser);
   await setYamlAndUpdateDiagram(page, diagramYaml);
   const imageBuffer = await exportDiagram(page);
   return imageBuffer;
@@ -116,7 +118,7 @@ function prepYaml(yaml) {
   return sepLoc >= 0 ? yaml.substring(sepLoc) : `---\n${yaml}`;
 }
 
-async function main(url, debugMode) {
+async function main(debugMode) {
   // Read stdin first; if it fails or blocks, no sense in launching the browser
   const rawYaml = readFileSync("/dev/stdin", "utf-8");
   const preppedYaml = prepYaml(rawYaml);
@@ -134,7 +136,7 @@ async function main(url, debugMode) {
   }
 
   try {
-    const imageBuffer = await render(preppedYaml, browser, url, debugMode);
+    const imageBuffer = await render(preppedYaml, browser, debugMode);
     process.stdout.write(imageBuffer);
   } catch (err) {
     console.error(
@@ -146,6 +148,5 @@ async function main(url, debugMode) {
   }
 }
 
-const url = 'https://structurizr.com/express';
 const debugMode = false;
-main(url, debugMode);
+main(debugMode);
