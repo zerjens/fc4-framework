@@ -83,7 +83,7 @@ Please see [The Authoring Workflow](https://fundingcircle.github.io/fc4-framewor
 Run this in your shell:
 
 ```bash
-bin/run bin/tests
+bin/docker-test-run bin/tests
 ```
 
 ### Without Docker

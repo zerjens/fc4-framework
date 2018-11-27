@@ -2,8 +2,6 @@
 ## Run this from <project-root>/tool/
 set -e
 
-bin/download-pkg-deps
-
 mkdir -p target/pkg
 
 cd renderer

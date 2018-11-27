@@ -8,6 +8,14 @@
   expound                     {:mvn/version "0.7.1"}
   com.cognitect/anomalies     {:mvn/version "0.1.12"}
 
+  ;; Our code doesn’t use joda-time directly; it’s specified here as an override to resolve a
+  ;; conflict between test.chuck which depends (indirectly) on joda-time 2.7 and cambada which
+  ;; depends (indirectly) on joda-time 2.8. The conflict was causing cambada’s uberjar process
+  ;; to fail. I’m overriding the dependency here at the root level, which takes precedence over the
+  ;; profiles, because I want to ensure that we’ll use the same version of joda-time when running
+  ;; the tests and building a distribution package (uberjar).
+  joda-time/joda-time         {:mvn/version "2.7"}
+
   ;; test.chuck is in the main dependency list, rather than in the test profile,
   ;; because we’re using one of its generators in a spec in a source file.
   ;; This means we’ll also need org.clojure/test.check at runtime. Not ideal,

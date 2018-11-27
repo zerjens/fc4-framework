@@ -1,6 +1,4 @@
-# This Dockerfile is intended for running the tests. It isn’t useful for _using_
-# the tool because, among other reasons, the tool requires access to your
-# clipboard.
+# This Dockerfile is intended for building distribution packages/artifacts.
 
 # The source for this base image is at <project-root>/.circleci/images/tool/Dockerfile
 FROM quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-10.13_debian-stretch
@@ -14,8 +12,8 @@ WORKDIR /tool
 # re-download deps every time the app code changes.
 COPY deps.edn ./
 COPY renderer/package*.json ./renderer/
-COPY bin/download-test-deps bin/
-RUN bin/download-test-deps
+COPY bin/download-pkg-deps bin/
+RUN bin/download-pkg-deps
 
 # Now copy *all* the code.
 COPY . ./
