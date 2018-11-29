@@ -6,4 +6,4 @@
 set -e
 
 SCRIPT_DIR="${BASH_SOURCE%/*}"
-java -jar $SCRIPT_DIR/fc4.jar "$@"
+java -jar "$SCRIPT_DIR/fc4.jar" "$@"
