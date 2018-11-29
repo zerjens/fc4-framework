@@ -1,16 +1,32 @@
 (ns fc4.integrations.structurizr.express.render
   (:require [clojure.java.io    :as io    :refer [file]]
             [clojure.java.shell :as shell :refer [sh]]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [clojure.string     :as str   :refer [split]]))
+
+(defn jar-dir
+  "Utility function to get the path to the dir in which the jar in which this
+  function is invoked is located.
+  Adapted from https://stackoverflow.com/a/13276993/7012"
+  []
+  ;; The .toURI step is vital to avoid problems with special characters,
+  ;; including spaces and pluses.
+  ;; Source: https://stackoverflow.com/q/320542/7012#comment18478290_320595
+  (-> (class *ns*)
+      .getProtectionDomain .getCodeSource .getLocation .toURI .getPath
+      file .toPath .getParent .toFile))
 
 (defn renderer-command
   []
-  (let [relative-paths ["render"
+  (let [possible-paths [; this first one is used when the tool is packaged in a jar
+                        (file (jar-dir) "fc4-render")
+                        "render"
                         "renderer/render.js"
                         "target/pkg/renderer/render-macos"
                         "target/pkg/renderer/render-linux"]
         hopefully-on-path "fc4-render"]
-    (or (some #(when (.canExecute (file %)) %) relative-paths)
+    (or (some #(if (.canExecute (file %)) %)
+              possible-paths)
         hopefully-on-path)))
 
 (defn render
