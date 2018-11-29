@@ -6,10 +6,14 @@
 set -ex
 docker build -f Dockerfile.pkg -t fc4-pkg .
 
+# It’s handy to pass in to the container because some packaging steps need this
+# info, and this way we don’t need to copy the repo into the container.
+git_head_sha=$(git rev-parse --short HEAD)
+
 # You might think this command should include --rm so as not to litter the
 # system with containers, and that’d be reasonable, BUT it can also make
 # debugging harder. Sometimes when the packaging scripts fail they write out
 # files that are meant to help with debugging; if the container is deleted as
 # soon as it exits then those files are gone. So you might want to run `docker
 # container prune` every once in awhile ;)
-docker run fc4-pkg "$@"
+docker run -e GIT_HEAD_SHA=$git_head_sha fc4-pkg "$@"
