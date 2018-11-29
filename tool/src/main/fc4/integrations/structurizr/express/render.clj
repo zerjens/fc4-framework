@@ -19,7 +19,7 @@
 (defn renderer-command
   []
   (let [possible-paths [; this first one is used when the tool is packaged in a jar
-                        (file (jar-dir) "fc4-render")
+                        (str (file (jar-dir) "fc4-render"))
                         "render"
                         "renderer/render.js"
                         "target/pkg/renderer/render-macos"
@@ -40,7 +40,8 @@
   ;; TODO: should this really throw an exception on any and all errors? Since
   ;; we’re returning a map in the success case, how about instead we return an
   ;; “anomaly” map?
-  (let [result (sh (renderer-command)
+  (let [command (renderer-command)
+        result (sh command
                    :in diagram-yaml
                    :out-enc :bytes)
         {:keys [exit out err]} result]
