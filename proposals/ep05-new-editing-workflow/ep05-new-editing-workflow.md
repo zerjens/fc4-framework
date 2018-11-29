@@ -50,43 +50,16 @@ clipboard optional rather than required.
 
 ## New User Experience (Workflow)
 
-### Single File Workflow
-
 1. The documentarian runs the new `edit` command like so:
-   1. `fc4 edit path/to/diagram.yaml`
-1. fc4-tool immediately processes the file:
-   1. Cleans up the YAML (overwriting the file)
-   1. Renders the diagram to a PNG file
-   1. Copies the cleaned-up YAML to the clipboard (overwriting its contents) in case the
-      documentarian wants to paste it into Structurizr Express to edit the diagram graphically
-1. fc4-tool stays running in a persistent mode, watching the file and the clipboard for changes
-1. Whenever the watched file is changed, fc4-tool automatically processes it again, just as it did
-   when first starting
-1. Whenever the contents of the clipboard are changed (by the documentarian) and contain a
-   Structurizr Express diagram in YAML, fc4-tool:
-   1. Assumes that the documentarian has edited the diagram graphically using Structurizr Express
-      and wishes to move the edits back to the files
-   1. Cleans up the YAML in the clipboard
-   1. Writes the cleaned-up YAML to the file (overwriting the file)
-   1. Renders the diagram to a PNG file
-   1. Copies the cleaned-up YAML back to the clipboard (overwriting its contents) in case the
-      documentarian wants to paste it into Structurizr Express to edit the diagram graphically again
-1. When the documentarian is done editing the diagram, they:
-   1. Wait for the last rendering step to complete, if it hasn’t already
-   1. Hit ctrl-c in their terminal to shut down fc4-tool
-   1. Run `git commit` to commit their changes to the diagram
-
-### Multi-File Workflow
-
-This is essentially the same as the single-file workflow, except it does not involve the clipboard
-and it does not proactively render or process any of the watched files when starting up.
-
-1. The documentarian runs the new `edit` command like so:
-   1. `fc4 edit path/to/diagrams/*.yaml`
+   1. `fc4 edit path/to/my_diagram.yaml`
+   1. or `fc4 edit all/the/diagrams/in/this/dir also/this/diagram.yaml also/these/*.yaml`
+      1. 1–N paths to files or directories may be supplied
+      1. Each specified directory will be watched for new or changed YAML files, recursively
 1. fc4-tool starts up in a persistent mode, watching those files for changes
 1. Whenever one of the watched files is changed, fc4-tool automatically:
    1. Cleans up the YAML in the file
    1. Renders the diagram to a PNG file
+      1. In the same directory and with the same name except for the extension
 1. When the documentarian is done editing the diagrams, they:
    1. Wait for the last rendering step to complete, if it hasn’t already
    1. Hit ctrl-c in their terminal to shut down fc4-tool
@@ -101,5 +74,6 @@ and it does not proactively render or process any of the watched files when star
 * Remaining work:
   * More error-handling
   * More automated testing
+  * Code cleanup
   * Solicit and incorporate feedback from documentarians based on both this enhancement proposal and
     on the spike
