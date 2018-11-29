@@ -19,11 +19,6 @@
 
 (namespaces '[structurizr :as st])
 
-(def default-front-matter
-  (str "links:\n"
-       "  The FC4 Framework: https://fundingcircle.github.io/fc4-framework/\n"
-       "  Structurizr Express: https://structurizr.com/express"))
-
 (defn blank-nil-or-empty? [v]
   (or (nil? v)
       (and (coll? v)
@@ -340,31 +335,13 @@
   (let [{:keys [::fy/front ::fy/main]} (split-file s)
         main-processed (process (yaml/parse-string main))]
     {::main-processed main-processed
-     ::str-processed (str (trim (or front default-front-matter))
+     ::str-processed (str (trim (or front sy/default-front-matter))
                           "\n---\n"
                           (stringify main-processed))}))
 
-(defmacro sometimes [body]
-  `(when (< (rand) 0.5)
-     ~body))
-
-(s/def ::diagram-yaml-str
-  (s/with-gen
-    (s/and string?
-           #(not (re-seq #"\n\n---\n" %)) ; prevent extra blank line
-           (fn [s]
-             (let [parsed (-> s split-file ::fy/main yaml/parse-string)]
-               (every? #(contains? parsed %) [:type :scope :description
-                                              :elements :size]))))
-    #(gen/fmap
-      (fn [diagram]
-        (str (sometimes (str default-front-matter "\n---\n"))
-             (stringify diagram)))
-      (s/gen ::st/diagram))))
-
 (s/def ::main-processed ::st/diagram)
-(s/def ::str-processed ::diagram-yaml-str)
+(s/def ::str-processed  ::st/diagram-yaml-str)
 
 (s/fdef process-file
-        :args (s/cat :in ::diagram-yaml-str)
+        :args (s/cat :in ::st/diagram-yaml-str)
         :ret  (s/keys :req [::main-processed ::str-processed]))

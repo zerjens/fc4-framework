@@ -1,11 +1,14 @@
 (ns fc4.integrations.structurizr.express.spec
-  (:require [clojure.spec.alpha :as s]
+  (:require [clj-yaml.core :as yaml]
+            [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [clojure.string :as str :refer [blank?]]
             [com.gfredericks.test.chuck.generators :refer [string-from-regex]]
+            [fc4.integrations.structurizr.express.yaml :as seyaml]
             [fc4.model :as m]
             [fc4.spec :as fs]
-            [fc4.util :as fu :refer [namespaces]]))
+            [fc4.util :as fu :refer [namespaces]]
+            [fc4.yaml :as fy :refer [split-file]]))
 
 (namespaces '[structurizr              :as st]
             '[structurizr.container    :as sc]
@@ -146,3 +149,21 @@
 (s/def ::st/diagram
   (s/keys :req-un [::sd/type ::sd/scope ::sd/elements ::sd/size]
           :opt-un [::st/description ::sd/relationships ::sd/styles]))
+
+(defmacro sometimes [body]
+  `(when (< (rand) 0.5)
+     ~body))
+
+(s/def ::st/diagram-yaml-str
+  (s/with-gen
+    (s/and string?
+           #(not (re-seq #"\n\n---\n" %)) ; prevent extra blank line
+           (fn [s]
+             (let [parsed (-> s split-file ::fy/main yaml/parse-string)]
+               (every? #(contains? parsed %) [:type :scope :description
+                                              :elements :size]))))
+    #(gen/fmap
+      (fn [diagram]
+        (str (sometimes (str seyaml/default-front-matter "\n---\n"))
+             (seyaml/stringify diagram)))
+      (s/gen ::st/diagram))))

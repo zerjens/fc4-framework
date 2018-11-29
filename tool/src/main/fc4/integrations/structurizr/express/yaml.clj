@@ -2,6 +2,11 @@
   (:require [clojure.string :as str]
             [fc4.yaml :as fy]))
 
+(def default-front-matter
+  (str "links:\n"
+       "  The FC4 Framework: https://fundingcircle.github.io/fc4-framework/\n"
+       "  Structurizr Express: https://structurizr.com/express"))
+
 (defn- wrap-coord-strings
   "If an entire value looks like a coordinate, wrap it in single quotes so as to
   force it to a string, because otherwise it might be parsed by Structurizr
