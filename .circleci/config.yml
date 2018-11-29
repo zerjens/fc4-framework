@@ -53,6 +53,7 @@ jobs:
        - run:
            name: Create distribution packages
            command: |
+             export GIT_HEAD_SHA=$(git rev-parse --short HEAD)
              bin/pkg-all
              mkdir -p /workspace/packages
              mv target/pkg/*.gz /workspace/packages/
