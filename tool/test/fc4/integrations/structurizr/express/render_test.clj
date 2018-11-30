@@ -1,7 +1,7 @@
 ; Suppress the Java icon from popping up and grabbing focus on MacOS.
 ; Found in a comment to this answer: https://stackoverflow.com/a/17544259/7012
 ; This is at the top of the file, as opposed to the ns form being first as is
-; idiomatic, because one of the mikera.image namespaces triggers that Java icon
+; idiomatic, because one of the required namespaces triggers that Java icon
 ; on load.
 (System/setProperty "apple.awt.UIElement" "true")
 
@@ -10,7 +10,7 @@
             [clojure.java.io                             :as io :refer [file input-stream]]
             [clojure.spec.alpha                          :as s]
             [clojure.test                                       :refer [deftest testing is]]
-            [image-resizer.core :refer [resize]])
+            [image-resizer.core                                 :refer [resize]])
   (:import  [java.awt Color]
             [java.awt.image BufferedImage]
             [java.io ByteArrayInputStream DataInputStream]
@@ -80,12 +80,10 @@
 (deftest render
   (testing "happy paths"
     (testing "rendering a Structurizr Express file"
-      (let [dir "test/data/structurizr/express/"
-            yaml (slurp (str dir "diagram_valid_cleaned.yaml"))
+      (let [yaml (slurp (str dir "diagram_valid_cleaned.yaml"))
             {:keys [::r/png-bytes ::r/stderr] :as result} (r/render yaml)
             actual-bytes png-bytes
             expected-bytes (binary-slurp (str dir "diagram_valid_cleaned_expected.png"))
-
             difference (->> [actual-bytes expected-bytes]
                             (map bytes->buffered-image)
                             (map #(resize % 1000 1000))
@@ -108,4 +106,10 @@
                    " different, which is higher than the threshold of "
                    max-allowable-image-difference
                    "\n“expected” PNG written to:" (.getPath expected-debug-fp)
-                   "\n“actual” PNG written to:" (.getPath actual-debug-fp))))))))
+                   "\n“actual” PNG written to:" (.getPath actual-debug-fp)))))))
+  (testing "sad paths"
+    (testing "various invalid inputs"
+      (let [result (r/render "this is not YAML? Or I guess maybe it is?")]
+        (is
+
+         result)))))

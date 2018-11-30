@@ -1,8 +1,35 @@
 (ns fc4.integrations.structurizr.express.render
-  (:require [clojure.java.io    :as io    :refer [file]]
-            [clojure.java.shell :as shell :refer [sh]]
-            [clojure.spec.alpha :as s]
-            [clojure.string     :as str   :refer [split]]))
+  (:require [clojure.java.io      :as io      :refer [file]]
+            [clojure.java.shell   :as shell   :refer [sh]]
+            [clojure.data.json    :as json]
+            [clojure.spec.alpha   :as s]
+            [clojure.string       :as str     :refer [split trim]]
+            [cognitect.anomalies  :as anom]
+            [expound.alpha        :as expound :refer [expound-str]]
+            [fc4.integrations.structurizr.express.spec :as ss]
+            [fc4.integrations.structurizr.express.util         :refer [probably-diagram-yaml?]]
+            [fc4.util             :as fu    :refer [namespaces]]))
+
+(namespaces '[structurizr :as st])
+
+(defn valid?
+  "Returns true if s is a valid Structurizr Express diagram specification in YAML format, otherwise
+  return a :cognitect.anomalies/anomaly."
+  [s]
+  (if-not (probably-diagram-yaml? s)
+    {::anom/category ::anom/fault
+     ::anom/message  (str "A cursory check indicated that this is almost certainly not a valid"
+                          " Structurizr Express diagram definition, as it doesn’t contain some"
+                          " crucial keywords.")}
+    (or (s/valid? ::st/diagram-yaml-str s)
+        {::anom/category ::anom/fault
+         ::anom/message  (expound-str ::st/diagram-yaml-str s)})))
+
+(s/fdef valid?
+        :args (s/cat :v (s/or :valid   ::st/diagram-yaml-str
+                              :invalid string?))
+        :ret  (s/or :valid   true?
+                    :invalid ::anom/anomaly))
 
 (defn jar-dir
   "Utility function to get the path to the dir in which the jar in which this
@@ -29,17 +56,38 @@
               possible-paths)
         hopefully-on-path)))
 
+(defn get-fenced
+  [s sep]
+  (-> (split s (re-pattern sep) 3)
+      (second)
+      (trim)))
+
+(defn parse-stderr-err
+  "Parses the contents of stderr, presumably the output of a failed invocation
+  of the renderer, into a structured value."
+  [stderr]
+  {::human-output (get-fenced stderr "🚨🚨🚨")
+   ::error        (json/read-str (get-fenced stderr "🤖🤖🤖"))})
+
+(s/def ::stderr string?)
+(s/def ::human-output string?)
+(s/def ::message string?)
+(s/def ::errors (s/coll-of ::error))
+(s/def ::error (s/keys :req [::message]
+                       :opt [::errors]))
+
+(s/fdef parse-stderr-err
+        :args ::stderr
+        :ret  (s/keys :req [::error ::human-output]))
+
 (defn render
   "Renders a Structurizr Express diagram as a PNG file, returning a PNG
-  bytearray. Not entirely pure; spawns a child process to perform the rendering.
+  bytearray on success. Not entirely pure; spawns a child process to perform the rendering.
   FWIW, that process is stateless and ephemeral."
   [diagram-yaml]
   ;; TODO: use ProcessBuilder (or some Clojure wrapper for such) rather than sh
   ;; so we can stream output from stderr to stderr so we can display progress as
   ;; it happens, so the user knows that something is actually happening!
-  ;; TODO: should this really throw an exception on any and all errors? Since
-  ;; we’re returning a map in the success case, how about instead we return an
-  ;; “anomaly” map?
   (let [command (renderer-command)
         result (sh command
                    :in diagram-yaml
@@ -48,19 +96,25 @@
     (if (zero? exit)
       {::png-bytes out
        ::stderr    err}
-      (throw (Exception. err)))))
+      (let [{:keys [::human-output ::error]} (parse-stderr-err err)]
+        {::anom/category ::anom/fault
+         ::anom/message  human-output
+         ::stderr        err
+         ::error         error}))))
 
-(s/def ::yaml-string string?)
 (s/def ::png-bytes bytes?)
-(s/def ::stderr string?)
 (s/def ::result (s/keys :req [::png-bytes ::stderr]))
+
+(s/def ::failure
+  (s/merge ::anom/anomaly (s/keys :req [::stderr ::error])))
 
 ; This spec is here mainly for documentation and instrumentation. I don’t
 ; recommend using it for generative testing, mainly because rendering is
 ; currently extremely slow (~12s on my system).
 (s/fdef render
-        :args ::yaml-string
-        :ret  ::result)
+        :args (s/cat :diagram ::st/diagram-yaml-str)
+        :ret  (s/or :success ::result
+                    :failure ::failure))
 
 (comment
   (use 'clojure.java.io 'clojure.java.shell)
@@ -72,7 +126,9 @@
 
   ; png-bytes
   (def result (render dy))
-  (def pngb (::png-bytes result))
+  (def pngb (or (::png-bytes result)
+                (::anom/message result)
+                "WTF"))
 
   (defn binary-spit [file-path data]
     (with-open [out (output-stream (file file-path))]
