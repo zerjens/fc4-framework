@@ -35,7 +35,7 @@ function chromiumPath() {
   return possiblePaths.find(path => existsSync(path)) || null;
 }
 
-function puppeteerOpts(debugMode) {
+function puppeteerOpts({ debugMode }) {
   const args = [
     // We need this because we’re using the default user in our local Docker-based
     // test running environment, which is apparently root, and Chromium won’t
@@ -81,7 +81,7 @@ async function exportDiagram(page) {
   return dataUriToBuffer(diagramImageBase64DataURI);
 }
 
-async function render(diagramYaml, browser, debugMode) {
+async function render(diagramYaml, browser, args) {
   const page = await loadStructurizrExpress(browser);
   await setYamlAndUpdateDiagram(page, diagramYaml);
   const imageBuffer = await exportDiagram(page);
@@ -90,9 +90,9 @@ async function render(diagramYaml, browser, debugMode) {
 
 // On success: returns a Puppeteer browser object
 // On failure: logs an error then returns null
-async function launchBrowser(debugMode) {
+async function launchBrowser(args) {
   try {
-    const opts = puppeteerOpts(debugMode);
+    const opts = puppeteerOpts(args);
     log.next('launching browser');
     return await puppeteer.launch(opts);
   } catch (err) {
@@ -101,7 +101,7 @@ async function launchBrowser(debugMode) {
   }
 }
 
-async function closeBrowser(browser, debugMode) {
+async function closeBrowser(browser, { debugMode }) {
   if (debugMode) {
     log.next('DEBUG MODE: leaving browser open; script may be blocked until the browser quits.');
   } else {
@@ -118,7 +118,16 @@ function prepYaml(yaml) {
   return sepLoc >= 0 ? yaml.substring(sepLoc) : `---\n${yaml}`;
 }
 
-async function main(debugMode) {
+function parseArgs() {
+  const args = process.argv.join();
+  return {
+    debugMode: args.includes('--debug')
+  }
+}
+
+async function main() {
+  const args = parseArgs();
+
   // Read stdin first; if it fails or blocks, no sense in launching the browser
   const rawYaml = readFileSync("/dev/stdin", "utf-8");
   const preppedYaml = prepYaml(rawYaml);
@@ -127,7 +136,7 @@ async function main(debugMode) {
   // both the try block below and the finally block, because if an error occurs
   // it’s really important to close the browser; if we don’t then the program
   // will hang and not exit, even though rendering failed.
-  const browser = await launchBrowser(debugMode);
+  const browser = await launchBrowser(args);
 
   if (!browser) {
     // An error message will have been printed out by launchBrowser
@@ -136,7 +145,7 @@ async function main(debugMode) {
   }
 
   try {
-    const imageBuffer = await render(preppedYaml, browser, debugMode);
+    const imageBuffer = await render(preppedYaml, browser, args);
     process.stdout.write(imageBuffer);
   } catch (err) {
     console.error(
@@ -144,9 +153,8 @@ async function main(debugMode) {
     );
     process.exitCode = 1;
   } finally {
-    closeBrowser(browser, debugMode);
+    closeBrowser(browser, args);
   }
 }
 
-const debugMode = false;
-main(debugMode);
+main();

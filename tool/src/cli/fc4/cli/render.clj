@@ -30,8 +30,7 @@
   [& in-paths]
   (doseq [in-path in-paths]
     (let [yaml      (slurp in-path)
-          {:keys [::r/png-bytes ::r/stderr]}
-          (render yaml)
+          {:keys [::r/png-bytes ::r/stderr]} (render yaml)
           out-path  (string/replace in-path #"\.ya?ml$" ".png")]
       (with-open [out (output-stream (file out-path))]
         (.write out png-bytes)))))

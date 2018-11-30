@@ -53,17 +53,21 @@ jobs:
        - run:
            name: Create distribution packages
            command: |
+             export GIT_HEAD_SHA=$(git rev-parse --short HEAD)
              bin/pkg-all
              mkdir -p /workspace/packages
              mv target/pkg/*.gz /workspace/packages/
        - run:
            # Packaging any node app with pkg can be tricky; that’s doubly true for an app that uses
            # Puppeteer. So it’s a good idea to ensure that the packaged renderer actually works.
+           # The JVM component’s ability to invoke the packaged renderer is also susceptible to
+           # breakage, so here we try to invoke the tool to render a diagram just as a user would.
            name: Test packaged renderer
            command: |
              mkdir test-renders
-             cat test/data/structurizr/express/diagram_valid_messy.yaml \
-               | target/pkg/renderer/render-linux --verbose > test-renders/1.png
+             target/pkg/linux/fc4/fc4 render \
+               test/data/structurizr/express/diagram_valid_messy.yaml
+             cp test/data/structurizr/express/diagram_valid_messy.png test-renders/1.png
        - persist_to_workspace: {root: /workspace, paths: [packages]}
        - store_artifacts: {path: /workspace/packages}
        - store_artifacts: {path: test-renders}
