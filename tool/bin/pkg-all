@@ -2,7 +2,7 @@
 ## Run this from <project-root>/tool/
 set -e
 
-[ "$GIT_HEAD_SHA" ] || { echo 'GIT_HEAD_SHA is not set!' && exit 1; }
+[[ -z "$GIT_HEAD_SHA" ]] && echo 'GIT_HEAD_SHA is not set!' && exit 1
 
 # TODO: how risky is this, that we’ll end up packaging stale files? I think not *too* risky since
 # we *should* be running this script in a fresh CI container!
@@ -22,5 +22,5 @@ for os in macos linux; do
 
   archive="fc4-tool-$os-$GIT_HEAD_SHA.tar.gz"
   echo "  Building archive target/pkg/$archive..."
-  (cd $os_dir && tar -czf ../$archive fc4/*)
+  (cd $os_dir && tar -czf "../$archive" fc4/*)
 done
