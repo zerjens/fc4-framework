@@ -9,7 +9,10 @@ set -e
 if [ ! -f target/pkg/fc4.jar ]; then bin/pkg-uberjar; fi
 if [ ! -f target/pkg/renderer/render-macos ]; then bin/pkg-renderer; fi
 
-for os in macos linux; do
+# Rename dir suffix from macos to mac for compatibility with loop below.
+mv target/pkg/renderer/render-macos target/pkg/renderer/render-mac
+
+for os in mac linux; do
   echo "Compiling distribution package for $os:"
 
   os_dir="target/pkg/$os"
