@@ -9,9 +9,9 @@ RUN apt-get -yq update \
 
 # Install fc4-tool
 RUN curl -L -s \
-      https://github.com/FundingCircle/fc4-framework/releases/download/master_2018-11-27_678/fc4-linux.tar.gz \
+      https://github.com/FundingCircle/fc4-framework/releases/download/release_2018-12-11_772/fc4-tool-linux-d021ef9.tar.gz \
       | tar xzv
 
 COPY *.yaml ./
 
-RUN export PATH=$PWD/fc4:$PATH && fc4 render *.yaml
+RUN fc4/fc4 render *.yaml
