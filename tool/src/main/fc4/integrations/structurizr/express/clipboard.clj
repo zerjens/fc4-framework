@@ -1,8 +1,7 @@
 (ns fc4.integrations.structurizr.express.clipboard
   (:require [clojure.core.async :as ca :refer [<! chan go-loop offer! poll! timeout]]
-            [fc4.integrations.structurizr.express.edit
-             :as ed
-             :refer [probably-diagram-yaml? process-file]])
+            [fc4.integrations.structurizr.express.edit       :as ed :refer [process-file]]
+            [fc4.integrations.structurizr.express.util              :refer [probably-diagram-yaml?]])
   (:import [java.awt Toolkit]
            [java.awt.datatransfer Clipboard DataFlavor StringSelection])
   (:refer-clojure :exclude [slurp spit]))

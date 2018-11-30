@@ -307,11 +307,6 @@
       %)
    d))
 
-(defn probably-diagram-yaml? [v]
-  (and (string? v)
-       (includes? v "type")
-       (includes? v "scope")))
-
 (defn process
   "Accepts a diagram as a map; reorders everything, snaps all coordinates to a
   virtual grid, and removes all empty/blank nodes."
