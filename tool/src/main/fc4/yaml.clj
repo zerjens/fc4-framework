@@ -9,17 +9,19 @@
   "Accepts a string containing either a single YAML document, or a YAML document
   and front matter (which itself is a YAML document). Returns a map containing
   ::front and ::main, wherein the value of each will be either nil or a string;
-  said string might contain a valid YAML document."
+  said string might contain a valid YAML document. If the input value is an
+  empty string, the value of ::main will be an empty string."
   [file-contents]
   (let [matcher (re-matcher #"(?ms)((?<front>.+)\n---\n)?(?<main>.+)\Z"
                             file-contents)
-        _ (.find matcher)
-        front (.group matcher "front")
-        main (.group matcher "main")]
+        has-matches (.find matcher)
+        [front main] (if has-matches
+                       [(.group matcher "front") (.group matcher "main")]
+                       [nil ""])]
     {::front front
      ::main  main}))
 
-(def ^:private doc-separator "\n---\n")
+(def doc-separator "\n---\n")
 
 (s/def ::yaml-file-string
   (let [sg (s/gen ::fs/non-blank-str)
@@ -33,11 +35,12 @@
 (s/def ::main string?)
 
 (s/fdef split-file
-        :args (s/cat :file-contents ::yaml-file-string)
+        :args (s/cat :v (s/or :yaml-file-contents ::yaml-file-string
+                              :random-string      string?))
         :ret  (s/keys :req [::front ::main])
-        :fn (fn [{{:keys [file-contents]} :args, ret :ret}]
+        :fn (fn [{{:keys [yaml-file-contents]} :args, ret :ret}]
               (and (not (nil? (::main ret)))
-                   (if (includes? file-contents doc-separator)
+                   (if (includes? yaml-file-contents doc-separator)
                      (not (nil? (::front ret)))
                      (nil? (::front ret))))))
 

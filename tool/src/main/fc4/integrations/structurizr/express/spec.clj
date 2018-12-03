@@ -8,7 +8,7 @@
             [fc4.model :as m]
             [fc4.spec :as fs]
             [fc4.util :as fu :refer [namespaces]]
-            [fc4.yaml :as fy :refer [split-file]]))
+            [fc4.yaml :as fy :refer [split-file doc-separator]]))
 
 (namespaces '[structurizr              :as st]
             '[structurizr.container    :as sc]
@@ -160,10 +160,17 @@
            #(not (re-seq #"\n\n---\n" %)) ; prevent extra blank line
            (fn [s]
              (let [parsed (-> s split-file ::fy/main yaml/parse-string)]
-               (every? #(contains? parsed %) [:type :scope :description
-                                              :elements :size]))))
+               (and
+                 ; a string is a valid YAML value, but a valid diagram is a map
+                (map? parsed)
+                (every? #(contains? parsed %) [:type :scope :description
+                                               :elements :size])))))
     #(gen/fmap
       (fn [diagram]
-        (str (sometimes (str seyaml/default-front-matter "\n---\n"))
-             (seyaml/stringify diagram)))
+        (str
+         (gen/generate
+          (gen/frequency [[1 (gen/return nil)]
+                          [1 (gen/return (str seyaml/default-front-matter
+                                              doc-separator))]]))
+         (seyaml/stringify diagram)))
       (s/gen ::st/diagram))))
