@@ -56,10 +56,10 @@
 (deftest render
   (testing "happy paths"
     (testing "rendering a Structurizr Express file"
-      (let [yaml (slurp (str dir "diagram_valid_cleaned.yaml"))
+      (let [yaml (slurp (file dir "diagram_valid_cleaned.yaml"))
             {:keys [::r/png-bytes ::r/stderr] :as result} (r/render yaml)
             actual-bytes png-bytes
-            expected-bytes (binary-slurp (str dir "diagram_valid_cleaned_expected.png"))
+            expected-bytes (binary-slurp (file dir "diagram_valid_cleaned_expected.png"))
             difference (->> [actual-bytes expected-bytes]
                             (map bytes->buffered-image)
                             (map #(resize % 1000 1000))
@@ -102,7 +102,7 @@
               {"a.yaml" ["Diagram scope" "software system named" "undefined" "could not be found"]
                "b.yaml" ["The diagram type must be" "System Landscape" "Dynamic"]
                "c.yaml" ["relationship destination element named" "Does not exist" "does not exist"]}]
-        (let [path (str dir "se_diagram_invalid_" fname-suffix)
+        (let [path (file dir (str "se_diagram_invalid_" fname-suffix))
               input (slurp path)
               {:keys [::anom/message ::r/error] :as result} (r/render input)]
           (is (s/valid? ::r/failure result)
