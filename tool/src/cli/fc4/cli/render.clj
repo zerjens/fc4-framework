@@ -5,11 +5,8 @@
    [cognitect.anomalies  :as anom]
    [clojure.java.io                             :as io :refer [file output-stream]]
    [clojure.string                              :as string]
+   [fc4.cli.util                                :as cu :refer [println-err]]
    [fc4.integrations.structurizr.express.render :as r]))
-
-(defn println-stderr [& vs]
-  (binding [*out* *err*]
-    (apply println vs)))
 
 ;; Feel free to override when testing.
 (def ^:dynamic *debug* false) ;; TODO: add a command-line flag that sets this
@@ -17,10 +14,10 @@
 
 (defn debug [& vs]
   (when *debug*
-    (apply println-stderr vs)))
+    (apply println-err vs)))
 
 (defn fail [file-path msg]
-  (println-stderr (str "Error rendering " file-path ": " msg))
+  (println-err (str "Error rendering " file-path ": " msg))
   (if *exit-on-fail*
     (System/exit 1)
     (throw (Exception. "Normally the program would have exited at this point!"))))
