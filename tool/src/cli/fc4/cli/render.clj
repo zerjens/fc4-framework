@@ -4,7 +4,7 @@
   (:require
    [cognitect.anomalies  :as anom]
    [clojure.java.io                             :as io :refer [file output-stream]]
-   [clojure.string                              :as string]
+   [clojure.string                              :as str :refer [split]]
    [fc4.cli.util                                :as cu :refer [debug]]
    [fc4.integrations.structurizr.express.render :as r]))
 
@@ -31,13 +31,37 @@
     (debug (::r/stderr result))
     result))
 
+(defn tmp-png-file
+  "Given a file path, returns the name of the file alone (the last segment in
+  the path) without its extension, if any."
+  [path]
+  (-> (file path)
+      (.getName)
+      (split #"\." 3)
+      (first)
+      (java.io.File/createTempFile ".maybe.png")))
+
 (defn check
   [result path]
-  (condp (partial contains? result)
-         ::anom/message (fail path (::anom/message result))
-         ::r/png-bytes :all-good
-         (fail path (str "Internal error: render result invalid (has neither"
-                         " ::anom/message nor ::r/png-bytes)"))))
+  (debug "checking result for errors...")
+  (condp #(contains? %2 %1) result
+    ::anom/message (fail path (::anom/message result))
+    ::r/png-bytes :all-good
+    (fail path (str "Internal error: render result invalid (has neither"
+                    " ::anom/message nor ::r/png-bytes)")))
+
+  (debug "checking PNG data size...")
+  (when (< (count (::r/png-bytes result))
+           ; arbitrary number is arbitrary. That said, according to my gut, less
+           ; data is likely to be invalid, and more has a chance of being valid.
+           1024)
+    (let [tmpfile (tmp-png-file path)]
+      (with-open [out (output-stream tmpfile)]
+        (.write out (::r/png-bytes result)))
+      (fail path (str "PNG data is <1K so it’s likely invalid. It’s been"
+                      " written to " tmpfile " for debugging."))))
+
+  (debug "rendering seems to have succeeded!"))
 
 (defn get-out
   [in-path]
@@ -51,9 +75,6 @@
   ;;
   ;; TODO: Actually, now that I think about it, we should probably add a --help
   ;; option ASAP.
-  ;;
-  ;; TODO: Check that png-bytes is not empty and exit with an error code if it
-  ;; is.
   ;;
   ;; TODO: add a command-line flag that sets cu/*debug* to true
   [& paths]
