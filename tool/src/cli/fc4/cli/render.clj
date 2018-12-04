@@ -32,13 +32,9 @@
     result))
 
 (defn tmp-png-file
-  "Given a file path, returns the name of the file alone (the last segment in
-  the path) without its extension, if any."
   [path]
-  (-> (file path)
-      (.getName)
-      (split #"\." 3)
-      (first)
+  (-> (file path) (.getName)
+      (split #"\." 3) (first) ; remove “extension”
       (java.io.File/createTempFile ".maybe.png")))
 
 (defn check
