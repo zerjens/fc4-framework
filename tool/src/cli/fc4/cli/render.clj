@@ -5,22 +5,11 @@
    [cognitect.anomalies  :as anom]
    [clojure.java.io                             :as io :refer [file output-stream]]
    [clojure.string                              :as string]
-   [fc4.cli.util                                :as cu :refer [println-err]]
+   [fc4.cli.util                                :as cu :refer [debug]]
    [fc4.integrations.structurizr.express.render :as r]))
 
-;; Feel free to override when testing.
-(def ^:dynamic *debug* false) ;; TODO: add a command-line flag that sets this
-(def ^:dynamic *exit-on-fail* true)
-
-(defn debug [& vs]
-  (when *debug*
-    (apply println-err vs)))
-
 (defn fail [file-path msg]
-  (println-err (str "Error rendering " file-path ": " msg))
-  (if *exit-on-fail*
-    (System/exit 1)
-    (throw (Exception. "Normally the program would have exited at this point!"))))
+  (cu/fail (str "Error rendering " file-path ": " msg)))
 
 (defn render [yaml]
   (debug "invoking renderer...")
@@ -39,6 +28,9 @@
   ;;
   ;; TODO: Check that png-bytes is not empty and exit with an error code if it
   ;; is.
+  ;;
+  ;; TODO: add a command-line flag that sets cu/*debug* to true
+  ;;
   ;; TODO: output more error details if --debug flag set.
   ;; New workflow:
   ;; for each file:
