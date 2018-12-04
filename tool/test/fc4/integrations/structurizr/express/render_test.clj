@@ -1,21 +1,7 @@
-; Suppress the Java icon from popping up and grabbing focus on MacOS.
-; Found in a comment to this answer: https://stackoverflow.com/a/17544259/7012
-; This is at the top of the file, as opposed to the ns form being first as is
-; idiomatic, because one of the required namespaces triggers that Java icon
-; on load.
-(System/setProperty "apple.awt.UIElement" "true")
-
 (ns fc4.integrations.structurizr.express.render-test
   (:require [fc4.integrations.structurizr.express.render :as r]
             [clojure.java.io                             :as io :refer [file input-stream]]
-            [clojure.spec.alpha                          :as s]
-            [clojure.test                                       :refer [deftest testing is]]
             [image-resizer.core                                 :refer [resize]])
-  (:import  [java.awt Color]
-            [java.awt.image BufferedImage]
-            [java.io ByteArrayInputStream DataInputStream]
-            [javax.imageio ImageIO]))
-
 (defn binary-slurp
   "Based on https://stackoverflow.com/a/29640320/7012"
   [file-or-file-path]
@@ -29,44 +15,7 @@
   (with-open [out (io/output-stream (file f))]
     (.write out data)))
 
-(defn bytes->buffered-image [bytes]
-  (ImageIO/read (ByteArrayInputStream. bytes)))
-
 (defn temp-png-file [basename] (java.io.File/createTempFile basename ".png"))
-
-(defn pixel-diff
-  "Ported from https://rosettacode.org/wiki/Percentage_difference_between_images#Java"
-  [a b]
-  (let [a-color-components (.getRGBColorComponents (Color. a) nil)
-        b-color-components (.getRGBColorComponents (Color. b) nil)]
-    (->> (map - a-color-components b-color-components)
-         (map #(Math/abs %))
-         (reduce +))))
-
-(defn image-pixels
-  [^BufferedImage img]
-  (-> img (.getRaster) (.getDataBuffer) (.getData)))
-
-(defn round-dec
-  "Rounds up, e.g. 0.001 rounded to two places will yield 0.01."
-  [places d]
-  (-> (bigdec d)
-      (.setScale places BigDecimal/ROUND_CEILING)
-      (double)))
-
-(defn image-diff
-  "Ported from https://rosettacode.org/wiki/Percentage_difference_between_images#Java"
-  [^BufferedImage a ^BufferedImage b]
-  (let [width   (.getWidth a)
-        height  (.getHeight a)
-        max-diff (* 3 255 width height)]
-    (when (or (not= width (.getWidth b))
-              (not= height (.getHeight b)))
-      (throw (Exception. "Images must have the same dimensions!")))
-    (as-> (map pixel-diff (image-pixels a) (image-pixels b)) it
-      (reduce + it)
-      (/ (* 100.0 it) max-diff)
-      (round-dec 4 it))))
 
 (def max-allowable-image-difference
   ;; This threshold might seem low, but the diffing algorithm is
