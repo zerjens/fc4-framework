@@ -29,7 +29,9 @@
         :args (s/cat :v (s/or :valid   ::st/diagram-yaml-str
                               :invalid string?))
         :ret  (s/or :valid   true?
-                    :invalid ::anom/anomaly))
+                    :invalid ::anom/anomaly)
+        :fn   (fn [{{arg :v} :args, ret :ret}]
+                (= (first arg) (first ret))))
 
 (defn jar-dir
   "Utility function to get the path to the dir in which the jar in which this
@@ -110,7 +112,7 @@
 
 ; This spec is here mainly for documentation and instrumentation. I don’t
 ; recommend using it for generative testing, mainly because rendering is
-; currently extremely slow (~12s on my system).
+; currently quite slow (~2s on my system).
 (s/fdef render
         :args (s/cat :diagram ::st/diagram-yaml-str)
         :ret  (s/or :success ::result

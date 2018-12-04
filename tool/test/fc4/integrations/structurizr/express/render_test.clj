@@ -1,7 +1,15 @@
 (ns fc4.integrations.structurizr.express.render-test
   (:require [fc4.integrations.structurizr.express.render :as r]
-            [clojure.java.io                             :as io :refer [file input-stream output-stream]]
-            [image-resizer.core                                 :refer [resize]])
+            [fc4.test-utils :refer [check]]
+            [fc4.test-utils.image-diff :refer [bytes->buffered-image image-diff]]
+            [clojure.java.io :refer [copy file input-stream output-stream]]
+            [clojure.spec.alpha :as s]
+            [clojure.string :refer [includes?]]
+            [clojure.test :refer [deftest testing is]]
+            [cognitect.anomalies :as anom]
+            [expound.alpha :as expound :refer [expound-str]]
+            [image-resizer.core :refer [resize]]))
+
 (defn binary-slurp
   "fp should be either a java.io.File or something coercable to such by
   clojure.java.io/file."
@@ -26,6 +34,18 @@
   ;; caught. Still, this is pretty unscientific, so it might be worth
   ;; looking into making this more precise and methodical.
   0.005)
+
+(deftest valid?
+  (testing "example test"
+    (let [result (r/valid? "this is not YAML? Or I guess maybe it is?")]
+      (is (s/valid? ::anom/anomaly result))
+      (is (every? #(includes? (::anom/message result) %)
+                  ["A cursory check"
+                   "almost certainly not"
+                   "valid Structurizr Express diagram definition"
+                   "contain some crucial keywords"]))))
+  (testing "property tests"
+    (check `r/valid? 300)))
 
 (def dir "test/data/structurizr/express/")
 
