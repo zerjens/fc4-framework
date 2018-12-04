@@ -1,21 +1,22 @@
 (ns fc4.integrations.structurizr.express.render-test
   (:require [fc4.integrations.structurizr.express.render :as r]
-            [clojure.java.io                             :as io :refer [file input-stream]]
+            [clojure.java.io                             :as io :refer [file input-stream output-stream]]
             [image-resizer.core                                 :refer [resize]])
 (defn binary-slurp
-  "Based on https://stackoverflow.com/a/29640320/7012"
-  [file-or-file-path]
-  (let [file (file file-or-file-path) ; no-op if the value is already a File
-        result (byte-array (.length file))]
-    (with-open [in (DataInputStream. (input-stream file))]
-      (.readFully in result))
-    result))
+  "fp should be either a java.io.File or something coercable to such by
+  clojure.java.io/file."
+  [fp]
+  (let [f (file fp)]
+    (with-open [out (java.io.ByteArrayOutputStream. (.length f))]
+      (copy f out)
+      (.toByteArray out))))
 
-(defn binary-spit [f data]
-  (with-open [out (io/output-stream (file f))]
-    (.write out data)))
-
-(defn temp-png-file [basename] (java.io.File/createTempFile basename ".png"))
+(defn binary-spit
+  "fp should be either a java.io.File or something coercable to such by
+  clojure.java.io/file."
+  [fp data]
+  (with-open [out (output-stream (file fp))]
+    (copy data out)))
 
 (def max-allowable-image-difference
   ;; This threshold might seem low, but the diffing algorithm is
@@ -25,6 +26,12 @@
   ;; caught. Still, this is pretty unscientific, so it might be worth
   ;; looking into making this more precise and methodical.
   0.005)
+
+(def dir "test/data/structurizr/express/")
+
+(defn temp-png-file
+  [basename]
+  (java.io.File/createTempFile basename ".png"))
 
 (deftest render
   (testing "happy paths"
