@@ -2,8 +2,8 @@
   (:require [clj-yaml.core           :as yaml :refer [generate-string]]
             [clojure.spec.alpha      :as s]
             [clojure.spec.gen.alpha  :as gen]
-            [clojure.string          :as string :refer [includes? join]]
-            [fc4.spec               :as fs]))
+            [clojure.string          :as string :refer [blank? includes? join]]
+            [fc4.spec                :as fs]))
 
 (defn split-file
   "Accepts a string containing either a single YAML document, or a YAML document
@@ -24,10 +24,9 @@
 (def doc-separator "\n---\n")
 
 (s/def ::yaml-file-string
-  (let [sg (s/gen ::fs/non-blank-str)
-        dsg (gen/return doc-separator)]
-    (s/with-gen
-      ::fs/non-blank-str
+  (s/with-gen ::fs/non-blank-str
+    (let [sg (s/gen ::fs/non-blank-str)
+          dsg (gen/return doc-separator)]
       #(gen/one-of [sg
                     (gen/fmap join (gen/tuple sg dsg sg))]))))
 
@@ -35,14 +34,19 @@
 (s/def ::main string?)
 
 (s/fdef split-file
-        :args (s/cat :v (s/or :yaml-file-contents ::yaml-file-string
-                              :random-string      string?))
+        :args (s/cat :v (s/or :non-blank ::yaml-file-string
+                              :blank     ::fs/blank-str))
         :ret  (s/keys :req [::front ::main])
-        :fn (fn [{{:keys [yaml-file-contents]} :args, ret :ret}]
-              (and (not (nil? (::main ret)))
-                   (if (includes? yaml-file-contents doc-separator)
-                     (not (nil? (::front ret)))
-                     (nil? (::front ret))))))
+        :fn (fn [{{[arg-tag arg-val] :v} :args, ret :ret}]
+              (case arg-tag
+                :non-blank
+                (and (not (nil? (::main ret)))
+                     (if (includes? arg-val doc-separator)
+                       (not (nil? (::front ret)))
+                       (nil? (::front ret))))
+
+                :blank
+                (= ret {::front nil ::main ""}))))
 
 (defn stringify
   "Accepts a map, converts it to a YAML string with a certain flow-style."
