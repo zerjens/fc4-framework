@@ -3,7 +3,7 @@
             [clojure.java.shell   :as shell   :refer [sh]]
             [clojure.data.json    :as json]
             [clojure.spec.alpha   :as s]
-            [clojure.string       :as str     :refer [ends-with? split trim]]
+            [clojure.string       :as str     :refer [ends-with? includes? split trim]]
             [cognitect.anomalies  :as anom]
             [expound.alpha        :as expound :refer [expound-str]]
             [fc4.integrations.structurizr.express.spec :as ss]
@@ -72,13 +72,22 @@
 ; qualified with.
 (def ^:private this-ns-name (str *ns*))
 
+(defn parse-json-err
+  [js]
+  (try
+    (json/read-str js :key-fn (partial keyword this-ns-name))
+    (catch Exception e
+      (throw (if (includes? (.getMessage e) "JSON error")
+               (Exception. (str "Error while parsing JSON fenced by 🤖🤖🤖: " js)
+                           e)
+               e)))))
+
 (defn parse-stderr-err
   "Parses the contents of stderr, presumably the output of a failed invocation
   of the renderer, into a structured value."
   [stderr]
   {::human-output (get-fenced stderr "🚨🚨🚨")
-   ::error        (json/read-str (get-fenced stderr "🤖🤖🤖")
-                                 :key-fn (partial keyword this-ns-name))})
+   ::error        (parse-json-err (get-fenced stderr "🤖🤖🤖"))})
 
 (s/def ::stderr string?)
 (s/def ::human-output string?)
