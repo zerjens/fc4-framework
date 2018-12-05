@@ -14,7 +14,8 @@
    :render render/-main
    :wcb    wcb/-main})
 
-(defn invalid-subcommand-message [subcommand]
+(defn invalid-subcommand-message
+  [subcommand]
   (str subcommand
        " is not a valid subcommand.\nValid subcommands are: "
        (join ", " (map name (keys subcommands)))))
@@ -40,5 +41,5 @@
     (do (apply f rest-args)
         ;; I’m not sure why, but without this the render subcommand would delay
         ;; the exit of the main command by about a minute. TODO: debug.
-        (System/exit 0))
-    (exit 1 (invalid-subcommand-message subcommand))))
+        (exit 0))
+    (fail (invalid-subcommand-message subcommand))))

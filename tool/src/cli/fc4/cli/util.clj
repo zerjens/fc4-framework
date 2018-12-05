@@ -29,7 +29,8 @@
   "Prints values to stderr using println-err then exits the JVM process with the
   specified status code."
   [status & vs]
-  (apply println-err vs)
+  (when (seq vs)
+    (apply println-err vs))
   (System/exit status))
 
 (defn missing?
