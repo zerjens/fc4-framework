@@ -16,4 +16,4 @@ git_head_sha=$(git rev-parse --short HEAD)
 # files that are meant to help with debugging; if the container is deleted as
 # soon as it exits then those files are gone. So you might want to run `docker
 # container prune` every once in awhile ;)
-docker run -e GIT_HEAD_SHA=$git_head_sha fc4-pkg "$@"
+docker run -it -e GIT_HEAD_SHA="$git_head_sha" fc4-pkg "$@"
