@@ -5,8 +5,9 @@
    [clojure.string   :as str     :refer [join]]
    [fc4.cli.export   :as export]
    [fc4.cli.render   :as render]
-   [fc4.cli.util     :as cu      :refer [exit]]
-   [fc4.cli.wcb      :as wcb]))
+   [fc4.cli.util     :as cu      :refer [exit fail]]
+   [fc4.cli.wcb      :as wcb])
+  (:import [java.nio.charset Charset]))
 
 (def subcommands
   {:export export/-main
@@ -18,6 +19,12 @@
        " is not a valid subcommand.\nValid subcommands are: "
        (join ", " (map name (keys subcommands)))))
 
+(defn check-charset
+  []
+  (let [default-charset (str (Charset/defaultCharset))]
+    (when (not= default-charset "UTF-8")
+      (fail "JVM default charset is" default-charset "but must be UTF-8."))))
+
 (defn -main
   ;; NB: if and when we add “universal” options — options that apply to all
   ;; subcommands — then we’ll probably want to use tools.cli/parse-opts to parse
@@ -28,6 +35,7 @@
   ;; TODO: Actually, now that I think about it, we should probably add a --help
   ;; universal option ASAP.
   [subcommand & rest-args]
+  (check-charset)
   (if-let [f (get subcommands (keyword subcommand))]
     (do (apply f rest-args)
         ;; I’m not sure why, but without this the render subcommand would delay

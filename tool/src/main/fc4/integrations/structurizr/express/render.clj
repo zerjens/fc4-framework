@@ -59,10 +59,13 @@
         hopefully-on-path)))
 
 (defn get-fenced
+  "If fence is found, returns the fenced string; if not, throws."
   [s sep]
-  (-> (split s (re-pattern sep) 3)
-      (second)
-      (trim)))
+  (or (some-> (split s (re-pattern sep) 3)
+              (second)
+              (trim))
+      (throw (Exception. (str "Error finding fenced segments in error output: "
+                              s)))))
 
 ; We have to capture this at compile time in order for it to have the value we
 ; want it to; if we referred to *ns* in the body of a function then, because it

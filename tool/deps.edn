@@ -29,7 +29,14 @@
            :test          {:extra-paths ["test" "src/test_utils"]
                            :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
                                          eftest                     {:mvn/version "0.5.3"}
-                                         image-resizer              {:mvn/version "0.1.10"}}}
+                                         image-resizer              {:mvn/version "0.1.10"}}
+                           ; It’s crucial to ensure that the JVM’s default character encoding is
+                           ; UTF-8 because the renderer outputs UTF-8 encoded text to its stderr,
+                           ; which the main program (the JVM program) then needs to read correctly.
+                           ; We’ve found that some Linux systems seem to default to US-ASCII which
+                           ; will generally break the ability of the main program to properly parse
+                           ; the error output of the renderer.
+                           :jvm-opts    ["-Dfile.encoding=UTF8"]}
 
            :test/run      {:main-opts   ["-m" "fc4.test-runner.runner"]}
 
