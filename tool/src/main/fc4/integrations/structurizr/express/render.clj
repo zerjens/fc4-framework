@@ -3,7 +3,7 @@
             [clojure.java.shell   :as shell   :refer [sh]]
             [clojure.data.json    :as json]
             [clojure.spec.alpha   :as s]
-            [clojure.string       :as str     :refer [split trim]]
+            [clojure.string       :as str     :refer [ends-with? split trim]]
             [cognitect.anomalies  :as anom]
             [expound.alpha        :as expound :refer [expound-str]]
             [fc4.integrations.structurizr.express.spec :as ss]
@@ -64,12 +64,21 @@
       (second)
       (trim)))
 
+; We have to capture this at compile time in order for it to have the value we
+; want it to; if we referred to *ns* in the body of a function then, because it
+; is dynamically bound, it would return the namespace at the top of the stack,
+; the “currently active namespace” rather than what we want, which is the
+; namespace of this file, because that’s the namespace all our keywords are
+; qualified with.
+(def ^:private this-ns-name (str *ns*))
+
 (defn parse-stderr-err
   "Parses the contents of stderr, presumably the output of a failed invocation
   of the renderer, into a structured value."
   [stderr]
   {::human-output (get-fenced stderr "🚨🚨🚨")
-   ::error        (json/read-str (get-fenced stderr "🤖🤖🤖"))})
+   ::error        (json/read-str (get-fenced stderr "🤖🤖🤖")
+                                 :key-fn (partial keyword this-ns-name))})
 
 (s/def ::stderr string?)
 (s/def ::human-output string?)
@@ -87,6 +96,9 @@
   bytearray on success. Not entirely pure; spawns a child process to perform the rendering.
   FWIW, that process is stateless and ephemeral."
   [diagram-yaml]
+  ;; Protect developers from themselves
+  {:pre [(not (ends-with? diagram-yaml ".yaml"))
+         (not (ends-with? diagram-yaml ".yml"))]}
   ;; TODO: use ProcessBuilder (or some Clojure wrapper for such) rather than sh
   ;; so we can stream output from stderr to stderr so we can display progress as
   ;; it happens, so the user knows that something is actually happening!

@@ -84,8 +84,29 @@
                    "\n“expected” PNG written to:" (.getPath expected-debug-fp)
                    "\n“actual” PNG written to:" (.getPath actual-debug-fp)))))))
   (testing "sad paths"
-    (testing "various invalid inputs"
-      (let [result (r/render "this is not YAML? Or I guess maybe it is?")]
-        (is
-
-         result)))))
+    ;; TODO: validate that the ::anom/message contains the required formatting (the two fenced sections)
+    (testing "inputs that contain no diagram definition whatsoever"
+      (doseq [input [""
+                     "this is not empty, but it’s not a diagram!"]]
+        (let [{:keys [::anom/message ::r/error] :as result} (r/render input)]
+          (is (s/valid? ::r/failure result)
+              (expound-str ::r/failure result))
+          (is (every? (partial includes? message)
+                      ["RENDERING FAILED"
+                       "Errors were found in the diagram definition"
+                       "No diagram has been defined"]))
+          (is (includes? (::r/message error) "Errors were found in the diagram definition"))
+          (is (includes? (-> error ::r/errors first ::r/message) "No diagram has been defined")))))
+    (testing "inputs that contain invalid diagram definitions"
+      (doseq [[fname-suffix expected-strings]
+              {"a.yaml" ["Diagram scope" "software system named" "undefined" "could not be found"]
+               "b.yaml" ["The diagram type must be" "System Landscape" "Dynamic"]
+               "c.yaml" ["relationship destination element named" "Does not exist" "does not exist"]}]
+        (let [path (str dir "se_diagram_invalid_" fname-suffix)
+              input (slurp path)
+              {:keys [::anom/message ::r/error] :as result} (r/render input)]
+          (is (s/valid? ::r/failure result)
+              (expound-str ::r/failure result))
+          (is (every? (partial includes? message) expected-strings))
+          (is (every? (partial includes? (-> error ::r/errors first ::r/message)) expected-strings))
+          (is (includes? (::r/message error) "Errors were found in the diagram definition")))))))
