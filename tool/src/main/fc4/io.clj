@@ -152,16 +152,3 @@
 (defn binary-spit [file-or-file-path data]
   (with-open [out (io/output-stream (io/file file-or-file-path))]
     (.write out data)))
-
-(defn render-diagram-file
-  ;; TODO: Error handling!!!!!
-  ;;
-  ;; TODO: Check that png-bytes is not empty and exit with an error code if it
-  ;; is.
-  [yaml-file]
-  (let [yaml                       (slurp yaml-file)
-        {:keys [::render/png-bytes
-                ::render/stderr]}  (render yaml)
-        out-path                   (str/replace yaml-file #"\.ya?ml$" ".png")]
-    (binary-spit out-path png-bytes)
-    stderr))

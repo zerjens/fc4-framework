@@ -8,7 +8,8 @@
    [clojure.string :as cstr :refer [ends-with?]]
    [fc4.cli.util :refer [debug fail verbose]]
    [fc4.integrations.structurizr.express.edit :as se-edit]
-   [fc4.io :as fio :refer [process-text-file render-diagram-file yaml-file?]]
+   [fc4.io :as fio :refer [process-text-file yaml-file?]]
+   [fc4.io.render :refer [render-diagram-file]]
    [hawk.core :as hawk])
   (:import [java.time Instant]
            [java.time.temporal ChronoUnit]
