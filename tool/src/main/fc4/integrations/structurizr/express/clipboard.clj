@@ -1,5 +1,5 @@
 (ns fc4.integrations.structurizr.express.clipboard
-  (:require [clojure.core.async :as ca :refer [<! >! chan close! dropping-buffer go offer! poll! timeout]]
+  (:require [clojure.core.async :as ca :refer [<! >! chan close! dropping-buffer go-loop offer! poll! timeout]]
             [fc4.integrations.structurizr.express.edit       :as ed :refer [process-file]]
             [fc4.integrations.structurizr.express.util              :refer [probably-diagram-yaml?]])
   (:import [java.awt Toolkit]
@@ -95,9 +95,12 @@
       nil)))
 
 (defn watch
-  "Must be called within a go block."
+  "Must be called within a go block. Returns a channel that will block until
+  the routine exits, at which point nil will be emitted to the channel,
+  closing it. This may be useful if a caller wishes to block while this routine
+  is running."
   [output-chan stop-chan]
-  (loop [prior-contents nil]
+  (go-loop [prior-contents nil]
     (let [contents (slurp)
           changed (not= contents prior-contents)
           process (and changed (probably-diagram-yaml? contents))
@@ -131,10 +134,7 @@
   []
   ; In this case we don’t actually care about the output; we don’t need to do anything with it.
   (let [output-chan (chan (dropping-buffer 1))]
-    (println "Watching clipboard for Structurizr Express diagram YAML documents...")
-    (go (watch output-chan stop-chan)) ; blocks until stop is called
-    (println "Stopped!")
-    (flush)))
+    (watch output-chan stop-chan)))
 
 (defn stop
   "Stop the goroutine started by wcb."
