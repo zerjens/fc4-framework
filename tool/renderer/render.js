@@ -17,6 +17,7 @@ const logStream = process.stderr;
 const args = process.argv.join();
 const verboseMode = args.includes('--verbose');
 const quietMode = args.includes('--quiet');
+const debugMode = args.includes('--debug');
 
 // top-level const so we don’t have to thread it through everything.
 const log = step => {
@@ -182,12 +183,8 @@ async function main() {
     printErrorMessages(err, preppedYaml);
     process.exitCode = 1;
   } finally {
-<<<<<<< ours
     closeBrowser(browser, args);
-=======
-    closeBrowser(browser, debugMode);
     log.finish();
->>>>>>> theirs
   }
 }
 
