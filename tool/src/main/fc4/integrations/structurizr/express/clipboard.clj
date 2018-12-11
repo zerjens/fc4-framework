@@ -1,9 +1,11 @@
 (ns fc4.integrations.structurizr.express.clipboard
-  (:require [clojure.core.async :as ca :refer [<! chan go-loop offer! poll! timeout]]
+  (:require [clojure.core.async :as ca :refer [<! >! chan dropping-buffer go offer! poll! timeout]]
             [fc4.integrations.structurizr.express.edit       :as ed :refer [process-file]]
             [fc4.integrations.structurizr.express.util              :refer [probably-diagram-yaml?]])
   (:import [java.awt Toolkit]
-           [java.awt.datatransfer Clipboard DataFlavor StringSelection])
+           [java.awt.datatransfer Clipboard DataFlavor StringSelection]
+           (java.util Date)
+           (java.text SimpleDateFormat))
   (:refer-clojure :exclude [slurp spit]))
 
 ; Suppress the Java icon from popping up and grabbing focus on MacOS.
@@ -14,15 +16,18 @@
 ;; This was a simple var at one point but that broke CI builds, which run on
 ;; headless machines; therefore this needs to be a function and it shouldn’t be
 ;; called during CI test runs.
-(defn clipboard ^Clipboard
+(defn clipboard
+  ^Clipboard
   []
   (.getSystemClipboard (Toolkit/getDefaultToolkit)))
 
 ;; based on code found at https://gist.github.com/Folcon/1167903
-(def string-flavor (DataFlavor/stringFlavor))
+(def string-flavor
+  (DataFlavor/stringFlavor))
 
 ;; based on code found at https://gist.github.com/Folcon/1167903
-(defn slurp []
+(defn slurp
+  []
   (try
     ;; We’re gonna check twice for the contents being a string because of
     ;; possible race conditions.
@@ -30,7 +35,7 @@
       (let [transferable (.getContents (clipboard) nil)]
         (when (.isDataFlavorSupported transferable string-flavor)
           (.getTransferData transferable string-flavor))))
-    (catch java.lang.NullPointerException e nil)))
+    (catch NullPointerException e nil)))
 
 (defn spit
   [s]
@@ -51,10 +56,10 @@
       (throw (RuntimeException. "Not a FC4 diagram.")))))
 
 (def ^:private current-local-time-format
-  (java.text.SimpleDateFormat. "HH:mm:ss"))
+  (SimpleDateFormat. "HH:mm:ss"))
 
 (defn ^:private current-local-time-str []
-  (.format current-local-time-format (java.util.Date.)))
+  (.format current-local-time-format (Date.)))
 
 (defn ^:private err-name
   [e]
@@ -91,6 +96,22 @@
 
 (def ^:private stop-chan (chan 1))
 
+(defn watch
+  "Must be called within a go block."
+  [output-chan stop-chan]
+  (loop [prior-contents nil]
+    (let [contents (slurp)
+          changed (not= contents prior-contents)
+          process (and changed (probably-diagram-yaml? contents))
+          output (when process
+                   (try-process contents))]
+      (when (and process output)
+        (>! output-chan output)
+        (spit output))
+      (when-not (poll! stop-chan)
+        (<! (timeout 1000))
+        (recur (or output contents))))))
+
 (defn wcb
   "Start a background routine that watches the clipboard for changes. If the
   changed content is a FC4 diagram in YAML, processes it and writes the
@@ -100,26 +121,18 @@
   
   Returns a channel that will block until the routine exits, at which point nil
   will be emitted to the channel, closing it. This may be useful if a caller
-  wishes to block while this routine is running."
+  wishes to block while this routine is running.
+
+  This is intended mainly for use in the CLI subcommand `wbc`."
   []
   ;; Just in case stop was accidentally called twice, in which case there’d be a superfluous value
   ;; in the channel, we’ll remove a value from the channel just before we get started.
   (poll! stop-chan)
-
-  (go-loop [prior-contents nil]
-    (let [contents (slurp)
-          process? (and (not= contents prior-contents)
-                        (probably-diagram-yaml? contents))]
-      (when process?
-        (when-let [processed (try-process contents)]
-          (spit processed)))
-      (if (poll! stop-chan)
-        (do (println "Stopped!")
-            (flush)
-            nil)
-        (let [contents (slurp)]
-          (<! (timeout 1000))
-          (recur contents))))))
+  ; In this case we don’t actually care about the output; we don’t need to do anything with it.
+  (let [output-chan (dropping-buffer 1)]
+    (go (watch output-chan stop-chan) ; blocks until stop is called
+        (println "Stopped!")
+        (flush))))
 
 (defn stop
   "Stop the goroutine started by wcb."
