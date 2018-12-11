@@ -11,18 +11,30 @@ const puppeteer = require('puppeteer-core');
 
 const STRUCTURIZR_EXPRESS_URL = 'https://structurizr.com/express';
 
-const log = function(msg) {
-  // This program must log to stderr rather than stdout because it outputs its
-  // result to stdout.
-  process.stderr.write(msg);
-  // Calling process.stderr.write twice might be slightly more efficient than
-  // concatenating the newline to msg.
-  process.stderr.write('\n');
+// This program must log to stderr rather than stdout because it writes its
+// output to stdout.
+const logStream = process.stderr;
+
+function parseArgs() {
+  const args = process.argv.join();
+  return {
+    debugMode:   args.includes('--debug'),
+    quietMode:   args.includes('--quiet'),
+    verboseMode: args.includes('--verbose'),
+  }
 }
 
-log.next = function(step) {
-  this(step + '...');
-}
+// top-level const so `log` can access it
+const args = parseArgs();
+
+// top-level const so we don’t have to thread it through everything.
+const log = step => {
+  if (!args.quietMode) {
+    logStream.write(args.verboseMode ? `${step}...\n` : '.');
+  }
+};
+
+log.finish = () => !args.quietMode && !args.verboseMode ? logStream.write('\n') : null;
 
 function chromiumPath() {
   // TODO: accept a path as a command-line argument
@@ -36,7 +48,7 @@ function chromiumPath() {
 }
 
 function puppeteerOpts({ debugMode }) {
-  const args = [
+  const browserArgs = [
     // We need this because we’re using the default user in our local Docker-based
     // test running environment, which is apparently root, and Chromium won’t
     // run as root unless this arg is passed.
@@ -47,7 +59,7 @@ function puppeteerOpts({ debugMode }) {
   ];
 
   return {
-    args: args,
+    args: browserArgs,
     ignoreHTTPSErrors: true,
     executablePath: chromiumPath(),
     headless: !debugMode
@@ -55,7 +67,7 @@ function puppeteerOpts({ debugMode }) {
 }
 
 async function loadStructurizrExpress(browser) {
-  log.next(`loading Structurizr Express from ${STRUCTURIZR_EXPRESS_URL}`);
+  log(`loading Structurizr Express from ${STRUCTURIZR_EXPRESS_URL}`);
   const page = await browser.newPage();
   await page.goto(STRUCTURIZR_EXPRESS_URL);
 
@@ -71,7 +83,7 @@ async function loadStructurizrExpress(browser) {
 // `message` property; the more detailed errors will be in its property `errors`. The value of
 // that property is described in the docs on `pageFunctions.getErrorMessages`.
 async function setYamlAndUpdateDiagram(page, diagramYaml) {
-  log.next('setting YAML and updating diagram');
+  log('setting YAML and updating diagram');
   await page.evaluate(pageFunctions.renderExpressDefinition, diagramYaml);
   if (await page.evaluate(pageFunctions.hasErrorMessages)) {
     const err = new Error("Errors were found in the diagram definition");
@@ -81,7 +93,7 @@ async function setYamlAndUpdateDiagram(page, diagramYaml) {
 }
 
 async function exportDiagram(page) {
-  log.next('calling export function');
+  log('calling export function');
   const diagramImageBase64DataURI = await page.evaluate(pageFunctions.exportCurrentDiagramToPNG);
 
   // TODO: add some error handling: check that it actually is a data URI,
@@ -102,7 +114,7 @@ async function render(diagramYaml, browser, args) {
 async function launchBrowser(args) {
   try {
     const opts = puppeteerOpts(args);
-    log.next('launching browser');
+    log('launching browser');
     return await puppeteer.launch(opts);
   } catch (err) {
     console.error(`Could not launch browser: ${err}\n${err.stack}`);
@@ -112,9 +124,9 @@ async function launchBrowser(args) {
 
 async function closeBrowser(browser, { debugMode }) {
   if (debugMode) {
-    log.next('DEBUG MODE: leaving browser open; script may be blocked until the browser quits.');
+    log('DEBUG MODE: leaving browser open; script may be blocked until the browser quits.');
   } else {
-    log.next('closing browser');
+    log('closing browser');
     await browser.close();
   }
 }
@@ -125,13 +137,6 @@ function prepYaml(yaml) {
   // assume that the diagram definition string is JSON and will fail.
   const sepLoc = yaml.indexOf('---');
   return sepLoc >= 0 ? yaml.substring(sepLoc) : `---\n${yaml}`;
-}
-
-function parseArgs() {
-  const args = process.argv.join();
-  return {
-    debugMode: args.includes('--debug')
-  }
 }
 
 function printErrorMessages(err, preppedYaml) {
@@ -153,9 +158,7 @@ function printErrorMessages(err, preppedYaml) {
   console.error(`🤖🤖🤖\n${JSON.stringify(machineOutput)}\n🤖🤖🤖`);
 }
 
-async function main() {
-  const args = parseArgs();
-
+async function main(args) {
   // Read stdin first; if it fails or blocks, no sense in launching the browser
   const rawYaml = readFileSync("/dev/stdin", "utf-8");
   const preppedYaml = prepYaml(rawYaml);
@@ -180,7 +183,8 @@ async function main() {
     process.exitCode = 1;
   } finally {
     closeBrowser(browser, args);
+    log.finish();
   }
 }
 
-main();
+main(args);

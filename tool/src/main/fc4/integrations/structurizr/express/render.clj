@@ -92,6 +92,7 @@
   ;; Protect developers from themselves
   {:pre [(not (ends-with? diagram-yaml ".yaml"))
          (not (ends-with? diagram-yaml ".yml"))]}
+  ;; TODO: some way to pass options to the renderer (--debug, --quiet, --verbose)
   ;; TODO: use ProcessBuilder (or some Clojure wrapper for such) rather than sh
   ;; so we can stream output from stderr to stderr so we can display progress as
   ;; it happens, so the user knows that something is actually happening!
