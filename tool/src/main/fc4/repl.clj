@@ -8,9 +8,8 @@
             [potemkin :refer [import-vars]]))
 
 ;; Make convenience functions readily accessible.
-(import-vars [fc4.integrations.structurizr.express.clipboard pcb wcb stop]
-             [fc4.io process-dir])
+(import-vars [fc4.integrations.structurizr.express.clipboard pcb wcb stop])
 
 ;; Print docs for the most handy-dandy funcs
-(doseq [s ['pcb 'wcb 'stop 'process-dir]]
+(doseq [s ['pcb 'wcb 'stop]]
   (#'cr/print-doc (meta (resolve s))))
