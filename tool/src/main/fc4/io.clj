@@ -3,7 +3,7 @@
   function specs are provided as a form of documentation and for instrumentation
   during development. They should not be used for generative testing."
   (:require
-   [clojure.java.io         :as io]
+   [clojure.java.io         :as io :refer [copy file output-stream]]
    [clojure.spec.alpha      :as s]
    [clojure.spec.gen.alpha  :as gen]
    [clojure.string          :as str :refer [ends-with?]]
@@ -20,10 +20,10 @@
   (:import [java.io FileNotFoundException]))
 
 (defn yaml-file?
-  [file]
-  (and (.isFile (io/file file))
-       (or (ends-with? file ".yaml")
-           (ends-with? file ".yml"))))
+  [f]
+  (and (.isFile (file f))
+       (or (ends-with? f ".yaml")
+           (ends-with? f ".yml"))))
 
 (defn yaml-files
   "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
@@ -149,6 +149,9 @@
         :ret  (s/or :success ::st/styles
                     :error   ::error))
 
-(defn binary-spit [file-or-file-path data]
-  (with-open [out (io/output-stream (io/file file-or-file-path))]
-    (.write out data)))
+(defn binary-spit
+  "fp must be a java.io.File or something coercable to such via
+  clojure.java.io/file"
+  [fp data]
+  (with-open [out (output-stream (file fp))]
+    (copy data out)))
