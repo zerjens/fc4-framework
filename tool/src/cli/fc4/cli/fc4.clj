@@ -5,18 +5,26 @@
    [clojure.string   :as str     :refer [join]]
    [fc4.cli.export   :as export]
    [fc4.cli.render   :as render]
-   [fc4.cli.util     :as cu      :refer [exit]]
-   [fc4.cli.wcb      :as wcb]))
+   [fc4.cli.util     :as cu      :refer [exit fail]]
+   [fc4.cli.wcb      :as wcb])
+  (:import [java.nio.charset Charset]))
 
 (def subcommands
   {:export export/-main
    :render render/-main
    :wcb    wcb/-main})
 
-(defn invalid-subcommand-message [subcommand]
+(defn invalid-subcommand-message
+  [subcommand]
   (str subcommand
        " is not a valid subcommand.\nValid subcommands are: "
        (join ", " (map name (keys subcommands)))))
+
+(defn check-charset
+  []
+  (let [default-charset (str (Charset/defaultCharset))]
+    (when (not= default-charset "UTF-8")
+      (fail "JVM default charset is" default-charset "but must be UTF-8."))))
 
 (defn -main
   ;; NB: if and when we add “universal” options — options that apply to all
@@ -28,9 +36,10 @@
   ;; TODO: Actually, now that I think about it, we should probably add a --help
   ;; universal option ASAP.
   [subcommand & rest-args]
+  (check-charset)
   (if-let [f (get subcommands (keyword subcommand))]
     (do (apply f rest-args)
         ;; I’m not sure why, but without this the render subcommand would delay
         ;; the exit of the main command by about a minute. TODO: debug.
-        (System/exit 0))
-    (exit 1 (invalid-subcommand-message subcommand))))
+        (exit 0))
+    (fail (invalid-subcommand-message subcommand))))

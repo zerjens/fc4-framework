@@ -28,6 +28,6 @@
 
   (testing "when the front matter has an extra newline at the end"
     (let [d (-> (s/gen :structurizr/diagram) gen/generate y/stringify)
-          yf (str e/default-front-matter "\n\n---\n" d)
+          yf (str y/default-front-matter "\n\n---\n" d)
           {str-result ::e/str-processed} (e/process-file yf)]
       (is (not (re-seq #"\n\n---\n" str-result))))))

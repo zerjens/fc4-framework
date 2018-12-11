@@ -1,0 +1,21 @@
+# This is invalid because the one of the sides of the relationship isn’t defined.
+type: System Context
+
+scope: B
+description: Big-picture diagram showing how our top-level systems and stakeholders interact
+
+elements:
+- type: Person
+  name: A
+  tags: foo, bar,foo_bar,foo-bar
+  position: '125,50'
+- type: Software System
+  name: B
+  position: '800,100'
+
+relationships:
+- source: A
+  description: interacts with
+  destination: Does not exist
+
+size: A6_Landscape

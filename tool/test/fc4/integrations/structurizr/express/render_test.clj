@@ -1,72 +1,48 @@
-; Suppress the Java icon from popping up and grabbing focus on MacOS.
-; Found in a comment to this answer: https://stackoverflow.com/a/17544259/7012
-; This is at the top of the file, as opposed to the ns form being first as is
-; idiomatic, because one of the mikera.image namespaces triggers that Java icon
-; on load.
-(System/setProperty "apple.awt.UIElement" "true")
-
 (ns fc4.integrations.structurizr.express.render-test
   (:require [fc4.integrations.structurizr.express.render :as r]
-            [clojure.java.io                             :as io :refer [file input-stream]]
-            [clojure.spec.alpha                          :as s]
-            [clojure.test                                       :refer [deftest testing is]]
-            [image-resizer.core :refer [resize]])
-  (:import  [java.awt Color]
-            [java.awt.image BufferedImage]
-            [java.io ByteArrayInputStream DataInputStream]
-            [javax.imageio ImageIO]))
+            [fc4.test-utils :refer [check]]
+            [fc4.test-utils.image-diff :refer [bytes->buffered-image image-diff]]
+            [clojure.java.io :refer [copy file input-stream output-stream]]
+            [clojure.spec.alpha :as s]
+            [clojure.string :refer [includes?]]
+            [clojure.test :refer [deftest testing is]]
+            [cognitect.anomalies :as anom]
+            [expound.alpha :as expound :refer [expound-str]]))
+
+; Require image-resizer.core while preventing the Java app icon from popping up
+; and grabbing focus on MacOS.
+; Approach found here: https://stackoverflow.com/questions/17460777/stop-java-coffee-cup-icon-from-appearing-in-the-dock-on-mac-osx/17544259#comment48475681_17544259
+; This require is here rather than in the ns form at the top of the file because
+; if I include this ns in the require list in the ns form, then the only way to
+; suppress the app icon from popping up and grabbing focus would be to place the
+; System/setProperty call at the top of the file, before the ns form, and that’d
+; violate Clojure idioms. When people open a clj file, they expect to see a ns
+; form right at the top declaring which namespace the file defines and
+; populates.
+; To be clear, calling the `require` function in a clj file, to require a
+; dependency, outside of the ns form, is *also* non-idiomatic; people expect all
+; of the dependencies of a file to be listed in the ns form. So I had to choose
+; between two non-idiomatic solutions; I chose this one because it seems to me
+; to be slightly less jarring for Clojurists.
+(do
+  (System/setProperty "apple.awt.UIElement" "true")
+  (require '[image-resizer.core :refer [resize]]))
 
 (defn binary-slurp
-  "Based on https://stackoverflow.com/a/29640320/7012"
-  [file-or-file-path]
-  (let [file (file file-or-file-path) ; no-op if the value is already a File
-        result (byte-array (.length file))]
-    (with-open [in (DataInputStream. (input-stream file))]
-      (.readFully in result))
-    result))
+  "fp should be either a java.io.File or something coercable to such by
+  clojure.java.io/file."
+  [fp]
+  (let [f (file fp)]
+    (with-open [out (java.io.ByteArrayOutputStream. (.length f))]
+      (copy f out)
+      (.toByteArray out))))
 
-(defn binary-spit [f data]
-  (with-open [out (io/output-stream (file f))]
-    (.write out data)))
-
-(defn bytes->buffered-image [bytes]
-  (ImageIO/read (ByteArrayInputStream. bytes)))
-
-(defn temp-png-file [basename] (java.io.File/createTempFile basename ".png"))
-
-(defn pixel-diff
-  "Ported from https://rosettacode.org/wiki/Percentage_difference_between_images#Java"
-  [a b]
-  (let [a-color-components (.getRGBColorComponents (Color. a) nil)
-        b-color-components (.getRGBColorComponents (Color. b) nil)]
-    (->> (map - a-color-components b-color-components)
-         (map #(Math/abs %))
-         (reduce +))))
-
-(defn image-pixels
-  [^BufferedImage img]
-  (-> img (.getRaster) (.getDataBuffer) (.getData)))
-
-(defn round-dec
-  "Rounds up, e.g. 0.001 rounded to two places will yield 0.01."
-  [places d]
-  (-> (bigdec d)
-      (.setScale places BigDecimal/ROUND_CEILING)
-      (double)))
-
-(defn image-diff
-  "Ported from https://rosettacode.org/wiki/Percentage_difference_between_images#Java"
-  [^BufferedImage a ^BufferedImage b]
-  (let [width   (.getWidth a)
-        height  (.getHeight a)
-        max-diff (* 3 255 width height)]
-    (when (or (not= width (.getWidth b))
-              (not= height (.getHeight b)))
-      (throw (Exception. "Images must have the same dimensions!")))
-    (as-> (map pixel-diff (image-pixels a) (image-pixels b)) it
-      (reduce + it)
-      (/ (* 100.0 it) max-diff)
-      (round-dec 4 it))))
+(defn binary-spit
+  "fp should be either a java.io.File or something coercable to such by
+  clojure.java.io/file."
+  [fp data]
+  (with-open [out (output-stream (file fp))]
+    (copy data out)))
 
 (def max-allowable-image-difference
   ;; This threshold might seem low, but the diffing algorithm is
@@ -77,15 +53,31 @@
   ;; looking into making this more precise and methodical.
   0.005)
 
+(deftest valid?
+  (testing "example test"
+    (let [result (r/valid? "this is not YAML? Or I guess maybe it is?")]
+      (is (s/valid? ::anom/anomaly result))
+      (is (every? #(includes? (::anom/message result) %)
+                  ["A cursory check"
+                   "almost certainly not"
+                   "valid Structurizr Express diagram definition"
+                   "contain some crucial keywords"]))))
+  (testing "property tests"
+    (check `r/valid? 300)))
+
+(def dir "test/data/structurizr/express/")
+
+(defn temp-png-file
+  [basename]
+  (java.io.File/createTempFile basename ".png"))
+
 (deftest render
   (testing "happy paths"
     (testing "rendering a Structurizr Express file"
-      (let [dir "test/data/structurizr/express/"
-            yaml (slurp (str dir "diagram_valid_cleaned.yaml"))
+      (let [yaml (slurp (file dir "diagram_valid_cleaned.yaml"))
             {:keys [::r/png-bytes ::r/stderr] :as result} (r/render yaml)
             actual-bytes png-bytes
-            expected-bytes (binary-slurp (str dir "diagram_valid_cleaned_expected.png"))
-
+            expected-bytes (binary-slurp (file dir "diagram_valid_cleaned_expected.png"))
             difference (->> [actual-bytes expected-bytes]
                             (map bytes->buffered-image)
                             (map #(resize % 1000 1000))
@@ -108,4 +100,31 @@
                    " different, which is higher than the threshold of "
                    max-allowable-image-difference
                    "\n“expected” PNG written to:" (.getPath expected-debug-fp)
-                   "\n“actual” PNG written to:" (.getPath actual-debug-fp))))))))
+                   "\n“actual” PNG written to:" (.getPath actual-debug-fp)))))))
+  (testing "sad paths"
+    ;; TODO: validate that the ::anom/message contains the required formatting (the two fenced sections)
+    (testing "inputs that contain no diagram definition whatsoever"
+      (doseq [input [""
+                     "this is not empty, but it’s not a diagram!"]]
+        (let [{:keys [::anom/message ::r/error] :as result} (r/render input)]
+          (is (s/valid? ::r/failure result)
+              (expound-str ::r/failure result))
+          (is (every? (partial includes? message)
+                      ["RENDERING FAILED"
+                       "Errors were found in the diagram definition"
+                       "No diagram has been defined"]))
+          (is (includes? (::r/message error) "Errors were found in the diagram definition"))
+          (is (includes? (-> error ::r/errors first ::r/message) "No diagram has been defined")))))
+    (testing "inputs that contain invalid diagram definitions"
+      (doseq [[fname-suffix expected-strings]
+              {"a.yaml" ["Diagram scope" "software system named" "undefined" "could not be found"]
+               "b.yaml" ["The diagram type must be" "System Landscape" "Dynamic"]
+               "c.yaml" ["relationship destination element named" "Does not exist" "does not exist"]}]
+        (let [path (file dir (str "se_diagram_invalid_" fname-suffix))
+              input (slurp path)
+              {:keys [::anom/message ::r/error] :as result} (r/render input)]
+          (is (s/valid? ::r/failure result)
+              (expound-str ::r/failure result))
+          (is (every? (partial includes? message) expected-strings))
+          (is (every? (partial includes? (-> error ::r/errors first ::r/message)) expected-strings))
+          (is (includes? (::r/message error) "Errors were found in the diagram definition")))))))

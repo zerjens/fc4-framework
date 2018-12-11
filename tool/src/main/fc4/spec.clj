@@ -6,6 +6,7 @@
             [clojure.string :refer [blank? ends-with? includes? join]]
             [com.gfredericks.test.chuck.generators :as gen']))
 
+(s/def ::blank-str #{""})
 (s/def ::non-blank-str (s/and string? (complement blank?)))
 (s/def ::no-linebreaks  (s/and string? #(not (includes? % "\n"))))
 (s/def ::non-blank-simple-str (s/and ::non-blank-str ::no-linebreaks))
