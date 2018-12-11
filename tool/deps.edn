@@ -62,4 +62,4 @@
                                          "--no-copy-source"
                                          "--out" "target"]}
 
-           :clj-next      {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-beta4"}}}}}
+           :clj-next      {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-RC5"}}}}}
