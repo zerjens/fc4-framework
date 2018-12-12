@@ -6,20 +6,40 @@
   (:require [cognitect.anomalies :as anom]
             [clojure.java.io :as io :refer [file output-stream]]
             [clojure.string :as str :refer [split]]
-            [fc4.cli.util :as cu :refer [debug]]
             [fc4.io :refer [binary-spit]]
             [fc4.integrations.structurizr.express.render :as r])
   (:import [java.io FileNotFoundException]))
 
-(defn fail
+; Feel free to change for development or whatever.
+; This is an atom rather than a dynamic var because the functions in this
+; namespace are often called from background threads (e.g. a filesystem
+; watching thread) and it’s quite annoying to rebind it in such a situation.
+(def debug? (atom false))
+
+(defn debug
+  [& vs]
+  (when @debug?
+    (apply println vs)))
+
+(defn err-msg
   [file-path msg]
-  (cu/fail (str "Error rendering " file-path ": " msg)))
+  (str "Error rendering " file-path ": " msg))
+
+(defn fail
+  ([path msg]
+   (fail path msg {} nil))
+  ([path msg data]
+   (fail path msg data nil))
+  ([path msg data cause]
+   (throw (if cause
+            (ex-info (err-msg path msg) data cause)
+            (ex-info (err-msg path msg) data)))))
 
 (defn read-text-file
   [path]
   (try (slurp path)
        (catch FileNotFoundException _ (fail path "file not found"))
-       (catch Exception e (fail path (.getMessage e)))))
+       (catch Exception e (fail path (.getMessage e) {} e))))
 
 (defn validate
   [yaml path]
@@ -29,7 +49,6 @@
 
 (defn render
   [yaml path]
-  (println (str path "..."))
   (let [result (r/render yaml)]
     (debug (::r/stderr result))
     result))
@@ -67,10 +86,15 @@
   (str/replace in-path #"\.ya?ml$" ".png"))
 
 (defn render-diagram-file
+  "Self-contained workflow for reading a YAML file containing a Structurizr
+  Express diagram definition, rendering it to an image, and writing the image to
+  a file in the same directory as the YAML file. Returns the path of the PNG
+  file that was written (as a string) or throws an Exception."
   [in-path]
   (let [yaml     (read-text-file in-path)
         _        (validate yaml in-path)
         result   (render yaml in-path)
         _        (check result in-path)
         out-path (get-out in-path)]
-    (binary-spit out-path (::r/png-bytes result))))
+    (binary-spit out-path (::r/png-bytes result))
+    out-path))
