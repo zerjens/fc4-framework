@@ -128,7 +128,7 @@
          ::stderr        err
          ::error         error}))))
 
-(s/def ::png-bytes bytes?)
+(s/def ::png-bytes (s/and bytes? #(> (count %) 0)))
 (s/def ::result (s/keys :req [::png-bytes ::stderr]))
 
 (s/def ::failure
