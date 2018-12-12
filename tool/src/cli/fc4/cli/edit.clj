@@ -33,14 +33,21 @@
 
 (defn process-file
   [context ^File file]
-  (print (str (.getName file) "... "))
+  (print (str (.getName file) "..."))
   (flush)
-  (let [result (se-edit/process-file (slurp file))
-        ;; TODO: error handling!
-        yaml-out (::se-edit/str-processed result)]
-    (spit file yaml-out))
-  (render-diagram-file file)
-  (println "✅")
+
+  (try
+    (let [result (se-edit/process-file (slurp file))
+          ;; TODO: error handling!
+          yaml-out (::se-edit/str-processed result)]
+      (spit file yaml-out))
+
+    (render-diagram-file file)
+    (println "✅")
+
+    (catch Exception e
+      (println "🚨" (.getMessage e))))
+
   ; Update the state value so process-fn-event? will be able to filter out
   ; events that are dispatched in rapid succession that would otherwise result
   ; in infinite loops.
