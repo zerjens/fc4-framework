@@ -2,7 +2,7 @@
   "Provides all I/O facilities so that the other namespaces can be pure. The
   function specs are provided as a form of documentation and for instrumentation
   during development. They should not be used for generative testing."
-  (:require [clojure.java.io         :as io]
+  (:require [clojure.java.io         :as io :refer [copy file output-stream]]
             [clojure.spec.alpha      :as s]
             [clojure.spec.gen.alpha  :as gen]
             [clojure.string          :as str :refer [ends-with?]]
@@ -133,3 +133,10 @@
         :args (s/cat :file-path ::fs/file-path-str)
         :ret  (s/or :success ::st/styles
                     :error   ::error))
+
+(defn binary-spit
+  "fp must be a java.io.File or something coercable to such via
+  clojure.java.io/file"
+  [fp data]
+  (with-open [out (output-stream (file fp))]
+    (copy data out)))
