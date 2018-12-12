@@ -31,6 +31,11 @@
              (debug "it’s been" (since last-processed) "seconds since" (.getName file) "was last changed...")
              (>= (since last-processed) min-secs-between-changes)))))
 
+(defn beep
+  []
+  (print (char 7))
+  (flush))
+
 (defn process-file
   [context ^File file]
   (print (str (.getName file) "..."))
@@ -46,6 +51,7 @@
     (println "✅")
 
     (catch Exception e
+      (beep)
       (println "🚨" (.getMessage e))))
 
   ; Update the state value so process-fn-event? will be able to filter out
