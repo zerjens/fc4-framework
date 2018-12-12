@@ -11,7 +11,7 @@
    [fc4.io :as fio :refer [process-text-file yaml-file?]]
    [fc4.io.render :refer [render-diagram-file]]
    [hawk.core :as hawk])
-  (:import [java.time Instant]
+  (:import [java.time Instant LocalTime]
            [java.time.temporal ChronoUnit]
            (java.io File)))
 
@@ -38,7 +38,10 @@
 
 (defn process-file
   [context ^File file]
-  (print (str (.getName file) "..."))
+  (print (str (.withNano (LocalTime/now) 0)
+              " "
+              (.getName file)
+              "... "))
   (flush)
 
   (try

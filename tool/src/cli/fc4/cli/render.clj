@@ -15,7 +15,7 @@
   [& paths]
   (try
     (doseq [path paths]
-      (print (str path "..."))
+      (print (str path "... "))
       (flush)
       (render-diagram-file path)
       (println "✅"))
