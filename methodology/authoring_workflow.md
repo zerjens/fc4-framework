@@ -33,6 +33,10 @@
    [Pull Request](https://help.github.com/articles/about-pull-requests/) to get your changes
    reviewed and then merged into master
 
+Here’s a screenshot of an editor with a diagram open in two panes:
+
+![Screenshot of an editor with a diagram open in two panes](images/screenshot of an editor with a diagram open in two panes.png)
+
 ## Optional: Using Structurizr Express for Graphical Editing
 
 This is optional, but can be very helpful when you need to make broad layout changes, or experiment
@@ -56,6 +60,10 @@ editor, you can use [Structurizr Express](https://structurizr.com/help/express) 
    1. Of note, as described in [The Toolset](toolset.md), the processing includes “snapping” the
       elements and vertices of a diagram to a virtual grid, which has the effect of precisely
       aligning elements that had been only roughly aligned
+
+Here’s a screenshot of Structurizr Express:
+
+![Screenshot of Structurizr Express](images/screenshot of structurizr express.png)
 
 ----
 
