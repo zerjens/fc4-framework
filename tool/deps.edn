@@ -1,6 +1,6 @@
 {:paths ["src/main" "src/cli"]
  :deps
- {org.clojure/core.async      {:mvn/version "0.4.474"}
+ {org.clojure/core.async      {:mvn/version "0.4.490"}
   org.clojure/data.json       {:mvn/version "0.2.6"}
   org.clojure/spec.alpha      {:mvn/version "0.2.176"}
   org.clojure/tools.cli       {:mvn/version "0.4.1"}
@@ -15,7 +15,7 @@
   ;; to fail. I’m overriding the dependency here at the root level, which takes precedence over the
   ;; profiles, because I want to ensure that we’ll use the same version of joda-time when running
   ;; the tests and building a distribution package (uberjar).
-  joda-time/joda-time         {:mvn/version "2.7"}
+  joda-time/joda-time         {:mvn/version "2.10.1"}
 
   ;; test.chuck is in the main dependency list, rather than in the test profile,
   ;; because we’re using one of its generators in a spec in a source file.
@@ -65,5 +65,8 @@
                                          "--aot" "all"
                                          "--no-copy-source"
                                          "--out" "target"]}
+
+           :outdated      {:extra-deps  {olical/depot               {:mvn/version "1.2.0"}}
+                           :main-opts   ["-m" "depot.outdated.main"]}
 
            :clj-next      {:override-deps {org.clojure/clojure      {:mvn/version "1.10.0-RC5"}}}}}
