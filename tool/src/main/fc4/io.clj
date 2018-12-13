@@ -139,6 +139,15 @@
         :ret  (s/or :success ::st/styles
                     :error   ::error))
 
+(defn binary-slurp
+  "fp should be either a java.io.File or something coercable to such by
+  clojure.java.io/file."
+  [fp]
+  (let [f (file fp)]
+    (with-open [out (java.io.ByteArrayOutputStream. (.length f))]
+      (copy f out)
+      (.toByteArray out))))
+
 (defn binary-spit
   "fp must be a java.io.File or something coercable to such via
   clojure.java.io/file"
