@@ -128,7 +128,7 @@
          ::stderr        err
          ::error         error}))))
 
-(s/def ::png-bytes bytes?)
+(s/def ::png-bytes (s/and bytes? #(> (count %) 0)))
 (s/def ::result (s/keys :req [::png-bytes ::stderr]))
 
 (s/def ::failure
@@ -143,7 +143,7 @@
                     :failure ::failure))
 
 (comment
-  (use 'clojure.java.io 'clojure.java.shell)
+  (use 'clojure.java.io 'clojure.java.shell 'fc4.io)
   (require :reload '[fc4.integrations.structurizr.express.render :as r])
   (in-ns 'fc4.integrations.structurizr.express.render)
 
@@ -155,9 +155,5 @@
   (def pngb (or (::png-bytes result)
                 (::anom/message result)
                 "WTF"))
-
-  (defn binary-spit [file-path data]
-    (with-open [out (output-stream (file file-path))]
-      (.write out data)))
 
   (binary-spit "/tmp/diagram.png" pngb))

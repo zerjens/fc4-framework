@@ -1,5 +1,6 @@
 (ns fc4.integrations.structurizr.express.render-test
   (:require [fc4.integrations.structurizr.express.render :as r]
+            [fc4.io :refer [binary-spit binary-slurp]]
             [fc4.test-utils :refer [check]]
             [fc4.test-utils.image-diff :refer [bytes->buffered-image image-diff]]
             [clojure.java.io :refer [copy file input-stream output-stream]]
@@ -27,22 +28,6 @@
 (do
   (System/setProperty "apple.awt.UIElement" "true")
   (require '[image-resizer.core :refer [resize]]))
-
-(defn binary-slurp
-  "fp should be either a java.io.File or something coercable to such by
-  clojure.java.io/file."
-  [fp]
-  (let [f (file fp)]
-    (with-open [out (java.io.ByteArrayOutputStream. (.length f))]
-      (copy f out)
-      (.toByteArray out))))
-
-(defn binary-spit
-  "fp should be either a java.io.File or something coercable to such by
-  clojure.java.io/file."
-  [fp data]
-  (with-open [out (output-stream (file fp))]
-    (copy data out)))
 
 (def max-allowable-image-difference
   ;; This threshold might seem low, but the diffing algorithm is

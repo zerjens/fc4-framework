@@ -2,7 +2,7 @@
   "Provides all I/O facilities so that the other namespaces can be pure. The
   function specs are provided as a form of documentation and for instrumentation
   during development. They should not be used for generative testing."
-  (:require [clojure.java.io         :as io]
+  (:require [clojure.java.io         :as io :refer [copy file output-stream]]
             [clojure.spec.alpha      :as s]
             [clojure.spec.gen.alpha  :as gen]
             [clojure.string          :as str :refer [ends-with?]]
@@ -17,14 +17,19 @@
             [fc4.view               :as v :refer [view-from-file]])
   (:import [java.io FileNotFoundException]))
 
+(defn yaml-file?
+  [f]
+  (and (.isFile (file f))
+       (or (ends-with? f ".yaml")
+           (ends-with? f ".yml"))))
+
 (defn yaml-files
   "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
   all the YAML files in that dir or in any of its child dirs (recursively) to an unlimited depth."
   [dir]
   (->> (io/file dir)
-       file-seq
-       (filter #(or (ends-with? % ".yaml")
-                    (ends-with? % ".yml")))))
+       (file-seq)
+       (filter yaml-file?)))
 
 (s/fdef yaml-files
         :args (s/cat :dir ::fs/dir-path)
@@ -133,3 +138,19 @@
         :args (s/cat :file-path ::fs/file-path-str)
         :ret  (s/or :success ::st/styles
                     :error   ::error))
+
+(defn binary-slurp
+  "fp should be either a java.io.File or something coercable to such by
+  clojure.java.io/file."
+  [fp]
+  (let [f (file fp)]
+    (with-open [out (java.io.ByteArrayOutputStream. (.length f))]
+      (copy f out)
+      (.toByteArray out))))
+
+(defn binary-spit
+  "fp must be a java.io.File or something coercable to such via
+  clojure.java.io/file"
+  [fp data]
+  (with-open [out (output-stream (file fp))]
+    (copy data out)))
