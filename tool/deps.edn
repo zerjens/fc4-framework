@@ -59,11 +59,11 @@
 
            :lint/fix      {:main-opts   ["-m" "cljfmt-runner.fix"]}
 
-           :uberjar       {:extra-deps  {luchiniatwork/cambada {:mvn/version "1.0.0"}}
+           :uberjar       {:extra-deps  {luchiniatwork/cambada      {:mvn/version "1.0.0"}}
                            :main-opts   ["-m" "cambada.uberjar"
                                          "-m" "fc4.cli.fc4"
                                          "--aot" "all"
                                          "--no-copy-source"
                                          "--out" "target"]}
 
-           :clj-next      {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-RC5"}}}}}
+           :clj-next      {:override-deps {org.clojure/clojure      {:mvn/version "1.10.0-RC5"}}}}}
