@@ -47,7 +47,9 @@
    (let [e (if cause
              (ex-info (err-msg path msg) data cause)
              (ex-info (err-msg path msg) data))]
-     (if *throw-on-fail* (throw e) e))))
+     (if *throw-on-fail*
+       (throw e)
+       e))))
 
 (defn read-text-file
   [path]
@@ -72,11 +74,18 @@
                      (or (= (first yaml) :valid)
                          (includes? (.getMessage (second ret)) path)))))
 
+(defn remove-filename-extension
+  "fp should be a string containing either a filename or a path ending with a
+  filename."
+  [fp]
+  (first (split fp #"\." 3)))
+
 (defn tmp-png-file
   [path]
-  (-> (file path) (.getName)
-      (split #"\." 3) (first) ; remove “extension”
-      (java.io.File/createTempFile ".maybe.png")))
+  (-> (file path)
+      (.getName)
+      (remove-filename-extension)
+      (File/createTempFile ".maybe.png")))
 
 (s/fdef tmp-png-file
         :args (s/cat :path (s/and ::fs/file-path-str
@@ -148,7 +157,7 @@
 
                   false)))
 
-(defn get-out
+(defn yaml-path->png-path
   [in-path]
   (str/replace in-path #"\.ya?ml$" ".png"))
 
@@ -163,6 +172,6 @@
         result   (r/render yaml)
         _        (debug (::r/stderr result))
         _        (check result in-path)
-        out-path (get-out in-path)]
+        out-path (yaml-path->png-path in-path)]
     (binary-spit out-path (::r/png-bytes result))
     out-path))

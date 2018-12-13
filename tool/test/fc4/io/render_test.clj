@@ -70,7 +70,7 @@
         non-existant "test/data/does_not_exist"
         not-text     "test/data/structurizr/express/diagram_valid_cleaned_expected.png"]
     (testing "a YAML file containing a valid SE diagram"
-      (let [expected-out-path (r/get-out valid)
+      (let [expected-out-path (r/yaml-path->png-path valid)
             expected-bytes (binary-slurp not-text)
             result (r/render-diagram-file valid)]
         (is (= result expected-out-path))
