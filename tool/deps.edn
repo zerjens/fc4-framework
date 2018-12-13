@@ -48,6 +48,10 @@
                                          "--fail-threshold" "65"
                                          "--codecov"]}
 
+           :kibit         {:extra-deps  {jonase/kibit               {:mvn/version "0.1.6"}}
+                           :main-opts   ["-e"
+                                         "(require,'[kibit.driver,:as,k]),(k/external-run,[\"src\"],nil)"]}
+
            :lint          {:extra-deps  {github-JamesLaverack/cljfmt-runner
                                          {:git/url "https://github.com/JamesLaverack/cljfmt-runner"
                                           :sha     "97960e9a6464935534b5a6bab529e063d0027128"}}
