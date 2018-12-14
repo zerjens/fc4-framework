@@ -4,7 +4,7 @@
   commands, some of them write to stdout/stderr and may call fc4.cli.util/fail
   (which calls System/exit unless fc4.cli.util/*exit-on-fail* is rebound)."
   (:require [cognitect.anomalies :as anom]
-            [clojure.java.io :as io :refer [file output-stream]]
+            [clojure.java.io :as io :refer [file]]
             [clojure.spec.alpha :as s]
             [clojure.string :as str :refer [ends-with? includes? split]]
             [fc4.io :refer [binary-spit]]
@@ -123,8 +123,7 @@
 
    (when (< (count (::r/png-bytes result)) min-valid-png-size)
      (let [tmpfile (tmp-png-file path)]
-       (with-open [out (output-stream tmpfile)]
-         (.write out (::r/png-bytes result)))
+       (binary-spit tmpfile (::r/png-bytes result))
        (fail path (str "PNG data is <1K so it’s likely invalid. It’s been"
                        " written to " tmpfile " for debugging."))))
 
