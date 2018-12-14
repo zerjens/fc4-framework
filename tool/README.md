@@ -107,8 +107,10 @@ So you’ll probably want to run `clj -A:dev:test`
 ```
 $ clj -A:dev:test
 Clojure 1.9.0
-user=> (require '[eftest.runner :refer [find-tests run-tests]])
-user=> (run-tests (find-tests "test") {:fail-fast? true})
+=> (do
+     (require '[eftest.runner :refer [find-tests run-tests]])
+     (run-tests (find-tests "test") {:fail-fast? true})
+     (print (char 7))) ; beep to get your attention
 ...
 ```
 

@@ -111,5 +111,5 @@
           (is (s/valid? ::r/failure result)
               (expound-str ::r/failure result))
           (is (every? (partial includes? message) expected-strings))
-          (is (every? (partial includes? (-> error ::r/errors first ::r/message)) expected-strings))
+          (is (every? (partial includes? (some-> error ::r/errors first ::r/message)) expected-strings))
           (is (includes? (::r/message error) "Errors were found in the diagram definition")))))))

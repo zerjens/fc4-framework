@@ -12,4 +12,4 @@ docker build -f Dockerfile.test -t fc4-test .
 # files that are meant to help with debugging; if the container is deleted as
 # soon as it exits then those files are gone. So you might want to run `docker
 # container prune` every once in awhile ;)
-docker run fc4-test "$@"
+docker run -it fc4-test "$@"
