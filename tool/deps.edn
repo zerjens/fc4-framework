@@ -10,6 +10,11 @@
   expound                     {:mvn/version "0.7.1"}
   com.cognitect/anomalies     {:mvn/version "0.1.12"}
 
+  ;; Override the version of ordered specified by clj-yaml 0.5.6; we’re specifying a newer version
+  ;; of ordered so we can get a fix that enables it to be compiled on Java 11+. Once clj-yaml has a
+  ;; newer release that uses this version of ordered (or a newer one) we can remove this override.
+  org.flatland/ordered        {:mvn/version "1.5.7"}
+
   ;; Our code doesn’t use joda-time directly; it’s specified here as an override to resolve a
   ;; conflict between test.chuck which depends (indirectly) on joda-time 2.7 and cambada which
   ;; depends (indirectly) on joda-time 2.8. The conflict was causing cambada’s uberjar process
@@ -30,7 +35,7 @@
 
            :test          {:extra-paths ["test" "src/test_utils"]
                            :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
-                                         eftest                     {:mvn/version "0.5.3"}
+                                         eftest                     {:mvn/version "0.5.4"}
                                          image-resizer              {:mvn/version "0.1.10"}}
                            ; It’s crucial to ensure that the JVM’s default character encoding is
                            ; UTF-8 because the renderer outputs UTF-8 encoded text to its stderr,
