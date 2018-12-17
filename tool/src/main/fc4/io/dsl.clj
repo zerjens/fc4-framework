@@ -30,8 +30,8 @@
        ((partial lookup-table-by ::m/name))))
 
 (s/fdef read-model-elements
-        :args (s/cat :root-path ::fs/dir-path)
-        :ret  (s/map-of ::m/name ::m/element))
+  :args (s/cat :root-path ::fs/dir-path)
+  :ret  (s/map-of ::m/name ::m/element))
 
 (s/def ::invalid-result any?)
 
@@ -71,9 +71,9 @@
     (val-or-error model ::m/model)))
 
 (s/fdef read-model
-        :args (s/cat :root-path ::fs/dir-path)
-        :ret  (s/or :success ::m/model
-                    :error   ::error))
+  :args (s/cat :root-path ::fs/dir-path)
+  :ret  (s/or :success ::m/model
+              :error   ::error))
 
 (defn read-view
   [file-path]
@@ -84,9 +84,9 @@
       (val-or-error ::v/view)))
 
 (s/fdef read-view
-        :args (s/cat :file-path ::fs/file-path-str)
-        :ret  (s/or :success ::v/view
-                    :error   ::error))
+  :args (s/cat :file-path ::fs/file-path-str)
+  :ret  (s/or :success ::v/view
+              :error   ::error))
 
 (defn read-styles
   [file-path]
@@ -97,6 +97,6 @@
       (val-or-error ::st/styles)))
 
 (s/fdef read-styles
-        :args (s/cat :file-path ::fs/file-path-str)
-        :ret  (s/or :success ::st/styles
-                    :error   ::error))
+  :args (s/cat :file-path ::fs/file-path-str)
+  :ret  (s/or :success ::st/styles
+              :error   ::error))

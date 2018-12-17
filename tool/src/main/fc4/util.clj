@@ -22,8 +22,8 @@
 ; is mutating the state of the current namespace, and can thus fail in all sorts
 ; of odd ways).
 (s/fdef namespaces
-        :args (s/cat :args ::ns-tuples)
-        :ret  nil?)
+  :args (s/cat :args ::ns-tuples)
+  :ret  nil?)
 
 (defn lookup-table-by
   "Given a function and a seqable, returns a map of (f x) to x.
@@ -43,9 +43,9 @@
         :string  ::fs/non-blank-simple-str))
 
 (s/fdef add-ns
-        :args (s/cat :namespace ::keyword-or-simple-string
-                     :keyword   ::keyword-or-simple-string)
-        :ret  qualified-keyword?)
+  :args (s/cat :namespace ::keyword-or-simple-string
+               :keyword   ::keyword-or-simple-string)
+  :ret  qualified-keyword?)
 
 (defn update-all
   "Given a map and a function of entry (coll of two elems) to entry, applies the
@@ -63,10 +63,10 @@
   (s/tuple any? any?))
 
 (s/fdef update-all
-        :args (s/cat :fn (s/fspec :args (s/cat :entry ::map-entry)
-                                  :ret  ::map-entry)
-                     :map map?)
-        :ret  map?)
+  :args (s/cat :fn (s/fspec :args (s/cat :entry ::map-entry)
+                            :ret  ::map-entry)
+               :map map?)
+  :ret  map?)
 
 (defn qualify-keys
   "Given a nested map with keyword keys, qualifies all keys, recursively, with
@@ -81,9 +81,9 @@
    m))
 
 (s/fdef qualify-keys
-        :args (s/cat :map (s/map-of keyword? any?)
-                     :ns-name ::fs/non-blank-simple-str)
-        :ret  (s/map-of qualified-keyword? any?))
+  :args (s/cat :map (s/map-of keyword? any?)
+               :ns-name ::fs/non-blank-simple-str)
+  :ret  (s/map-of qualified-keyword? any?))
 
 ; Rebind for testing. See docstring of `fail` below for explanation.
 (def ^:dynamic *throw-on-fail* true)

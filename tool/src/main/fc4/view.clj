@@ -21,14 +21,14 @@
    view))
 
 (s/fdef fixup-keys
-        :args (s/cat :m (s/map-of ::fs/unqualified-keyword any?))
-        :ret  (s/map-of (s/or :keyword keyword? :string string?) any?)
-        :fn   (fn [{{m :m} :args, ret :ret}]
-                (and (= (count m) (count ret))
-                     (empty? (->> (keys ret)
-                                  (filter keyword?)
-                                  (map name)
-                                  (filter #(re-seq #"[A-Z ]" %)))))))
+  :args (s/cat :m (s/map-of ::fs/unqualified-keyword any?))
+  :ret  (s/map-of (s/or :keyword keyword? :string string?) any?)
+  :fn   (fn [{{m :m} :args, ret :ret}]
+          (and (= (count m) (count ret))
+               (empty? (->> (keys ret)
+                            (filter keyword?)
+                            (map name)
+                            (filter #(re-seq #"[A-Z ]" %)))))))
 
 ; We have to capture this at compile time in order for it to have the value we
 ; want it to; if we referred to *ns* in the body of a function then, because it
@@ -55,8 +55,8 @@
     #(gen/fmap yaml/generate-string (s/gen ::view))))
 
 (s/fdef view-from-file
-        :args (s/cat :file-contents ::yaml-file-contents)
-        :ret  ::view
-        :fn   (fn [{{:keys [file-contents]} :args, ret :ret}]
-                (= file-contents
-                   (yaml/generate-string ret))))
+  :args (s/cat :file-contents ::yaml-file-contents)
+  :ret  ::view
+  :fn   (fn [{{:keys [file-contents]} :args, ret :ret}]
+          (= file-contents
+             (yaml/generate-string ret))))

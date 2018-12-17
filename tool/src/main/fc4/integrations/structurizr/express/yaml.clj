@@ -49,9 +49,9 @@
        (includes? s "scope")))
 
 (s/fdef probably-diagram?
-        :args (s/cat :v (s/or :is-diagram     :structurizr/diagram-yaml-str
-                              :is-not-diagram string?))
-        :ret  boolean?)
+  :args (s/cat :v (s/or :is-diagram     :structurizr/diagram-yaml-str
+                        :is-not-diagram string?))
+  :ret  boolean?)
 
 (defn valid?
   "Returns true if s is a valid Structurizr Express diagram specification in YAML format, otherwise
@@ -67,9 +67,9 @@
          ::anom/message  (expound-str ::st/diagram-yaml-str s)})))
 
 (s/fdef valid?
-        :args (s/cat :v (s/or :valid   ::st/diagram-yaml-str
-                              :invalid string?))
-        :ret  (s/or :valid   true?
-                    :invalid ::anom/anomaly)
-        :fn   (fn [{{arg :v} :args, ret :ret}]
-                (= (first arg) (first ret))))
+  :args (s/cat :v (s/or :valid   ::st/diagram-yaml-str
+                        :invalid string?))
+  :ret  (s/or :valid   true?
+              :invalid ::anom/anomaly)
+  :fn   (fn [{{arg :v} :args, ret :ret}]
+          (= (first arg) (first ret))))

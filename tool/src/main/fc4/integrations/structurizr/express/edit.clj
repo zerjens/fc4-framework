@@ -27,27 +27,27 @@
            (blank? v))))
 
 (s/fdef blank-nil-or-empty?
-        :args (s/cat :v (s/or :nil nil?
-                              :coll (s/coll-of any?
+  :args (s/cat :v (s/or :nil nil?
+                        :coll (s/coll-of any?
                                          ; for this fn it matters only if the coll is empty or not
-                                               :gen-max 1)
-                              :string string?))
-        :ret boolean?
-        :fn (fn [{:keys [args ret]}]
-              (let [[which v] (:v args)]
-                (case which
-                  :nil
-                  (= ret true)
+                                         :gen-max 1)
+                        :string string?))
+  :ret boolean?
+  :fn (fn [{:keys [args ret]}]
+        (let [[which v] (:v args)]
+          (case which
+            :nil
+            (= ret true)
 
-                  :coll
-                  (if (empty? v)
-                    (= ret true)
-                    (= ret false))
+            :coll
+            (if (empty? v)
+              (= ret true)
+              (= ret false))
 
-                  :string
-                  (if (blank? v)
-                    (= ret true)
-                    (= ret false))))))
+            :string
+            (if (blank? v)
+              (= ret true)
+              (= ret false))))))
 
 (defn shrink
   "Recursively remove map entries with a blank, nil, or empty value.
@@ -67,18 +67,18 @@
             diagram))
 
 (s/fdef shrink
-        :args (s/cat :in ::st/diagram)
-        :ret  ::st/diagram
-        :fn (s/and
-             (fn [{{in :in} :args, ret :ret}] (= (type in) (type ret)))
-             (fn [{{in :in} :args, ret :ret}]
-               (let [all-vals #(if (map? %) (vals %) %) ; works on maps or sequences
-                     leaf-vals #(->> (tree-seq coll? all-vals %)
-                                     (remove coll?)
-                                     flatten)
-                     in-vals (->> (leaf-vals in) (filter (complement blank-nil-or-empty?)) set)
-                     ret-vals (->> (leaf-vals ret) set)]
-                 (= in-vals ret-vals)))))
+  :args (s/cat :in ::st/diagram)
+  :ret  ::st/diagram
+  :fn (s/and
+       (fn [{{in :in} :args, ret :ret}] (= (type in) (type ret)))
+       (fn [{{in :in} :args, ret :ret}]
+         (let [all-vals #(if (map? %) (vals %) %) ; works on maps or sequences
+               leaf-vals #(->> (tree-seq coll? all-vals %)
+                               (remove coll?)
+                               flatten)
+               in-vals (->> (leaf-vals in) (filter (complement blank-nil-or-empty?)) set)
+               ret-vals (->> (leaf-vals ret) set)]
+           (= in-vals ret-vals)))))
 
 (defn reorder
   "Reorder a map as per a seq of keys.
@@ -113,22 +113,22 @@
          (into (ordered-map)))))
 
 (s/fdef reorder
-        :args (s/cat :m  (s/map-of simple-keyword? any?)
-                     :ks (s/coll-of simple-keyword?
-                                    :min-count 2
-                                    :distinct true))
-        :ret  (s/and (s/map-of simple-keyword? any?)
-                     (partial instance? OrderedMap))
-        :fn   (fn [{{:keys [m ks]} :args, ret :ret}]
-                (let [kss (set ks)]
-                  (and
+  :args (s/cat :m  (s/map-of simple-keyword? any?)
+               :ks (s/coll-of simple-keyword?
+                              :min-count 2
+                              :distinct true))
+  :ret  (s/and (s/map-of simple-keyword? any?)
+               (partial instance? OrderedMap))
+  :fn   (fn [{{:keys [m ks]} :args, ret :ret}]
+          (let [kss (set ks)]
+            (and
                     ; Yeah, OrderedMaps are equal to maps with the same entries
                     ; regardless of order — surprised me too!
-                   (= m ret)
-                   (= (or (keys ret) []) ; keys on empty map returns nil
-                      (concat (filter (partial contains? m) ks)
-                              (sort (remove (partial contains? kss)
-                                            (keys m)))))))))
+             (= m ret)
+             (= (or (keys ret) []) ; keys on empty map returns nil
+                (concat (filter (partial contains? m) ks)
+                        (sort (remove (partial contains? kss)
+                                      (keys m)))))))))
 
 (def desired-order
   {:root          {:sort-keys nil
@@ -169,13 +169,13 @@
            (map #(Integer/parseInt %))))
 
 (s/fdef parse-coords
-        :args (s/cat :s ::fs/coord-string)
-        :ret (s/coll-of ::fs/coord-int :count 2)
-        :fn (fn [{:keys [ret args]}]
-              (= ret
-                 (->> (split (:s args) #",")
-                      (map trim)
-                      (map #(Integer/parseInt %))))))
+  :args (s/cat :s ::fs/coord-string)
+  :ret (s/coll-of ::fs/coord-int :count 2)
+  :fn (fn [{:keys [ret args]}]
+        (= ret
+           (->> (split (:s args) #",")
+                (map trim)
+                (map #(Integer/parseInt %))))))
 
 (defn round-to-closest
   "Accepts any natural int n and rounds it to the closest target. If the rounded
@@ -192,14 +192,14 @@
 (s/def ::snap-target #{10 25 50 75 100})
 
 (s/fdef round-to-closest
-        :args (s/cat :target ::snap-target
-                     :n      ::fs/coord-int)
-        :ret ::fs/coord-int
-        :fn (fn [{{:keys [target n]} :args
-                  ret :ret}]
-              (or (zero? ret)
-                  (zero? (rem ret target))
-                  (= ret fs/max-coord-int))))
+  :args (s/cat :target ::snap-target
+               :n      ::fs/coord-int)
+  :ret ::fs/coord-int
+  :fn (fn [{{:keys [target n]} :args
+            ret :ret}]
+        (or (zero? ret)
+            (zero? (rem ret target))
+            (= ret fs/max-coord-int))))
 
 (def elem-offsets
   {"Person" [25 -50]
@@ -230,15 +230,15 @@
         (join ","))))
 
 (s/fdef snap-coords
-        :args (s/cat :coords     (s/coll-of ::fs/coord-int :count 2)
-                     :to-closest ::snap-target
-                     :min-margin ::fs/coord-int
-                     :offsets    (s/? (s/coll-of (s/int-in -50 50) :count 2)))
-        :ret ::fs/coord-string
-        :fn (fn [{:keys [ret args]}]
-              (let [parsed-ret (parse-coords ret)
-                    {:keys [:to-closest :min-margin]} args]
-                (every? #(>= % min-margin) parsed-ret))))
+  :args (s/cat :coords     (s/coll-of ::fs/coord-int :count 2)
+               :to-closest ::snap-target
+               :min-margin ::fs/coord-int
+               :offsets    (s/? (s/coll-of (s/int-in -50 50) :count 2)))
+  :ret ::fs/coord-string
+  :fn (fn [{:keys [ret args]}]
+        (let [parsed-ret (parse-coords ret)
+              {:keys [:to-closest :min-margin]} args]
+          (every? #(>= % min-margin) parsed-ret))))
 
 (defn snap-elem-to-grid
   "Accepts an element (a software system, person, container, or
@@ -267,11 +267,11 @@
                  out-coords))))
 
 (s/fdef snap-elem-to-grid
-        :args (s/cat :elem       ::st/element-with-position
-                     :to-closest ::snap-target
-                     :min-margin (s/int-in 0 500))
-        :ret  ::st/element-with-position
-        :fn   snap-elem-to-grid-fdef-pred)
+  :args (s/cat :elem       ::st/element-with-position
+               :to-closest ::snap-target
+               :min-margin (s/int-in 0 500))
+  :ret  ::st/element-with-position
+  :fn   snap-elem-to-grid-fdef-pred)
 
 (defn snap-vertices-to-grid
   "Accepts an ordered-map representing a relationship, and snaps its vertices, if any, to a grid
@@ -316,8 +316,8 @@
       shrink)) ; must follow reorder-diagram because that tends to introduce new keys with nil values
 
 (s/fdef process
-        :args (s/cat :in ::st/diagram)
-        :ret  ::st/diagram)
+  :args (s/cat :in ::st/diagram)
+  :ret  ::st/diagram)
 
 (defn process-file
   "Accepts a string containing either a single YAML document, or a YAML document and front matter
@@ -338,5 +338,5 @@
 (s/def ::str-processed  ::st/diagram-yaml-str)
 
 (s/fdef process-file
-        :args (s/cat :in ::st/diagram-yaml-str)
-        :ret  (s/keys :req [::main-processed ::str-processed]))
+  :args (s/cat :in ::st/diagram-yaml-str)
+  :ret  (s/keys :req [::main-processed ::str-processed]))

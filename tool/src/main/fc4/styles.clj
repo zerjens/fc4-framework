@@ -55,9 +55,9 @@
     #(gen/fmap yaml/generate-string (s/gen ::styles))))
 
 (s/fdef styles-from-file
-        :args (s/cat :file-contents ::yaml-file-contents)
-        :ret  ::styles
-        :fn   (fn [{{:keys [file-contents]} :args, ret :ret}]
+  :args (s/cat :file-contents ::yaml-file-contents)
+  :ret  ::styles
+  :fn   (fn [{{:keys [file-contents]} :args, ret :ret}]
                 ;; Unlike the similar function fc4.view/view-from-file, this
                 ;; needs to parse the strings back from the YAML back into (in
                 ;; this case) seqs of ordered maps because otherwise the YAML
@@ -68,5 +68,5 @@
                 ;; two ordered maps with different orders would be considered
                 ;; equivalent but I’ll give the developers (of flatland/ordered)
                 ;; the benefit of the doubt that they’ve good reasons for this.
-                (= (yaml/parse-string file-contents)
-                   (yaml/parse-string (yaml/generate-string ret)))))
+          (= (yaml/parse-string file-contents)
+             (yaml/parse-string (yaml/generate-string ret)))))
