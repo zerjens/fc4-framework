@@ -24,4 +24,5 @@ RUN apt-get install -yq \
 # Install Clojure
 RUN wget -q https://download.clojure.org/install/linux-install-1.10.0.403.sh \
       && chmod +x linux-install-1.10.0.403.sh \
-      && ./linux-install-1.10.0.403.sh
+      && ./linux-install-1.10.0.403.sh \
+      && rm linux-install-1.10.0.403.sh
