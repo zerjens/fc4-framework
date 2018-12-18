@@ -17,7 +17,7 @@ WORKDIR /tmp
 # in a container, for debugging.
 RUN apt-get update -yq
 RUN apt-get install -yq \
-      chromium=70.0.3538.67-1~deb9u1 \
+      chromium=71.0.3578.80-1~deb9u1 \
       openjdk-8-jre=8u181-b13-2~deb9u1 \
       rlwrap
 
