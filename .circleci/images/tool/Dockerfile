@@ -22,6 +22,6 @@ RUN apt-get install -yq \
       rlwrap
 
 # Install Clojure
-RUN wget -q https://download.clojure.org/install/linux-install-1.9.0.394.sh \
-      && chmod +x linux-install-1.9.0.394.sh \
-      && ./linux-install-1.9.0.394.sh
+RUN wget -q https://download.clojure.org/install/linux-install-1.10.0.403.sh \
+      && chmod +x linux-install-1.10.0.403.sh \
+      && ./linux-install-1.10.0.403.sh
