@@ -3,7 +3,7 @@
 # clipboard.
 
 # The source for this base image is at <project-root>/.circleci/images/tool/Dockerfile
-FROM quay.io/fundingcircle/clojure-node-chromium:clojure-1.9.0.394_node-10.13_debian-stretch
+FROM quay.io/fundingcircle/clojure-node-chromium:clojure-1.10.0.403_node-10.13_debian-stretch
 
 LABEL maintainer="Avi Flax <avi.flax@fundingcircle.com>"
 
