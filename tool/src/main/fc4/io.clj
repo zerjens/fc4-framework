@@ -8,6 +8,7 @@
             [clojure.string          :as str :refer [ends-with?]]
             [cognitect.anomalies     :as anom]
             [expound.alpha           :as expound :refer [expound-str]]
+            [fc4.io.yaml             :as ioy :refer [yaml-files]]
             [fc4.model              :as m :refer [elements-from-file]]
             [fc4.spec               :as fs]
             [fc4.styles             :as st :refer [styles-from-file]]
@@ -15,24 +16,6 @@
             [fc4.yaml               :as fy :refer [split-file]]
             [fc4.view               :as v :refer [view-from-file]])
   (:import [java.io File FileNotFoundException]))
-
-(defn yaml-file?
-  [f]
-  (and (.isFile (file f))
-       (or (ends-with? f ".yaml")
-           (ends-with? f ".yml"))))
-
-(defn yaml-files
-  "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
-  all the YAML files in that dir or in any of its child dirs (recursively) to an unlimited depth."
-  [dir]
-  (->> (file dir)
-       (file-seq)
-       (filter yaml-file?)))
-
-(s/fdef yaml-files
-        :args (s/cat :dir ::fs/dir-path)
-        :ret  (s/coll-of (partial instance? File)))
 
 (defn- read-model-elements
   "Recursively find and read all elements from all YAML files under a directory
