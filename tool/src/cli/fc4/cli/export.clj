@@ -8,10 +8,10 @@
    [clojure.tools.cli                            :as cli :refer [parse-opts]]
    [cognitect.anomalies                          :as anom]
    [expound.alpha                                :as ex :refer [expound-str]]
-   [fc4.cli.util                                :as cu :refer [exit]]
-   [fc4.integrations.structurizr.express.export :as se]
-   [fc4.integrations.structurizr.express.yaml   :as sy]
-   [fc4.io                                      :as io]))
+   [fc4.cli.util                                 :as cu :refer [exit]]
+   [fc4.integrations.structurizr.express.export  :as se]
+   [fc4.integrations.structurizr.express.yaml    :as sy]
+   [fc4.io.dsl                                   :as dsl]))
 
 (def opts
   ;; TODO: add --loop and --output
@@ -48,9 +48,9 @@
 
 (defn- export-or-exit
   [view-path model-path styles-path debug]
-  (let [view   (read-or-exit io/read-view   view-path   "view")
-        model  (read-or-exit io/read-model  model-path  "model")
-        styles (read-or-exit io/read-styles styles-path "styles")
+  (let [view   (read-or-exit dsl/read-view   view-path   "view")
+        model  (read-or-exit dsl/read-model  model-path  "model")
+        styles (read-or-exit dsl/read-styles styles-path "styles")
         system-context-diagram (se/view->system-context view model styles)
         debug-data {:system-context-diagram system-context-diagram
                     :model model

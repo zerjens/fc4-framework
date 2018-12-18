@@ -1,6 +1,6 @@
 (ns fc4.integrations.structurizr.express.render-test
   (:require [fc4.integrations.structurizr.express.render :as r]
-            [fc4.io :refer [binary-spit binary-slurp]]
+            [fc4.io.util :refer [binary-spit binary-slurp]]
             [fc4.test-utils :refer [check]]
             [fc4.test-utils.image-diff :refer [bytes->buffered-image image-diff]]
             [clojure.java.io :refer [copy file input-stream output-stream]]
@@ -37,18 +37,6 @@
   ;; caught. Still, this is pretty unscientific, so it might be worth
   ;; looking into making this more precise and methodical.
   0.005)
-
-(deftest valid?
-  (testing "example test"
-    (let [result (r/valid? "this is not YAML? Or I guess maybe it is?")]
-      (is (s/valid? ::anom/anomaly result))
-      (is (every? #(includes? (::anom/message result) %)
-                  ["A cursory check"
-                   "almost certainly not"
-                   "valid Structurizr Express diagram definition"
-                   "contain some crucial keywords"]))))
-  (testing "property tests"
-    (check `r/valid? 300)))
 
 (def dir "test/data/structurizr/express/")
 

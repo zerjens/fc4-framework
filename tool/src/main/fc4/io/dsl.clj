@@ -1,21 +1,21 @@
-(ns fc4.io
+(ns fc4.io.dsl
   "Provides all I/O facilities so that the other namespaces can be pure. The
   function specs are provided as a form of documentation and for instrumentation
   during development. They should not be used for generative testing."
-  (:require [clojure.java.io         :as io :refer [copy file output-stream]]
+  (:require [clojure.java.io         :refer [file]]
             [clojure.spec.alpha      :as s]
             [clojure.spec.gen.alpha  :as gen]
             [clojure.string          :as str :refer [ends-with?]]
             [cognitect.anomalies     :as anom]
             [expound.alpha           :as expound :refer [expound-str]]
             [fc4.io.yaml             :as ioy :refer [yaml-files]]
-            [fc4.model              :as m :refer [elements-from-file]]
-            [fc4.spec               :as fs]
-            [fc4.styles             :as st :refer [styles-from-file]]
-            [fc4.util               :as u :refer [lookup-table-by]]
-            [fc4.yaml               :as fy :refer [split-file]]
-            [fc4.view               :as v :refer [view-from-file]])
-  (:import [java.io File FileNotFoundException]))
+            [fc4.model               :as m :refer [elements-from-file]]
+            [fc4.spec                :as fs]
+            [fc4.styles              :as st :refer [styles-from-file]]
+            [fc4.util                :as u :refer [lookup-table-by]]
+            [fc4.yaml                :as fy :refer [split-file]]
+            [fc4.view                :as v :refer [view-from-file]])
+  (:import [java.io FileNotFoundException]))
 
 (defn- read-model-elements
   "Recursively find and read all elements from all YAML files under a directory
@@ -43,7 +43,7 @@
   actually dirs. If anything is invalid, throws a FileNotFoundException or a
   RuntimeException. Otherwise returns nil."
   [root-path]
-  (let [d (partial io/file root-path)]
+  (let [d (partial file root-path)]
     (doseq [dir [(d) (d "systems") (d "users")]]
       (when-not (.exists dir)
         (throw (FileNotFoundException.
@@ -65,9 +65,9 @@
   [root-path]
   (validate-model-dirs root-path)
   (let [model {::m/systems (read-model-elements :system
-                                                (io/file root-path "systems"))
+                                                (file root-path "systems"))
                ::m/users   (read-model-elements :user
-                                                (io/file root-path "users"))}]
+                                                (file root-path "users"))}]
     (val-or-error model ::m/model)))
 
 (s/fdef read-model
@@ -100,19 +100,3 @@
         :args (s/cat :file-path ::fs/file-path-str)
         :ret  (s/or :success ::st/styles
                     :error   ::error))
-
-(defn binary-slurp
-  "fp should be either a java.io.File or something coercable to such by
-  clojure.java.io/file."
-  [fp]
-  (let [f (file fp)]
-    (with-open [out (java.io.ByteArrayOutputStream. (.length f))]
-      (copy f out)
-      (.toByteArray out))))
-
-(defn binary-spit
-  "fp must be a java.io.File or something coercable to such via
-  clojure.java.io/file"
-  [fp data]
-  (with-open [out (output-stream (file fp))]
-    (copy data out)))

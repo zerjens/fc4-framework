@@ -5,10 +5,10 @@
             [cognitect.anomalies     :as anom]
             [expound.alpha           :as expound]
             [fc4.integrations.structurizr.express.export :as e]
-            [fc4.io                 :as io]
-            [fc4.model              :as m]
-            [fc4.test-utils         :as tu :refer [check]]
-            [fc4.view               :as v]))
+            [fc4.io.dsl              :as dsl]
+            [fc4.model               :as m]
+            [fc4.test-utils          :as tu :refer [check]]
+            [fc4.view                :as v]))
 
 (deftest add-control-points (check `e/add-control-points))
 (deftest add-in-house-tag (check `e/add-in-house-tag))
@@ -51,11 +51,11 @@
   (testing "on-disk examples"
     (testing "happy path"
       (let [mp     "test/data/model (valid)/"
-            model  (io/read-model mp)
+            model  (dsl/read-model mp)
             vp     "test/data/views/middle (valid).yaml"
-            view   (io/read-view vp)
+            view   (dsl/read-view vp)
             sp     "test/data/styles (valid).yaml"
-            styles (io/read-styles sp)
+            styles (dsl/read-styles sp)
             _ (doseq [[n [v p]] {"model"  [model  mp]
                                  "view"   [view   vp]
                                  "styles" [styles sp]}]
@@ -68,11 +68,11 @@
     (testing "neutral path:"
       (testing "view references undefined system"
         (let [mp     "test/data/model (valid)/"
-              model  (io/read-model mp)
+              model  (dsl/read-model mp)
               vp     "test/data/views/middle (valid, references undefined system).yaml"
-              view   (io/read-view vp)
+              view   (dsl/read-view vp)
               sp     "test/data/styles (valid).yaml"
-              styles (io/read-styles sp)
+              styles (dsl/read-styles sp)
               _ (doseq [[n [v p]] {"model"  [model  mp]
                                    "view"   [view   vp]
                                    "styles" [styles sp]}]

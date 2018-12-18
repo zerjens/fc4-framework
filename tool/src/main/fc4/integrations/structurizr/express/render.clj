@@ -7,31 +7,9 @@
             [cognitect.anomalies  :as anom]
             [expound.alpha        :as expound :refer [expound-str]]
             [fc4.integrations.structurizr.express.spec :as ss]
-            [fc4.integrations.structurizr.express.util         :refer [probably-diagram-yaml?]]
             [fc4.util             :as fu    :refer [namespaces]]))
 
 (namespaces '[structurizr :as st])
-
-(defn valid?
-  "Returns true if s is a valid Structurizr Express diagram specification in YAML format, otherwise
-  return a :cognitect.anomalies/anomaly."
-  [s]
-  (if-not (probably-diagram-yaml? s)
-    {::anom/category ::anom/fault
-     ::anom/message  (str "A cursory check indicated that this is almost certainly not a valid"
-                          " Structurizr Express diagram definition, as it doesn’t contain some"
-                          " crucial keywords.")}
-    (or (s/valid? ::st/diagram-yaml-str s)
-        {::anom/category ::anom/fault
-         ::anom/message  (expound-str ::st/diagram-yaml-str s)})))
-
-(s/fdef valid?
-        :args (s/cat :v (s/or :valid   ::st/diagram-yaml-str
-                              :invalid string?))
-        :ret  (s/or :valid   true?
-                    :invalid ::anom/anomaly)
-        :fn   (fn [{{arg :v} :args, ret :ret}]
-                (= (first arg) (first ret))))
 
 (defn jar-dir
   "Utility function to get the path to the dir in which the jar in which this
@@ -146,7 +124,7 @@
                     :failure ::failure))
 
 (comment
-  (use 'clojure.java.io 'clojure.java.shell 'fc4.io)
+  (use 'clojure.java.io 'clojure.java.shell 'fc4.io.util)
   (require :reload '[fc4.integrations.structurizr.express.render :as r])
   (in-ns 'fc4.integrations.structurizr.express.render)
 
