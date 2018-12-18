@@ -47,10 +47,13 @@
 
 (defn renderer-command
   []
-  (let [possible-paths [; this first one is used when the tool is packaged in a jar
+  (let [possible-paths [; This first one must be first so it’s preferred to an
+                        ; “installed” executable when running tests from source
+                        "renderer/render.js"
+                        ; Used when the tool is packaged in a jar
                         (str (file (jar-dir) "fc4-render"))
                         "render"
-                        "renderer/render.js"
+                        "target/pkg/renderer/render-mac"
                         "target/pkg/renderer/render-macos"
                         "target/pkg/renderer/render-linux"]
         hopefully-on-path "fc4-render"]

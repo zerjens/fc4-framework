@@ -1,5 +1,5 @@
 (ns fc4.io.render-test
-  (:require [clojure.java.io      :as jio :refer [file]]
+  (:require [clojure.java.io      :as jio :refer [delete-file file]]
             [clojure.spec.alpha   :as s]
             [clojure.string       :as str :refer [includes?]]
             [clojure.test         :as ct :refer [deftest is testing]]
@@ -80,7 +80,9 @@
                               (map bytes->buffered-image)
                               (map #(resize % 1000 1000))
                               (reduce image-diff))]
-          (is (<= difference max-allowable-image-difference)))))
+          (is (<= difference max-allowable-image-difference)))
+        ; cleanup just so as not to leave git status dirty
+        (delete-file result :silently)))
     (testing "a YAML file containing a blatantly invalid SE diagram"
       (is (thrown-with-msg? Exception
                             #"invalid because it is missing the root property"

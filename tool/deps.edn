@@ -6,9 +6,13 @@
   org.clojure/spec.alpha      {:mvn/version "0.2.176"}
   org.clojure/tools.cli       {:mvn/version "0.4.1"}
   circleci/clj-yaml           {:mvn/version "0.5.6"}
-  potemkin                    {:mvn/version "0.4.5"}
   expound                     {:mvn/version "0.7.1"}
   com.cognitect/anomalies     {:mvn/version "0.1.12"}
+
+  ;; Override the version of ordered specified by clj-yaml 0.5.6; we’re specifying a newer version
+  ;; of ordered so we can get a fix that enables it to be compiled on Java 11+. Once clj-yaml has a
+  ;; newer release that uses this version of ordered (or a newer one) we can remove this override.
+  org.flatland/ordered        {:mvn/version "1.5.7"}
 
   ;; Our code doesn’t use joda-time directly; it’s specified here as an override to resolve a
   ;; conflict between test.chuck which depends (indirectly) on joda-time 2.7 and cambada which
@@ -25,11 +29,12 @@
   com.gfredericks/test.chuck  {:mvn/version "0.2.9"}}
 
  :aliases {:dev           {:extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
-                                         inspectable                {:mvn/version "0.2.2"}}}
+                                         inspectable                {:mvn/version "0.2.2"}}
+                           :jvm-opts    ["-XX:-OmitStackTraceInFastThrow"]}
 
            :test          {:extra-paths ["test" "src/test_utils"]
                            :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
-                                         eftest                     {:mvn/version "0.5.3"}
+                                         eftest                     {:mvn/version "0.5.4"}
                                          image-resizer              {:mvn/version "0.1.10"}}
                            ; It’s crucial to ensure that the JVM’s default character encoding is
                            ; UTF-8 because the renderer outputs UTF-8 encoded text to its stderr,

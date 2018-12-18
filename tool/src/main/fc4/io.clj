@@ -8,14 +8,13 @@
             [clojure.string          :as str :refer [ends-with?]]
             [cognitect.anomalies     :as anom]
             [expound.alpha           :as expound :refer [expound-str]]
-            [fc4.files              :as files :refer [relativize]]
             [fc4.model              :as m :refer [elements-from-file]]
             [fc4.spec               :as fs]
             [fc4.styles             :as st :refer [styles-from-file]]
             [fc4.util               :as u :refer [lookup-table-by]]
             [fc4.yaml               :as fy :refer [split-file]]
             [fc4.view               :as v :refer [view-from-file]])
-  (:import [java.io FileNotFoundException]))
+  (:import [java.io File FileNotFoundException]))
 
 (defn yaml-file?
   [f]
@@ -27,33 +26,13 @@
   "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
   all the YAML files in that dir or in any of its child dirs (recursively) to an unlimited depth."
   [dir]
-  (->> (io/file dir)
+  (->> (file dir)
        (file-seq)
        (filter yaml-file?)))
 
 (s/fdef yaml-files
         :args (s/cat :dir ::fs/dir-path)
-        :ret  (s/coll-of (partial instance? java.io.File)))
-
-(defn process-dir
-  "Accepts a directory path as a string, finds all the YAML files in that dir or
-  in any of its child dirs (recursively) to an unlimited depth, and applies f to
-  the contents of each file, overwriting its current contents. Prints out the
-  path of each file before processing it. If an error occurs, it is thrown
-  immediately, aborting the work."
-  [dir-path f]
-  (doseq [file (yaml-files dir-path)]
-    (binding [*out* *err*]
-      (println (relativize (str file) dir-path)))
-    (->> (slurp file)
-         (f)
-         (spit file))))
-
-(s/fdef process-dir
-        :args (s/cat :dir-path ::fs/dir-path
-                     :f        (s/fspec :args (s/cat :file-contents string?)
-                                        :ret  string?))
-        :ret  nil?)
+        :ret  (s/coll-of (partial instance? File)))
 
 (defn- read-model-elements
   "Recursively find and read all elements from all YAML files under a directory
