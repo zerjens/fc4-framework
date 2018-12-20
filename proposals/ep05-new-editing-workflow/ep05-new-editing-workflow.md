@@ -15,7 +15,7 @@
   </tr>
   <tr>
     <th>Status:</th>
-    <td>Accepted</td>
+    <td>Final</td>
   </tr>
   <tr>
     <th>Created:</th>

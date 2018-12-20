@@ -44,18 +44,23 @@ MacOS quick-start for [Homebrew](https://brew.sh/) users: `brew cask install ado
    1. e.g. `mv ~/Downloads/fc4/fc4* ~/bin/`
 
 
-## Editing and Rendering Diagrams
+## Authoring Diagrams
 
-### Basic Workflow
+### Abridged Workflow
 
-1. Run in your terminal: `fc4 wcb`
-1. Copy-and-paste YAML diagram definitions between [Structurizr Express](https://structurizr.com/help/express) (SE) and an open file in your text editor.
-1. When done, ensure the YAML in your editor is the latest version, copy-and-pasting from SE one last time if necessary, then save the file.
-1. Switch to your terminal and hit ctrl-c to stop fc4-tool
-1. Run `fc4 render path/to/diagram.yaml` to generate a `.png` file alongside the `.yaml` file
-1. Commit both files
+1. Run in your terminal: `fc4 edit path/to/diagram.yaml/or/dir`
+1. Open a YAML file in your text editor and edit it
+   1. Either a YAML file specified directly or one in or under a specified directory
+1. Whenever you save the file, fc4-tool will see the change, clean up the file (overwriting it) and
+   render the diagram to a PNG file (overwriting that file, if it already existed)
+1. When you’d like to wrap up your session:
+   1. Save the file one last time and wait for fc4-tool to process and render it
+   1. Hit ctrl-c to exit fc4-tool
+   1. Run `git status` and you should see that the YAML file has been created/changed and its
+      corresponding PNG file has also been created/changed
+   1. Commit both files
 
-### Full Workflow
+## Full Workflow
 
 Please see [The Authoring Workflow](https://fundingcircle.github.io/fc4-framework/methodology/authoring_workflow.html) section of
 [the FC4 Methodology](https://fundingcircle.github.io/fc4-framework/methodology/).

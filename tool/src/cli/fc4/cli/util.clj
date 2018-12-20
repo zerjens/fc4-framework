@@ -1,8 +1,9 @@
 (ns fc4.cli.util)
 
-;; Feel free to change when testing.
+;; Feel free to change when testing or as specified by command-line flags
 (def ^:dynamic *debug* false)
 (def ^:dynamic *exit-on-fail* true)
+(def ^:dynamic *verbose* false)
 
 (defn println-err
   "Prints values to stderr using println."
@@ -14,6 +15,12 @@
   "Prints values to stderr using println-err, if *debug* is true."
   [& vs]
   (when *debug*
+    (apply println-err vs)))
+
+(defn verbose
+  "Prints values to stderr using println-err, if *verbose* is true."
+  [& vs]
+  (when *verbose*
     (apply println-err vs)))
 
 (defn fail
