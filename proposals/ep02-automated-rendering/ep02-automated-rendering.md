@@ -33,12 +33,12 @@ The [current workflow](https://fundingcircle.github.io/fc4-framework/methodology
 
 ## Status
 
-The [recommended approach](#recommended-implementation-approach) was implemented in mid-November 2018. Key pull requests are labeled with [EP02](https://github.com/FundingCircle/fc4-framework/pulls?utf8=%E2%9C%93&q=is%3Apr+label%3AEP02+).
+The [recommended approach](#recommended-implementation-approach) was implemented in mid-November 2018. Key pull requests are labeled with [EP02](https://github.com/FundingCircle/fc4-framework/pulls?utf8=%E2%9C%93&q=is%3Apr+label%3AEP02).
 
 
 ## New User Experience (Workflow)
 
-1. The documentarian runs a command such as:
+1. The [documentarian](http://www.writethedocs.org/documentarians/) runs a command such as:
    1. `fc4 render diagrams/us/us_system_landscape.yaml path/to/another.yaml`
    1. `fc4 render diagrams/us/*.yaml`
 1. fc4-tool would then render each specified diagram into a PNG file
@@ -216,7 +216,7 @@ I found [in Paper’s README](https://github.com/paperjs/paper.js#installing-pap
 
 ## On ClojureScript
 
-fc4-tool is currently implemented with “just Clojure” i.e. the O.G. variant of [Clojure](https://clojure.org) that runs on the JVM. That’s as opposed to the other popular variant of Clojure, [ClojureScript](https://clojurescript.org), which is transpiled to JavaScript and thereby runs in browsers and/or [Node.js](https://nodejs.org/). The main reason for this is simply that it’s what I knew, so it was easiest for me. Ease matters sometimes, to some degree, but there are many instances wherein it is outweighed by other priorities, and this might be one of them. In the event that some approach for implementing automated rendering is highly compelling but would require running in Node, I’d be open to considering migrating all of fc4-tool to ClojureScript. (This might yield additional benefits such as reduced execution time.)
+fc4-tool is currently implemented with “just Clojure” i.e. the original variant of [Clojure](https://clojure.org) that runs on the JVM. That’s as opposed to the other popular variant of Clojure, [ClojureScript](https://clojurescript.org), which is transpiled to JavaScript and thereby runs in browsers and/or [Node.js](https://nodejs.org/). The main reason for this is simply that it’s what I knew, so it was easiest for me. Ease matters sometimes, to some degree, but there are many instances wherein it is outweighed by other priorities, and this might be one of them. In the event that some approach for implementing automated rendering is highly compelling but would require running in Node, I’d be open to considering migrating all of fc4-tool to ClojureScript. (This might yield additional benefits such as reduced execution time.)
 
 ## On Other Programming Systems
 
