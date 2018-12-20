@@ -12,9 +12,8 @@
 1. Create a new git branch in your local instance of [the diagram repository](repository.md)
 1. In your text editor: either create a new diagram source file or open an existing diagram source file
 1. In your terminal, run `fc4 edit path/to/repo`
-   1. This starts [fc4-tool](toolset.md#fc4-tool) in a mode wherein it will watch your repository
-      for changes to any diagram source YAML file (or new files) and process and render each file
-      when it changes
+   1. This starts [fc4-tool](toolset.md#fc4-tool) watching your repository for changes to any
+      diagram source YAML file (or new files) and process and render each file when it changes
 1. In your text editor, open a diagram YAML file in one pane and its rendered PNG file in an
    adjacent pane
    1. If the diagram is new then the PNG file won’t exist until you’ve saved the YAML file and
@@ -27,7 +26,7 @@
       happy with the changes
 1. In your terminal, hit `ctrl-c` to stop fc4-tool
 1. Use your git UI of choice to commit your changes
-1. Push your local changes to the origin repository regularly
+1. Push your local changes to the remote repository regularly
 1. When you’re ready to submit your changes for review, open a
    [Merge Request](https://docs.gitlab.com/ee/user/project/merge_requests/index.html) or
    [Pull Request](https://help.github.com/articles/about-pull-requests/) to get your changes
