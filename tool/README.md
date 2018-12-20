@@ -131,17 +131,6 @@ via [cljfmt-runner](https://github.com/JamesLaverack/cljfmt-runner).
     them into the git index. This way you can review the changes that were
     applied and decide which to keep and which to discard.
 
-## Building an Uberjar
-
-You’ll need to be using Java 9 or 10; 11 or higher cannot currently compile the project (see [issue #85](https://github.com/FundingCircle/fc4-framework/issues/85)).
-
-```shell
-# From <repo-root>/tool/ run:
-bin/uberjar
-```
-
-Since you need to use Java 8/9/10 to compile the project but then Java 11 to validate the uberjar, you might find [jenv](http://www.jenv.be/) useful. (I discovered it via [Multiple JVM versions on macOS](https://pete-woods.com/2018/01/multiple-jvm-versions-on-macos/) by Pete Woods.)
-
 ## Contributors
 
 * [99-not-out](https://github.com/99-not-out)
