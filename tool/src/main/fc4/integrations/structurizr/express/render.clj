@@ -81,8 +81,8 @@
                        :opt [::errors]))
 
 (s/fdef parse-stderr-err
-        :args ::stderr
-        :ret  (s/keys :req [::error ::human-output]))
+  :args ::stderr
+  :ret  (s/keys :req [::error ::human-output]))
 
 (defn render
   "Renders a Structurizr Express diagram as a PNG file, returning a PNG
@@ -120,9 +120,9 @@
 ; recommend using it for generative testing, mainly because rendering is
 ; currently quite slow (~2s on my system).
 (s/fdef render
-        :args (s/cat :diagram ::st/diagram-yaml-str)
-        :ret  (s/or :success ::result
-                    :failure ::failure))
+  :args (s/cat :diagram ::st/diagram-yaml-str)
+  :ret  (s/or :success ::result
+              :failure ::failure))
 
 (comment
   (use 'clojure.java.io 'clojure.java.shell 'fc4.io.util)

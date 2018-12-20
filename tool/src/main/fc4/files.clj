@@ -16,6 +16,6 @@
                 (inc (count pp)))))))
 
 (s/fdef relativize
-        :args (s/cat :path ::fs/file-path
-                     :parent-path ::fs/dir-path)
-        :ret  ::fs/file-path-str)
+  :args (s/cat :path ::fs/file-path
+               :parent-path ::fs/dir-path)
+  :ret  ::fs/file-path-str)

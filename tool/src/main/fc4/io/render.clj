@@ -22,17 +22,17 @@
       (File/createTempFile ".maybe.png")))
 
 (s/fdef tmp-png-file
-        :args (s/cat :path (s/and ::fs/file-path-str
-                                  #(>= (count (.getName (file %))) 3)))
-        :ret  (s/and (partial instance? File)
-                     #(.canWrite %)
-                     #(ends-with? % ".maybe.png"))
-        :fn   (fn [{:keys [args ret]}]
-                (includes? (str ret) (-> (:path args)
-                                         (file)
-                                         (.getName)
-                                         (split #"\." 3)
-                                         (first)))))
+  :args (s/cat :path (s/and ::fs/file-path-str
+                            #(>= (count (.getName (file %))) 3)))
+  :ret  (s/and (partial instance? File)
+               #(.canWrite %)
+               #(ends-with? % ".maybe.png"))
+  :fn   (fn [{:keys [args ret]}]
+          (includes? (str ret) (-> (:path args)
+                                   (file)
+                                   (.getName)
+                                   (split #"\." 3)
+                                   (first)))))
 
 ; Arbitrary number is arbitrary. That said, according to my gut, less
 ; data is likely to be invalid, and more has a chance of being valid.
@@ -66,30 +66,30 @@
    nil))
 
 (s/fdef check
-        :args (s/cat :result (s/or :success ::r/result
-                                   :failure ::r/failure)
-                     :path   ::fs/file-path-str)
-        :ret  (s/or :success nil?
-                    :failure (partial instance? Exception))
-        :fn   (fn [{{[result-tag result-val] :result
-                     path                    :path}  :args
-                    [ret-tag ret-val]                :ret}]
-                (case result-tag
-                  :failure
-                  (and (= ret-tag :failure)
-                       (includes? (.getMessage ret-val) path))
+  :args (s/cat :result (s/or :success ::r/result
+                             :failure ::r/failure)
+               :path   ::fs/file-path-str)
+  :ret  (s/or :success nil?
+              :failure (partial instance? Exception))
+  :fn   (fn [{{[result-tag result-val] :result
+               path                    :path}  :args
+              [ret-tag ret-val]                :ret}]
+          (case result-tag
+            :failure
+            (and (= ret-tag :failure)
+                 (includes? (.getMessage ret-val) path))
 
                   ; this case can still fail the check if png-bytes is too small
-                  :success
-                  (cond
-                    (>= (count (::r/png-bytes result-val)) min-valid-png-size)
-                    (= ret-tag :success)
+            :success
+            (cond
+              (>= (count (::r/png-bytes result-val)) min-valid-png-size)
+              (= ret-tag :success)
 
-                    (< (count (::r/png-bytes result-val)) min-valid-png-size)
-                    (and (= ret-tag :failure)
-                         (includes? (.getMessage ret-val) path)))
+              (< (count (::r/png-bytes result-val)) min-valid-png-size)
+              (and (= ret-tag :failure)
+                   (includes? (.getMessage ret-val) path)))
 
-                  false)))
+            false)))
 
 (defn yaml-path->png-path
   [in-path]

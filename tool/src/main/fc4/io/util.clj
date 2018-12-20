@@ -24,12 +24,12 @@
   (str "Error processing [" file-path "]: " msg))
 
 (s/fdef err-msg
-        :args (s/cat :file ::fs/non-blank-str
-                     :msg  ::fs/non-blank-str)
-        :ret  ::fs/non-blank-str
-        :fn   (fn [{:keys [args ret]}]
-                (every? (partial includes? ret)
-                        (vals args))))
+  :args (s/cat :file ::fs/non-blank-str
+               :msg  ::fs/non-blank-str)
+  :ret  ::fs/non-blank-str
+  :fn   (fn [{:keys [args ret]}]
+          (every? (partial includes? ret)
+                  (vals args))))
 
 (defn fail
   "Thin wrapper for `fu/fail` that accepts a path and adds it to the message

@@ -34,19 +34,19 @@
 (s/def ::main string?)
 
 (s/fdef split-file
-        :args (s/cat :v (s/or :non-blank ::yaml-file-string
-                              :blank     ::fs/blank-str))
-        :ret  (s/keys :req [::front ::main])
-        :fn (fn [{{[arg-tag arg-val] :v} :args, ret :ret}]
-              (case arg-tag
-                :non-blank
-                (and (not (nil? (::main ret)))
-                     (if (includes? arg-val doc-separator)
-                       (not (nil? (::front ret)))
-                       (nil? (::front ret))))
+  :args (s/cat :v (s/or :non-blank ::yaml-file-string
+                        :blank     ::fs/blank-str))
+  :ret  (s/keys :req [::front ::main])
+  :fn (fn [{{[arg-tag arg-val] :v} :args, ret :ret}]
+        (case arg-tag
+          :non-blank
+          (and (not (nil? (::main ret)))
+               (if (includes? arg-val doc-separator)
+                 (not (nil? (::front ret)))
+                 (nil? (::front ret))))
 
-                :blank
-                (= ret {::front nil ::main ""}))))
+          :blank
+          (= ret {::front nil ::main ""}))))
 
 (defn stringify
   "Accepts a map, converts it to a YAML string with a certain flow-style."

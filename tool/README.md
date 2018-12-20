@@ -38,7 +38,7 @@ MacOS quick-start for [Homebrew](https://brew.sh/) users: `brew cask install ado
 
 ### Download and Install
 
-1. Download the archive from your platform from the latest release on [the releases page](https://github.com/FundingCircle/fc4-framework/releases)
+1. Download the archive for your platform from the latest release on [the releases page](https://github.com/FundingCircle/fc4-framework/releases)
 1. Expand the archive
 1. Optional: move the extracted files to somewhere on your $PATH
    1. e.g. `mv ~/Downloads/fc4/fc4* ~/bin/`

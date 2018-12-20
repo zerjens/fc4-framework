@@ -26,9 +26,9 @@
           "0,0"))
 
 (s/fdef sys-position
-        :args (s/cat :sys-name ::m/name
-                     :view     ::v/view)
-        :ret  ::v/coord-string)
+  :args (s/cat :sys-name ::m/name
+               :view     ::v/view)
+  :ret  ::v/coord-string)
 
 (defn- add-in-house-tag
   [tags]
@@ -37,13 +37,13 @@
     (conj tags :in-house)))
 
 (s/fdef add-in-house-tag
-        :args (s/cat :tags ::m/tags)
-        :ret  ::m/tags
-        :fn   (fn [{{in-tags :tags} :args, out-tags :ret}]
-                (if (:external in-tags)
-                  (= in-tags out-tags)
-                  (and (contains? out-tags :in-house)
-                       (= in-tags (disj out-tags :in-house))))))
+  :args (s/cat :tags ::m/tags)
+  :ret  ::m/tags
+  :fn   (fn [{{in-tags :tags} :args, out-tags :ret}]
+          (if (:external in-tags)
+            (= in-tags out-tags)
+            (and (contains? out-tags :in-house)
+                 (= in-tags (disj out-tags :in-house))))))
 
 (defn- replace-internal-tag
   "The tag “internal” is a special reserved tag for Structurizr Express; for
@@ -60,14 +60,14 @@
         (conj :in-house))))
 
 (s/fdef replace-internal-tag
-        :args (s/cat :tags ::m/tags)
-        :ret  ::m/tags
-        :fn   (fn [{{in-tags :tags} :args, out-tags :ret}]
-                (if (:internal in-tags)
-                  (and (contains? out-tags :in-house)
-                       (not (contains? out-tags :internal))
-                       (= (count in-tags) (count out-tags)))
-                  (= in-tags out-tags))))
+  :args (s/cat :tags ::m/tags)
+  :ret  ::m/tags
+  :fn   (fn [{{in-tags :tags} :args, out-tags :ret}]
+          (if (:internal in-tags)
+            (and (contains? out-tags :in-house)
+                 (not (contains? out-tags :internal))
+                 (= (count in-tags) (count out-tags)))
+            (= in-tags out-tags))))
 
 (defn- tags
   [elem]
@@ -78,16 +78,16 @@
        (join ",")))
 
 (s/fdef tags
-        :args (s/cat :elem ::m/element)
-        :ret  ::st/tags
-        :fn   (fn [{{{in-tags ::m/tags} :elem} :args, out-tags :ret}]
-                (every? (fn [in-tag]
-                          (condp = in-tag
-                            :internal
-                            (and (includes? out-tags "in-house")
-                                 (not (includes? out-tags "internal")))
+  :args (s/cat :elem ::m/element)
+  :ret  ::st/tags
+  :fn   (fn [{{{in-tags ::m/tags} :elem} :args, out-tags :ret}]
+          (every? (fn [in-tag]
+                    (condp = in-tag
+                      :internal
+                      (and (includes? out-tags "in-house")
+                           (not (includes? out-tags "internal")))
 
-                            :external
+                      :external
                             ; You might think we’d want to ensure that out-tags
                             ; does *not* include "in-house". But! What if
                             ; in-tags contains both :internal *and* :external!?
@@ -95,10 +95,10 @@
                             ; still has to handle it somehow. I decided to go
                             ; with GIGO — data validation is not the job of this
                             ; fn, nor is linting.
-                            (includes? out-tags "external")
+                      (includes? out-tags "external")
 
-                            (includes? out-tags (name in-tag))))
-                        in-tags)))
+                      (includes? out-tags (name in-tag))))
+                  in-tags)))
 
 (defn dequalify-keys
   "Given a nested map, removes the namespaces from any keys that are qualified
@@ -113,8 +113,8 @@
    m))
 
 (s/fdef dequalify-keys
-        :args (s/cat :m (s/map-of qualified-keyword? any?))
-        :ret  (s/map-of ::fs/unqualified-keyword any?))
+  :args (s/cat :m (s/map-of qualified-keyword? any?))
+  :ret  (s/map-of ::fs/unqualified-keyword any?))
 
 (defn- sys-elem
   ;; TODO: this should probably be combined with user-elem.
@@ -134,18 +134,18 @@
                 :tags (tags system)}))))
 
 (s/fdef sys-elem
-        :args (s/cat :sys-name ::m/name
-                     :view     ::v/view
-                     :model    ::m/model)
-        :ret  (s/nilable ::st/system)
-        :fn   (fn [{{:keys [:sys-name :view :model]} :args, ret :ret}]
-                (cond
-                  (get-in model [::m/systems sys-name]) ; the named system is in the model
-                  (= (:name ret) sys-name)
+  :args (s/cat :sys-name ::m/name
+               :view     ::v/view
+               :model    ::m/model)
+  :ret  (s/nilable ::st/system)
+  :fn   (fn [{{:keys [:sys-name :view :model]} :args, ret :ret}]
+          (cond
+            (get-in model [::m/systems sys-name]) ; the named system is in the model
+            (= (:name ret) sys-name)
 
-                  :sys-not-in-model
-                  (and (includes? (:name ret) sys-name)
-                       (includes? (:name ret) "undefined")))))
+            :sys-not-in-model
+            (and (includes? (:name ret) sys-name)
+                 (includes? (:name ret) "undefined")))))
 
 (defn- person-elem
   ;; TODO: this should probably be combined with sys-elem.
@@ -164,18 +164,18 @@
                 :tags (tags user)}))))
 
 (s/fdef person-elem
-        :args (s/cat :user-name ::m/name
-                     :view      ::v/view
-                     :model     ::m/model)
-        :ret  (s/nilable ::st/person)
-        :fn   (fn [{{:keys [user-name view model]} :args, ret :ret}]
-                (cond
-                  (get-in model [::m/users user-name]) ; the named user is in the model
-                  (= (:name ret) user-name)
+  :args (s/cat :user-name ::m/name
+               :view      ::v/view
+               :model     ::m/model)
+  :ret  (s/nilable ::st/person)
+  :fn   (fn [{{:keys [user-name view model]} :args, ret :ret}]
+          (cond
+            (get-in model [::m/users user-name]) ; the named user is in the model
+            (= (:name ret) user-name)
 
-                  :user-not-in-model
-                  (and (includes? (:name ret) user-name)
-                       (includes? (:name ret) "undefined")))))
+            :user-not-in-model
+            (and (includes? (:name ret) user-name)
+                 (includes? (:name ret) "undefined")))))
 
 (defn- deps-of
   "Returns the systems that the subject system uses — its dependencies."
@@ -192,9 +192,9 @@
    []))
 
 (s/fdef deps-of
-        :args (s/cat :system ::m/system-map
-                     :model  ::m/model)
-        :ret  (s/coll-of ::m/sys-ref))
+  :args (s/cat :system ::m/system-map
+               :model  ::m/model)
+  :ret  (s/coll-of ::m/sys-ref))
 
 (defn- users-of
   "Returns the systems that use the subject system."
@@ -217,13 +217,13 @@
                            (::m/system dep))}))
 
 (s/fdef dep->relationship
-        :args (s/cat :dep          ::m/sys-ref
-                     :subject-name ::m/name)
-        :ret  ::st/relationship
-        :fn   (fn [{{:keys [dep subject-name]} :args, ret :ret}]
-                (and (or (= (:destination ret) (::m/container dep))
-                         (= (:destination ret) (::m/system dep)))
-                     (= (:source ret) subject-name))))
+  :args (s/cat :dep          ::m/sys-ref
+               :subject-name ::m/name)
+  :ret  ::st/relationship
+  :fn   (fn [{{:keys [dep subject-name]} :args, ret :ret}]
+          (and (or (= (:destination ret) (::m/container dep))
+                   (= (:destination ret) (::m/system dep)))
+               (= (:source ret) subject-name))))
 
 (defn- user->relationships
   "User here means a system, person, or user that uses the subject system."
@@ -237,24 +237,24 @@
        sys-refs))
 
 (s/fdef user->relationships
-        :args (s/cat :user ::m/user
-                     :subject-name ::m/name)
-        :ret  (s/coll-of ::st/relationship)
-        :fn   (fn [{{:keys [user subject-name]} :args, ret :ret}]
-                (every?
-                 (fn [rel]
-                   (= (:source rel)
-                      (::m/name user)))
-                 ret)))
+  :args (s/cat :user ::m/user
+               :subject-name ::m/name)
+  :ret  (s/coll-of ::st/relationship)
+  :fn   (fn [{{:keys [user subject-name]} :args, ret :ret}]
+          (every?
+           (fn [rel]
+             (= (:source rel)
+                (::m/name user)))
+           ret)))
 
 (defn- get-subject
   [{subject-name ::v/system :as view} model]
   (get-in model [::m/systems subject-name]))
 
 (s/fdef get-subject
-        :args (s/cat :view ::v/view
-                     :model ::m/model)
-        :ret  ::m/system-map)
+  :args (s/cat :view ::v/view
+               :model ::m/model)
+  :ret  ::m/system-map)
 
 (defn- elements
   [view model]
@@ -268,9 +268,9 @@
     (concat person-elems sys-elems)))
 
 (s/fdef elements
-        :args (s/cat :view  ::v/view
-                     :model ::m/model)
-        :ret  (s/coll-of ::st/element))
+  :args (s/cat :view  ::v/view
+               :model ::m/model)
+  :ret  (s/coll-of ::st/element))
 
 (defn- relationship-with
   "Given a relationship and the subject name, returns the name of the other side
@@ -284,13 +284,13 @@
     nil))
 
 (s/fdef relationship-with
-        :args (s/cat :subject-name ::v/name
-                     :rel          ::st/relationship)
-        :ret  (s/nilable ::st/name)
-        :fn   (fn [{{:keys [subject-name rel]} :args, ret-name :ret}]
-                (or (= ret-name (:source rel))
-                    (= ret-name (:destination rel))
-                    (nil? ret-name))))
+  :args (s/cat :subject-name ::v/name
+               :rel          ::st/relationship)
+  :ret  (s/nilable ::st/name)
+  :fn   (fn [{{:keys [subject-name rel]} :args, ret-name :ret}]
+          (or (= ret-name (:source rel))
+              (= ret-name (:destination rel))
+              (nil? ret-name))))
 
 (defn- inject-control-points
   "Given the set of relationships with a single system, and potentially a set of
@@ -314,16 +314,16 @@
              :min-count 1))
 
 (s/fdef inject-control-points
-        :args (s/cat :rels         ::relationships-without-vertices
-                     :point-groups (s/nilable ::v/control-point-seqs))
-        :ret  :structurizr.diagram/relationships
-        :fn   (fn [{{in-rels      :rels
-                     point-groups :point-groups} :args
-                    out-rels                     :ret}]
-                (and (= (count in-rels) (count out-rels))
-                     (= (count (filter :vertices out-rels))
-                        (min (count point-groups)
-                             (count in-rels))))))
+  :args (s/cat :rels         ::relationships-without-vertices
+               :point-groups (s/nilable ::v/control-point-seqs))
+  :ret  :structurizr.diagram/relationships
+  :fn   (fn [{{in-rels      :rels
+               point-groups :point-groups} :args
+              out-rels                     :ret}]
+          (and (= (count in-rels) (count out-rels))
+               (= (count (filter :vertices out-rels))
+                  (min (count point-groups)
+                       (count in-rels))))))
 
 (defn- add-control-points
   "Add control points to relationships, when they’re specified in the view."
@@ -338,19 +338,19 @@
                    these-rels)))))
 
 (s/fdef add-control-points
-        :args (s/cat :rels ::relationships-without-vertices
-                     :view ::v/view)
-        :ret  :structurizr.diagram/relationships
-        :fn   (fn [{{in-rels :rels
-                     view    :view} :args
-                    out-rels        :ret}]
-                (and (= (count in-rels) (count out-rels))
-                     (->> (filter :vertices out-rels)
-                          (every? (fn [{:keys [destination source] :as out-rel}]
-                                    (let [all-cp-groups (get-in view [::v/control-points ::v/system-context])
-                                          cp-group-systems (set (keys all-cp-groups))]
-                                      (or (contains? cp-group-systems destination)
-                                          (contains? cp-group-systems source)))))))))
+  :args (s/cat :rels ::relationships-without-vertices
+               :view ::v/view)
+  :ret  :structurizr.diagram/relationships
+  :fn   (fn [{{in-rels :rels
+               view    :view} :args
+              out-rels        :ret}]
+          (and (= (count in-rels) (count out-rels))
+               (->> (filter :vertices out-rels)
+                    (every? (fn [{:keys [destination source] :as out-rel}]
+                              (let [all-cp-groups (get-in view [::v/control-points ::v/system-context])
+                                    cp-group-systems (set (keys all-cp-groups))]
+                                (or (contains? cp-group-systems destination)
+                                    (contains? cp-group-systems source)))))))))
 
 (defn- relationships
   [view model]
@@ -379,21 +379,21 @@
         (distinct))))
 
 (s/fdef relationships
-        :args (s/cat :view ::v/view
-                     :model ::m/model)
-        :ret  :structurizr.diagram/relationships
-        :fn   (fn [{{:keys [view model]} :args
-                    ret                  :ret}]
-                (let [{sub-name    ::m/name
-                       direct-deps ::m/uses} (get-subject view model)]
+  :args (s/cat :view ::v/view
+               :model ::m/model)
+  :ret  :structurizr.diagram/relationships
+  :fn   (fn [{{:keys [view model]} :args
+              ret                  :ret}]
+          (let [{sub-name    ::m/name
+                 direct-deps ::m/uses} (get-subject view model)]
                   ;; TODO: also verify control points
-                  (every? (fn [{dep-sys-name ::m/system :as dep}]
-                            (some (fn [{source-sys-name :source
-                                        dest-sys-name   :destination}]
-                                    (or (= source-sys-name dep-sys-name)
-                                        (= dest-sys-name dep-sys-name)))
-                                  ret))
-                          direct-deps))))
+            (every? (fn [{dep-sys-name ::m/system :as dep}]
+                      (some (fn [{source-sys-name :source
+                                  dest-sys-name   :destination}]
+                              (or (= source-sys-name dep-sys-name)
+                                  (= dest-sys-name dep-sys-name)))
+                            ret))
+                    direct-deps))))
 
 (defn- rename-internal-tag
   "Please see docstring of replace-internal-tag."
@@ -406,15 +406,15 @@
    styles))
 
 (s/fdef rename-internal-tag
-        :args (s/cat :styles ::ss/styles)
-        :ret  ::ss/styles
-        :fn (fn [{{in-styles :styles} :args, out-styles :ret}]
-              (every? true?
-                      (map (fn [in-style out-style]
-                             (if (= (::ss/tag in-style) "internal")
-                               (= (::ss/tag out-style) "in-house")
-                               (= (::ss/tag in-style) (::ss/tag out-style))))
-                           in-styles out-styles))))
+  :args (s/cat :styles ::ss/styles)
+  :ret  ::ss/styles
+  :fn (fn [{{in-styles :styles} :args, out-styles :ret}]
+        (every? true?
+                (map (fn [in-style out-style]
+                       (if (= (::ss/tag in-style) "internal")
+                         (= (::ss/tag out-style) "in-house")
+                         (= (::ss/tag in-style) (::ss/tag out-style))))
+                     in-styles out-styles))))
 
 (defn view->system-context
   "Converts an FC4 view to a Structurizr Express System Context diagram."
@@ -428,7 +428,7 @@
     :size (::v/size view)}))
 
 (s/fdef view->system-context
-        :args (s/cat :view ::v/view
+  :args (s/cat :view ::v/view
                      ; TODO: rather than just a model that is merely *valid*
                      ; as in it conforms with its spec, we should probably
                      ; ensure that what gets passed in *makes sense*. I mean...
@@ -438,7 +438,7 @@
                      ; that’s what it expects, and therefore it can just throw
                      ; an exception (or return an anomaly) if something in it
                      ; does NOT make sense.
-                     :model ::m/model
-                     :styles ::ss/styles)
-        :ret  (s/or :success ::st/diagram
-                    :error   ::anom/anomaly))
+               :model ::m/model
+               :styles ::ss/styles)
+  :ret  (s/or :success ::st/diagram
+              :error   ::anom/anomaly))
