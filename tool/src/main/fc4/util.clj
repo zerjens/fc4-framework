@@ -84,3 +84,23 @@
         :args (s/cat :map (s/map-of keyword? any?)
                      :ns-name ::fs/non-blank-simple-str)
         :ret  (s/map-of qualified-keyword? any?))
+
+; Rebind for testing. See docstring of `fail` below for explanation.
+(def ^:dynamic *throw-on-fail* true)
+
+(defn fail
+  "Convenience function that makes throwing exceptions more concise in code but also enables
+  functions that might throw exceptions at runtime to be tested using property testing by returning
+  the exception rather than throwing it, since clojure.spec.test.alpha/check doesn’t currently
+  support testing functions that sometimes throw."
+  ([msg]
+   (fail msg {} nil))
+  ([msg data]
+   (fail msg data nil))
+  ([msg data cause]
+   (let [e (if cause
+             (ex-info msg data cause)
+             (ex-info msg data))]
+     (if *throw-on-fail*
+       (throw e)
+       e))))

@@ -6,13 +6,12 @@
             [clojure.spec.alpha   :as s]
             [clojure.string       :as string :refer [includes? join]]
             [fc4.integrations.structurizr.express.spec] ;; for side fx
-            [fc4.io              :as io]
-            [fc4.model           :as m]
-            [fc4.spec            :as fs]
-            [fc4.styles          :as ss]
-            [fc4.util            :as fu :refer [namespaces update-all]]
-            [fc4.view            :as v]
-            [fc4.yaml            :as fy :refer [split-file]]))
+            [fc4.model            :as m]
+            [fc4.spec             :as fs]
+            [fc4.styles           :as ss]
+            [fc4.util             :as fu :refer [namespaces update-all]]
+            [fc4.view             :as v]
+            [fc4.yaml             :as fy :refer [split-file]]))
 
 (namespaces '[structurizr :as st])
 

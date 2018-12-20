@@ -4,10 +4,11 @@
             [clojure.string       :as str :refer [includes?]]
             [clojure.test         :as ct :refer [deftest is testing]]
             [cognitect.anomalies  :as anom]
-            [fc4.io               :as io :refer [binary-slurp]]
             [fc4.io.render        :as r]
+            [fc4.io.util          :as iou :refer [binary-slurp]]
             [fc4.test-utils       :as tu :refer [check]]
-            [fc4.test-utils.image-diff :refer [bytes->buffered-image image-diff]])
+            [fc4.test-utils.image-diff :refer [bytes->buffered-image image-diff]]
+            [fc4.util :as fu])
   (:import [java.io FileNotFoundException]))
 
 ; Require image-resizer.core while preventing the Java app icon from popping up
@@ -29,29 +30,12 @@
   (System/setProperty "apple.awt.UIElement" "true")
   (require '[image-resizer.core :refer [resize]]))
 
-(reset! r/debug? true)
-
-(deftest err-msg (check `r/err-msg))
-
-(deftest read-text-file
-  (let [existant     "test/data/styles (valid).yaml"
-        non-existant "test/data/does_not_exist"
-        not-text     "test/data/structurizr/express/diagram_valid_cleaned_expected.png"]
-    (is (includes? (r/read-text-file existant) "The FC4 Framework"))
-    (is (thrown-with-msg? Exception #"file not found" (r/read-text-file non-existant)))
-    ; read-text-file is a thin wrapper for slurp; as such it behaves the same as
-    ; slurp when passed the path to a non-text file: reads the contents of the file
-    ; as a String and returns that String. The String is non-sensical but so be it.
-    (is (string? (r/read-text-file not-text)))))
-
-(deftest validate
-  (binding [r/*throw-on-fail* false]
-    (check `r/validate)))
+(reset! iou/debug? true)
 
 (deftest tmp-png-file (check `r/tmp-png-file))
 
 (deftest check-fn
-  (binding [r/*throw-on-fail* false]
+  (binding [fu/*throw-on-fail* false]
     (check `r/check)))
 
 (def max-allowable-image-difference
@@ -96,5 +80,5 @@
     (testing "a input file that does not contain text"
       (is (thrown-with-msg?
            Exception
-           #"Error rendering.+cursory check.+not a valid Structurizr Express diagram definition"
+           #"(?i)Error.+cursory check.+not a valid Structurizr Express diagram definition"
            (r/render-diagram-file not-text))))))

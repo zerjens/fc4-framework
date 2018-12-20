@@ -1,7 +1,7 @@
 (ns fc4.integrations.structurizr.express.clipboard
   (:require [clojure.core.async :as ca :refer [<! chan go-loop offer! poll! timeout]]
             [fc4.integrations.structurizr.express.edit       :as ed :refer [process-file]]
-            [fc4.integrations.structurizr.express.util              :refer [probably-diagram-yaml?]])
+            [fc4.integrations.structurizr.express.yaml              :refer [probably-diagram?]])
   (:import [java.awt Toolkit]
            [java.awt.datatransfer Clipboard DataFlavor StringSelection])
   (:refer-clojure :exclude [slurp spit]))
@@ -43,7 +43,7 @@
   thrown."
   []
   (let [contents (slurp)]
-    (if (probably-diagram-yaml? contents)
+    (if (probably-diagram? contents)
       (-> contents
           process-file
           ::ed/str-processed
@@ -109,7 +109,7 @@
   (go-loop [prior-contents nil]
     (let [contents (slurp)
           process? (and (not= contents prior-contents)
-                        (probably-diagram-yaml? contents))]
+                        (probably-diagram? contents))]
       (when process?
         (when-let [processed (try-process contents)]
           (spit processed)))
