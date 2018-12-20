@@ -5,8 +5,4 @@ coverage:
         target: auto
         threshold: 1 # up to 1% drop should pass
         base: auto
-    patch:
-      default:
-        target: auto
-        threshold: 1 # up to 1% drop should pass
-        base: auto
+    patch: no
