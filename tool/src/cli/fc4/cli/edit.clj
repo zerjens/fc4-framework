@@ -3,7 +3,6 @@
   are observed to a YAML file, the YAML in the file is cleaned up and rendered
   to an image file."
   (:require
-   [clojure.core.async :as ca :refer [<! chan dropping-buffer go]]
    [clojure.java.io :as io]
    [clojure.string :as cstr :refer [ends-with?]]
    [fc4.cli.util :refer [debug fail verbose]]

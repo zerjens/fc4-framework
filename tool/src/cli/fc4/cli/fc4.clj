@@ -6,15 +6,13 @@
    [fc4.cli.edit     :as edit]
    [fc4.cli.export   :as export]
    [fc4.cli.render   :as render]
-   [fc4.cli.util     :as cu      :refer [exit fail]]
-   [fc4.cli.wcb      :as wcb])
+   [fc4.cli.util     :as cu      :refer [exit fail]])
   (:import [java.nio.charset Charset]))
 
 (def subcommands
   {:edit   edit/-main
    :export export/-main
-   :render render/-main
-   :wcb    wcb/-main})
+   :render render/-main})
 
 (defn invalid-subcommand-message
   [subcommand]
