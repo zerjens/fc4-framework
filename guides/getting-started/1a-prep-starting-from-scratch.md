@@ -1,4 +1,13 @@
-# FC4 Framework » Getting Started From Scratch » Prep
+# FC4 Framework » Getting Started » Prep (Starting From Scratch)
+
+This page is for [documentarians](http://www.writethedocs.org/documentarians/)
+who are completely new to FC4 and will be starting completely from scratch —
+meaning, in particular, that you do _not_ need to work with an existing FC4
+[corpus](../../concepts.md#corpus) that may already exist within your team or
+organization.
+
+(If your team/org _does_ already have an FC4 corpus that you want to work on,
+please switch to [Prep (Existing Corpus)](1b-prep-existing-corpus.md).)
 
 ## Choose a Subject
 
