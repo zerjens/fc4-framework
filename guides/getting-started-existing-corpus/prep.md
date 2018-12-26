@@ -7,10 +7,9 @@ Decide which system you want to document.
 For the purposes of this guide, we’ll document a system named _Spline Reticulator_.
 
 <aside>
-To get started, you mainly need to be clear on the name of the system. If other
-aspects of the system are a little fuzzy — its boundaries, for example — don’t
-worry about that; those tend to come into focus through the work of documenting
-the subject.
+To get started, you mainly need to be clear on the name of the system. If other aspects of the
+system are a little fuzzy — its boundaries, for example — don’t worry about that; those tend to come
+into focus through the work of documenting the subject.
 </aside>
 
 ## Identify the Repository
