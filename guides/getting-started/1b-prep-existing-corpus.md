@@ -23,49 +23,42 @@ worry about that; those tend to come into focus through the work of documenting
 the subject.
 </aside>
 
-## Identify the Repository
+## Prep the Repository
 
 As described in [The Repository](../../methodology/repository.md) FC4 diagrams
-should be part of a Git repository.
+should be part of a [Git](https://git-scm.com) repository.
 
-If your team or organization already has an FC4 repository, then you’ll need to
+Since your team or organization already has an FC4 repository, you’ll need to
 make sure you have a local clone of that repo, and that its `master` branch is
 up to date
 
 ```shell
-# If you need to clone an existing repo:
+# If you need to clone the existing repo:
 $ git clone https://our-git-host.com/docs.git
 
-# Or if you need to update master of a repo you already have a clone of:
-$ cd repo-dir && git checkout master && git pull
-
-# Or if you need to create a new repository:
-$ mkdir docs && cd docs && git init
-```
-
-In either case, determine whether your FC4 repository (the set of files that
-make up a corpus of FC4 resources/data/diagrams [_choose one_]) is located in
-the root of the Git repo [_shit, it’s clear that overloading “repository” was a
-mistake. Must choose new term. Maybe “corpus”?_] or in a subdirectory within the
-repo.
-
-```shell
-$ mkdir fc4 && cd fc4
+# Or if you need to update master branch of a repo you already have a clone of:
+$ cd docs && git checkout master && git pull
 ```
 
 ### Create a New Git Branch
 
-The recommended FC4 workflow uses git “feature branches” to prepare, review, and
-ship changes to the corpus.
+The [FC4 Authoring Workflow](../../methodology/authoring_workflow.md) uses Git
+“feature branches” to prepare, review, and ship changes to the corpus.
 
 ```shell
 $ git checkout -b spline-reticulator
 ```
 
-### Initialize the Corpus
+## Identify the Corpus Directory
+
+Determine whether your FC4 corpus directory the root of the Git repo or a
+subdirectory within the repo.
+
+For the purposes of this guide, we’ll assume that the corpus directory is a
+root-level directory named `fc4`:
 
 ```shell
-$ mkdir model views && touch styles.yaml
+$ cd fc4
 ```
 
 ### Download and Install fc4-tool
@@ -78,4 +71,6 @@ $ mkdir model views && touch styles.yaml
 
 ----
 
-OK, you’re prepped. Next up: []
+OK, you’re prepped!
+
+Next up: [Model the System](2-modeling.md)

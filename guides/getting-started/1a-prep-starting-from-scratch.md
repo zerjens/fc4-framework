@@ -23,46 +23,48 @@ worry about that; those tend to come into focus through the work of documenting
 the subject.
 </aside>
 
-## Identify the Repository
+## Create the Git Repository
 
 As described in [The Repository](../../methodology/repository.md) FC4 diagrams
-should be part of a Git repository.
-
-If your team or organization already has an FC4 repository, then you’ll need to
-make sure you have a local clone of that repo, and that its `master` branch is
-up to date:
+should be part of a [Git](https://git-scm.com) repository. So let’s create one:
 
 ```shell
-# If you need to clone an existing repo:
-$ git clone https://our-git-host.com/docs.git
-
-# Or if you need to update master of a repo you already have a clone of:
-$ cd repo-dir && git checkout master && git pull
-
-# Or if you need to create a new repository:
 $ mkdir docs && cd docs && git init
-```
-
-In either case, determine whether your FC4 repository (the set of files that
-make up a corpus of FC4 resources/data/diagrams [_choose one_]) is located in
-the root of the Git repo [_shit, it’s clear that overloading “repository” was a
-mistake. Must choose new term. Maybe “corpus”?_] or in a subdirectory within the
-repo.
-
-```shell
-$ mkdir fc4 && cd fc4
 ```
 
 ### Create a New Git Branch
 
-The recommended FC4 workflow uses git “feature branches” to prepare, review, and
-ship changes to the corpus.
+The [FC4 Authoring Workflow](../../methodology/authoring_workflow.md) uses Git
+“feature branches” to prepare, review, and ship changes to the corpus.
 
 ```shell
 $ git checkout -b spline-reticulator
 ```
 
+## Create the Corpus Directory
+
+We _could_ use the root directory of the repository as our FC4 corpus, but that
+precludes other kinds of documentation being hosted in this repo. So let’s
+instead create a root-level directory to serve as the corpus:
+
+```shell
+$ mkdir fc4 && cd fc4
+```
+
+<aside>
+Why do we name this directory `fc4` rather than, say, `diagrams`? Because while
+the primary value proposition of the FC4 framework is indeed to publish and
+maintain software architecture diagrams, in order to do so we must create a
+dataset that defines a static model of all of our software systems. That model
+documents, in a form that’s readable by both humans and machines, all of our
+systems, their containers, and their relationships. This data is crucial for
+programmatically generating software architecture diagrams, but it also has many
+other potential uses. [_violates YAGNI?_]
+</aside>
+
 ### Initialize the Corpus
+
+We need to create the two root-level directories and the styles file:
 
 ```shell
 $ mkdir model views && touch styles.yaml
@@ -78,4 +80,6 @@ $ mkdir model views && touch styles.yaml
 
 ----
 
-OK, you’re prepped. Next up: []
+OK, you’re prepped!
+
+Next up: [Model the System](2-modeling.md)
