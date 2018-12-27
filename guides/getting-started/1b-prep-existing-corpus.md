@@ -40,6 +40,17 @@ $ git clone https://our-git-host.com/docs.git
 $ cd docs && git checkout master && git pull
 ```
 
+<aside>
+
+* Throughout this guide, we’ll show shell commands with a prompt (`PS1`) set to
+  `\w $` which means that the current working directory — the context from
+  within which the command is run — is shown to the left of the dollar sign ($)
+  while the command itself is to the right of the dollar sign. If you wish to
+  copy-and-paste a command into your shell, select the text to the right of the
+  dollar sign, and don’t include the dollar sign.
+
+</aside>
+
 ### Create a New Git Branch
 
 The [FC4 Authoring Workflow](../../methodology/authoring_workflow.md) uses Git
@@ -61,13 +72,36 @@ root-level directory named `fc4`:
 $ cd fc4
 ```
 
-### Download and Install fc4-tool
+## fc4-tool
+
+[fc4-tool](../../methodology/toolset.md) performs a variety of functions that
+support working with an FC4 corpus.
+
+### Download and Install
 
 1. Download the archive for your platform from the latest release on [the
    releases page](https://github.com/FundingCircle/fc4-framework/releases)
 1. Expand the archive
 1. Optional but recommended: move the extracted files to somewhere on your $PATH
    1. e.g. `mv ~/Downloads/fc4/fc4* ~/bin/`
+
+### Run in the Background
+
+Start fc4-tool running in the background:
+
+```shell
+~/dev/docs/fc4 $ fc4 edit
+```
+
+<aside>
+
+* The tool will check that its working directory is an FC4 corpus and will warn
+  if it isn’t
+* If you haven’t placed the tool’s files in a directory that’s included in your
+  shell’s PATH environment variable, then you’ll need to specify the full path
+  to the `fc4` executable
+
+</aside>
 
 ----
 

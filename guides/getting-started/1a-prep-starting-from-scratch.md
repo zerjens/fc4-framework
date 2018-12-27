@@ -29,8 +29,19 @@ As described in [The Repository](../../methodology/repository.md) FC4 diagrams
 should be part of a [Git](https://git-scm.com) repository. So let’s create one:
 
 ```shell
-$ mkdir docs && cd docs && git init
+~/dev $ mkdir docs && cd docs && git init
 ```
+
+<aside>
+
+* Throughout this guide, we’ll show shell commands with a prompt (`PS1`) set to
+  `\w $` which means that the current working directory — the context from
+  within which the command is run — is shown to the left of the dollar sign ($)
+  while the command itself is to the right of the dollar sign. If you wish to
+  copy-and-paste a command into your shell, select the text to the right of the
+  dollar sign, and don’t include the dollar sign.
+
+</aside>
 
 ### Create a New Git Branch
 
@@ -38,7 +49,7 @@ The [FC4 Authoring Workflow](../../methodology/authoring_workflow.md) uses Git
 “feature branches” to prepare, review, and ship changes to the corpus.
 
 ```shell
-$ git checkout -b spline-reticulator
+~/dev/docs $ git checkout -b spline-reticulator
 ```
 
 ## Create the Corpus Directory
@@ -48,7 +59,7 @@ precludes other kinds of documentation being hosted in this repo. So let’s
 instead create a root-level directory to serve as the corpus:
 
 ```shell
-$ mkdir fc4 && cd fc4
+~/dev/docs $ mkdir fc4 && cd fc4
 ```
 
 <aside>
@@ -67,16 +78,39 @@ other potential uses. [_violates YAGNI?_]
 We need to create the two root-level directories and the styles file:
 
 ```shell
-$ mkdir model views && touch styles.yaml
+~/dev/docs/fc4 $ mkdir model views && touch styles.yaml
 ```
 
-### Download and Install fc4-tool
+## fc4-tool
+
+[fc4-tool](../../methodology/toolset.md) performs a variety of functions that
+support working with an FC4 corpus.
+
+### Download and Install
 
 1. Download the archive for your platform from the latest release on [the
    releases page](https://github.com/FundingCircle/fc4-framework/releases)
 1. Expand the archive
 1. Optional but recommended: move the extracted files to somewhere on your $PATH
    1. e.g. `mv ~/Downloads/fc4/fc4* ~/bin/`
+
+### Run in the Background
+
+Start fc4-tool running in the background:
+
+```shell
+~/dev/docs/fc4 $ fc4 edit
+```
+
+<aside>
+
+* The tool will check that its working directory is an FC4 corpus and will warn
+  if it isn’t
+* If you haven’t placed the tool’s files in a directory that’s included in your
+  shell’s PATH environment variable, then you’ll need to specify the full path
+  to the `fc4` executable
+
+</aside>
 
 ----
 
