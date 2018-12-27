@@ -1,15 +1,31 @@
 # FC4 Framework » Getting Started » Modeling
 
-Now that you’re [prepped](index.md), the next step is to model the system you
-wish to diagram.
+Now that you’re [prepped](index.md), the next step is to
+[model](../../concepts.md#model) the system you wish to diagram.
 
 By “model” all we mean is to document the subject using [the FC4
 DSL](../../reference/dsl.md).
 
+<details>
+<summary>Expand to skip:</summary>
+
+<!-- TOC depthFrom:2 -->
+
+- [Start fc4-tool](#start-fc4-tool)
+- [Create the File](#create-the-file)
+- [Containers](#containers)
+  - [Connections](#connections)
+- [Context](#context)
+  - [Users](#users)
+  - [Other Systems](#other-systems)
+
+<!-- /TOC -->
+
+</details>
+
 ## Start fc4-tool
 
-If you haven’t already done so, start [fc4-tool](../../methodology/toolset.md)
-running in the background:
+If you haven’t already done so, start [fc4-tool](../../methodology/toolset.md):
 
 ```shell
 ~/dev/docs/fc4 $ fc4 edit
@@ -24,6 +40,9 @@ running in the background:
   to the `fc4` executable
 
 </aside>
+
+We suggest opening a second terminal tab/window in which to run file-related
+commands.
 
 ## Create the File
 
@@ -44,6 +63,15 @@ system:
 It may not look like much, but that’s a valid minimal definition of a system in
 the FC4 DSL. Now that we’ve defined it, it can be included in
 [views](../../concepts.md#view) (which yield diagrams).
+
+Save the file if you haven’t yet, then switch back to the terminal tab in which
+fc4-tool is running. You should see output like this:
+
+```
+2019-03-04T18:19:20 model/spline-reticulator.yaml » ok
+```
+
+This tells us that fc4-tool has noticed the new file and validated its contents.
 
 ## Containers
 
@@ -98,9 +126,6 @@ system:
             description: Puts jobs on the queue
           Flux Capacitor:
             description: Puts flux in, takes flux out
-# ADD THIS LATER
-    # tags:
-    #   tech: [Avro, Clojure, Kafka]
 ```
 
 Now we’re getting somewhere. We’ve specified that the _Flux Capacitor_ container
@@ -121,7 +146,89 @@ value from the features of a system — otherwise, the system would have no reas
 to exist. Usually, users interact directly with a system, but sometimes the
 interaction is indirect.
 
-So let’s add a user to our model:
+So let’s add a user to our model.
+
+Create a new file:
+
+```shell
+~/dev/docs/fc4 $ touch model/grace-hopper.md
+```
+
+Open it in your editor and paste in these contents:
+
+```yaml
+user:
+  Grace Hopper:
+    description: >
+      Grace Hopper was an American computer scientist and United States Navy
+      rear admiral. ...she was a pioneer of computer programming who invented
+      one of the first compiler related tools. She popularized the idea of
+      machine-independent programming languages, which led to the development of
+      COBOL... source: https://en.wikipedia.org/wiki/Grace_Hopper
+    uses:
+      Spline Reticulator:
+        to: Reticulate those splines
+```
+
+There, now our system has a user — and quite a distinguished one at that!
+
+<aside>
+
+* FC4 allows systems and users to be defined in as many, or as few, files as the
+  user wishes. A corpus could describing, say one hundred systems and users
+  could describe them all in a single file, or in one hundred files, or
+  somewhere in between when there’s some logical grouping that’d be meaningful
+  and useful for documentarians working on the corpus (e.g. by business domain
+  or business unit).
+* When defining multiple systems or users in a file, the root key used must be
+  in the plural form: `systems` rather than `system` and `users` rather than
+  `user`.
+* Within this guide we’ll be using a single file for each system and user, just
+  for simplicity and convenience. This cardinality is not recommended or
+  counter-recommended; it’s used here as an expediency.
+
+</aside>
+
+### Other Systems
+
+There’s one last major aspect of our subject that we should add: connections to
+other systems. First, we’ll need to define another system.
+
+<aside>
+
+* While not universal, it’s extremely common for a system to interact with other
+  systems
+* These other systems might be application-level systems providing APIs or
+  similar features to the subject, or they might be lower-level plumbing, such
+  as DNS.
+
+</aside>
+
+Create a new file:
+
+```shell
+~/dev/docs/fc4 $ touch model/splinecheck-api.md
+```
+
+Open it in your editor and paste in these contents:
+
+```yaml
+system:
+  SplineCheck API:
+    description: Web API that checks splines for correctness
+    tags:
+    - external
+    - tech: web
+```
+
+This should look familiar. The only thing that’s new is the `tags` property.
+This allows you to associate arbitrary metadata with any system, user, and
+container. Within FC4, this is used mainly to apply styles. Tags can also be
+useful when using custom tools to read the FC4 model for uses outside of the
+scope of FC4 itself. (Tags may be simple strings or name/value pairs.)
+
+Now, in your editor, switch back to `spline-reticulator.yaml` and update its
+contents to:
 
 ```yaml
 system:
@@ -142,55 +249,15 @@ system:
             description: Puts jobs on the queue
           Flux Capacitor:
             description: Puts flux in, takes flux out
-### ------ new stuff below this line ------
-user:
-  Grace Hopper:
-    description: >
-      Grace Hopper was an American computer scientist and United States Navy
-      rear admiral. One of the first programmers of the Harvard Mark I computer,
-      she was a pioneer of computer programming who invented one of the first
-      compiler related tools. She popularized the idea of machine-independent
-      programming languages, which led to the development of COBOL...
-      
-      source: https://en.wikipedia.org/wiki/Grace_Hopper
+    ### ------ new stuff below this line ------
     uses:
-      Spline Reticulator:
-        to: Reticulate those splines
-# ADD THIS LATER
-    # tags:
-    #   tech: [Avro, Clojure, Kafka]
+      SplineCheck API:
+        to: Check the splines
 ```
 
-There, now our system has a user — and quite a distinguished one at that!
+----
 
-<aside>
+That’s it — we now have a valid and nontrivial model of our
+[landscape](../../concepts.md#landscape)!
 
-* FC4 allows systems and users to be defined in as many, or as few, files as the
-  user wishes. A corpus could describing, say one hundred systems and users
-  could describe them all in a single file, or in one hundred files, or
-  somewhere in between when there’s some logical grouping that’d be meaningful
-  and useful for documentarians working on the corpus (e.g. by business domain
-  or business unit).
-* When defining multiple systems or users in a file, the root key used must be
-  in the plural form: `systems` rather than `system` and `users` rather than
-  `user`.
-* Within this guide we’ll be using a single file for our entire model, just for
-  simplicity and convenience. This cardinality is not recommended or
-  counter-recommended; it’s used here as an expediency.
-
-</aside>
-
-### Other Systems
-
-There’s one last major aspect of our subject that we should add: connections to
-other systems.
-
-<aside>
-
-* While not universal, it’s extremely common for a system to interact with other
-  systems
-* These other systems might be application-level systems providing APIs or
-  similar features to the subject, or they might be lower-level plumbing, such
-  as DNS.
-
-</aside>
+Next up: [Create a System View](3-view.md)

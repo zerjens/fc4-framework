@@ -85,9 +85,9 @@ support working with an FC4 corpus.
 1. Optional but recommended: move the extracted files to somewhere on your $PATH
    1. e.g. `mv ~/Downloads/fc4/fc4* ~/bin/`
 
-### Run in the Background
+### Start
 
-Start fc4-tool running in the background:
+Start fc4-tool:
 
 ```shell
 ~/dev/docs/fc4 $ fc4 edit
