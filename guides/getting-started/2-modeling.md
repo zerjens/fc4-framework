@@ -41,13 +41,14 @@ system:
     description: Reticulates all the splines without breaking a sweat
 ```
 
-It may not look like much, but that’s a valid minimal definition of a system
-in the FC4 DSL. Now that we’ve defined it, it can be included in views (which
-yield diagrams).
+It may not look like much, but that’s a valid minimal definition of a system in
+the FC4 DSL. Now that we’ve defined it, it can be included in
+[views](../../concepts.md#view) (which yield diagrams).
 
 ## Containers
 
 While the above _is_ a valid system definition, it’s not particularly interesting.
+
 A view with that system as its subject would be quite boring.
 
 So let’s add some more information about our system:
@@ -70,8 +71,11 @@ system:
 
 As you can see, we’ve added three [containers](../../reference/concepts.md#container)
 to the definition. A view of this system would now be slightly more interesting.
+
 But there are still no connections defined, so our view would yield a diagram
-showing a bunch of floating boxes with no lines connecting them. Let’s fix that.
+showing a bunch of floating boxes with no lines connecting them.
+
+Let’s fix that:
 
 ```yaml
 system:
@@ -116,6 +120,65 @@ All systems have users, in the sense that there are always people who derive
 value from the features of a system — otherwise, the system would have no reason
 to exist. Usually, users interact directly with a system, but sometimes the
 interaction is indirect.
+
+So let’s add a user to our model:
+
+```yaml
+system:
+  Spline Reticulator:
+    description: Reticulates all the splines without breaking a sweat
+    containers:
+      Flux Capacitor:
+        description: Stores up that flux for quick release
+        uses:
+          Job Queue:
+            description: Pulls jobs off the queue
+      Job Queue:
+        description: Gets those jobs done
+      Main Brain:
+        description: In your business, running your logic
+        uses:
+          Job Queue:
+            description: Puts jobs on the queue
+          Flux Capacitor:
+            description: Puts flux in, takes flux out
+### ------ new stuff below this line ------
+user:
+  Grace Hopper:
+    description: >
+      Grace Hopper was an American computer scientist and United States Navy
+      rear admiral. One of the first programmers of the Harvard Mark I computer,
+      she was a pioneer of computer programming who invented one of the first
+      compiler related tools. She popularized the idea of machine-independent
+      programming languages, which led to the development of COBOL...
+      
+      source: https://en.wikipedia.org/wiki/Grace_Hopper
+    uses:
+      Spline Reticulator:
+        to: Reticulate those splines
+# ADD THIS LATER
+    # tags:
+    #   tech: [Avro, Clojure, Kafka]
+```
+
+There, now our system has a user — and quite a distinguished one at that!
+
+<aside>
+
+* FC4 allows systems and users to be defined in as many, or as few, files as the
+  user wishes. A corpus could describing, say one hundred systems and users
+  could describe them all in a single file, or in one hundred files, or
+  somewhere in between when there’s some logical grouping that’d be meaningful
+  and useful for documentarians working on the corpus (e.g. by business domain
+  or business unit).
+* When defining multiple systems or users in a file, the root key used must be
+  in the plural form: `systems` rather than `system` and `users` rather than
+  `user`.
+* Within this guide we’ll be using a single file for our entire model, just for
+  simplicity and convenience. This cardinality is not recommended or
+  counter-recommended; it’s used here as an expediency.
+
+</aside>
 
 ### Other Systems
 
