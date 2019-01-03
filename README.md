@@ -26,6 +26,6 @@ The name is a combination of “FC” and “C4” — the former is a reference
 
 ## Copyright & License
 
-Copyright © 2018 Funding Circle Ltd.
+Copyright © 2018–2019 Funding Circle Ltd.
 
 Distributed under [the BSD 3-Clause License](LICENSE).
