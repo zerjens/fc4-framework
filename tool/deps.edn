@@ -48,6 +48,8 @@
                            ; the error output of the renderer.
                            :jvm-opts    ["-Dfile.encoding=UTF8"]}
 
+           :repl          {:jvm-opts    ["-Dclojure.server.repl={:port,5555,:accept,clojure.core.server/repl}"]}
+
            :test/run      {:main-opts   ["-m" "fc4.test-runner.runner"]}
 
            :test/coverage {:extra-deps  {cloverage                  {:mvn/version "1.0.13"}}
