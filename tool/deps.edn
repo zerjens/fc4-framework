@@ -8,6 +8,7 @@
   expound                     {:mvn/version "0.7.1"}
   com.cognitect/anomalies     {:mvn/version "0.1.12"}
   hawk                        {:mvn/version "0.2.11"}
+  medley                      {:mvn/version "1.0.0"}
 
   ;; Override the version of ordered specified by clj-yaml 0.5.6; we’re specifying a newer version
   ;; of ordered so we can get a fix that enables it to be compiled on Java 11+. Once clj-yaml has a
