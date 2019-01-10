@@ -1,7 +1,8 @@
 (ns fc4.util
   (:require [clojure.walk        :as walk  :refer [postwalk]]
             [clojure.spec.alpha  :as s]
-            [fc4.spec           :as fs]))
+            [cognitect.anomalies :as anom]
+            [fc4.spec            :as fs]))
 
 (s/def ::ns-tuples
   (s/+ (s/tuple simple-symbol? #{:as} simple-symbol?)))
@@ -103,3 +104,14 @@
      (if *throw-on-fail*
        (throw e)
        e))))
+
+(defn fault
+  "Given a message, returns a :cognitect.anomalies/anomaly with :anom/category
+  set to ::anom/fault and ::anom/message set to the provided message."
+  [msg]
+  {::anom/category ::anom/fault
+   ::anom/message  msg})
+
+(s/fdef fault
+  :args (s/cat :msg string?)
+  :ret  ::anom/anomaly)
