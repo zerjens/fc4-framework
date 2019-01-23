@@ -1,6 +1,6 @@
 # The FC4 Framework
 
-FC4 is a framework for authoring, publishing, and maintaining software architecture diagrams.
+FC4 is a [_Docs as Code_](https://www.writethedocs.org/guide/docs-as-code/) framework that enables software creators to author, publish, and maintain software architecture diagrams more effectively, efficiently, and collaboratively over time.
 
 It builds on [the C4 Model](https://c4model.com/) and [Structurizr Express](https://structurizr.com/express), both of which were created by and are maintained by [Simon Brown](http://simonbrown.je/).
 
