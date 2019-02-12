@@ -1,13 +1,29 @@
 # The FC4 Framework
 
-FC4 is a framework for authoring, publishing, and maintaining software architecture diagrams.
+<!-- Using a table because I want the image to “float” to the right. I tried to do so with an inline
+style on the img tag (or a wrapping figure tag) — but no dice. It looks like GitHub Pages strips
+inline CSS. Understandable. So while this is kinda ugly, it more or less works. -->
 
-It builds on [the C4 Model](https://c4model.com/) and [Structurizr Express](https://structurizr.com/express), both of which were created by and are maintained by [Simon Brown](http://simonbrown.je/).
+<table><tr><td>
+
+FC4 is a [_Docs as Code_](https://www.writethedocs.org/guide/docs-as-code/) framework that enables software creators to author, publish, and maintain software architecture diagrams more effectively, efficiently, and collaboratively over time.
 
 It has two components:
 
 * [the methodology](methodology/)
 * [fc4-tool](tool/)
+
+</td><td>
+
+<img src="https://fundingcircle.github.io/fc4-framework/tool/doc/fc4-tool-container.png"
+     width="800"
+     height="213"
+     alt="Example: a container diagram of fc4-tool."
+     title="Example: a container diagram of fc4-tool.">
+
+</td></tr></table>
+
+It builds on [the C4 Model](https://c4model.com/) and [Structurizr Express](https://structurizr.com/express), both of which were created by and are maintained by [Simon Brown](http://simonbrown.je/).
 
 It originated at and is maintained by [Funding Circle](https://engineering.fundingcircle.com/).
 
@@ -26,6 +42,6 @@ The name is a combination of “FC” and “C4” — the former is a reference
 
 ## Copyright & License
 
-Copyright © 2018 Funding Circle Ltd.
+Copyright © 2018–2019 Funding Circle Ltd.
 
 Distributed under [the BSD 3-Clause License](LICENSE).

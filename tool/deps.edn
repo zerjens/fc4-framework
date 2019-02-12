@@ -4,15 +4,10 @@
   org.clojure/data.json       {:mvn/version "0.2.6"}
   org.clojure/spec.alpha      {:mvn/version "0.2.176"}
   org.clojure/tools.cli       {:mvn/version "0.4.1"}
-  circleci/clj-yaml           {:mvn/version "0.5.6"}
-  expound                     {:mvn/version "0.7.1"}
+  clj-commons/clj-yaml        {:mvn/version "0.6.1"}
+  expound                     {:mvn/version "0.7.2"}
   com.cognitect/anomalies     {:mvn/version "0.1.12"}
   hawk                        {:mvn/version "0.2.11"}
-
-  ;; Override the version of ordered specified by clj-yaml 0.5.6; we’re specifying a newer version
-  ;; of ordered so we can get a fix that enables it to be compiled on Java 11+. Once clj-yaml has a
-  ;; newer release that uses this version of ordered (or a newer one) we can remove this override.
-  org.flatland/ordered        {:mvn/version "1.5.7"}
 
   ;; Our code doesn’t use joda-time directly; it’s specified here as an override to resolve a
   ;; conflict between test.chuck which depends (indirectly) on joda-time 2.7 and cambada which
@@ -23,8 +18,8 @@
   joda-time/joda-time         {:mvn/version "2.10.1"}
 
   ;; Conflicting versions of jna are resolved via org.clojure/tools.gitlibs and hawk.
-  net.java.dev.jna/jna          {:mvn/version "4.1.0"}
-  net.java.dev.jna/jna-platform {:mvn/version "4.1.0"}
+  net.java.dev.jna/jna          {:mvn/version "5.2.0"}
+  net.java.dev.jna/jna-platform {:mvn/version "5.2.0"}
 
   ;; test.chuck is in the main dependency list, rather than in the test profile,
   ;; because we’re using one of its generators in a spec in a source file.
