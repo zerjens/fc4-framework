@@ -6,18 +6,22 @@ inline CSS. Understandable. So while this is kinda ugly, it more or less works. 
 
 <table><tr><td>
 
-FC4 is a [_Docs as Code_](https://www.writethedocs.org/guide/docs-as-code/) framework that enables software creators to author, publish, and maintain software architecture diagrams more effectively, efficiently, and collaboratively over time.
+FC4 is a <a href="https://www.writethedocs.org/guide/docs-as-code/"><i>Docs as Code</i></a>
+framework that enables software creators to author, publish, and maintain software architecture
+diagrams more effectively, efficiently, and collaboratively over time.
 
 It has two components:
 
-* [the methodology](methodology/)
-* [fc4-tool](tool/)
+<ul>
+  <li><a href="methodology/">the methodology</a>
+  <li><a href="tool/">the tool</a>
+</ul>
 
 </td><td>
 
 <img src="https://fundingcircle.github.io/fc4-framework/tool/doc/fc4-tool-container.png"
-     width="800"
-     height="213"
+     width="60%"
+     height="60%"
      alt="Example: a container diagram of fc4-tool."
      title="Example: a container diagram of fc4-tool.">
 
