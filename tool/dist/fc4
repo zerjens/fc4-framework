@@ -1,0 +1,18 @@
+#!/bin/bash
+
+## This script is meant to be included in distribution packages and installed on
+## end-users’ systems. It is for running compiled and packaged versions of fc4.
+
+set -e
+
+SCRIPT_DIR="${BASH_SOURCE%/*}"
+
+# It’s crucial to ensure that the JVM’s default character encoding is UTF-8
+# because the renderer outputs UTF-8 encoded text to its stderr, which the main
+# program (the JVM program) then needs to read correctly. We’ve found that some
+# Linux systems seem to default to US-ASCII which will generally break the
+# ability of the main program to properly parse the error output of the
+# renderer.
+JVM_OPTS="-Dfile.encoding=UTF8"
+
+java "$JVM_OPTS" -jar "$SCRIPT_DIR/fc4.jar" "$@"

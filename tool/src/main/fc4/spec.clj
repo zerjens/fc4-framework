@@ -6,6 +6,7 @@
             [clojure.string :refer [blank? ends-with? includes? join]]
             [com.gfredericks.test.chuck.generators :as gen']))
 
+(s/def ::blank-str #{""})
 (s/def ::non-blank-str (s/and string? (complement blank?)))
 (s/def ::no-linebreaks  (s/and string? #(not (includes? % "\n"))))
 (s/def ::non-blank-simple-str (s/and ::non-blank-str ::no-linebreaks))
@@ -48,7 +49,8 @@
     (s/and ::non-blank-simple-str #(includes? % "/"))
     #(gen/fmap
       (fn [s] (str (->> (repeat 5 s) (join "/"))))
-      (s/gen ::short-non-blank-simple-str))))
+      (s/gen (s/and ::short-non-blank-simple-str
+                    (fn [s] (>= (count s) 3)))))))
 
 (s/def ::file-path-file
   (s/with-gen

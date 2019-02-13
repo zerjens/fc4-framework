@@ -1,54 +1,21 @@
-(ns fc4.io
+(ns fc4.io.dsl
   "Provides all I/O facilities so that the other namespaces can be pure. The
   function specs are provided as a form of documentation and for instrumentation
   during development. They should not be used for generative testing."
-  (:require [clojure.java.io         :as io]
+  (:require [clojure.java.io         :refer [file]]
             [clojure.spec.alpha      :as s]
             [clojure.spec.gen.alpha  :as gen]
             [clojure.string          :as str :refer [ends-with?]]
             [cognitect.anomalies     :as anom]
             [expound.alpha           :as expound :refer [expound-str]]
-            [fc4.files              :as files :refer [relativize]]
-            [fc4.model              :as m :refer [elements-from-file]]
-            [fc4.spec               :as fs]
-            [fc4.styles             :as st :refer [styles-from-file]]
-            [fc4.util               :as u :refer [lookup-table-by]]
-            [fc4.yaml               :as fy :refer [split-file]]
-            [fc4.view               :as v :refer [view-from-file]])
+            [fc4.io.yaml             :as ioy :refer [yaml-files]]
+            [fc4.model               :as m :refer [elements-from-file]]
+            [fc4.spec                :as fs]
+            [fc4.styles              :as st :refer [styles-from-file]]
+            [fc4.util                :as u :refer [lookup-table-by]]
+            [fc4.yaml                :as fy :refer [split-file]]
+            [fc4.view                :as v :refer [view-from-file]])
   (:import [java.io FileNotFoundException]))
-
-(defn yaml-files
-  "Accepts a directory as a path string or a java.io.File, returns a lazy sequence of java.io.File objects for
-  all the YAML files in that dir or in any of its child dirs (recursively) to an unlimited depth."
-  [dir]
-  (->> (io/file dir)
-       file-seq
-       (filter #(or (ends-with? % ".yaml")
-                    (ends-with? % ".yml")))))
-
-(s/fdef yaml-files
-        :args (s/cat :dir ::fs/dir-path)
-        :ret  (s/coll-of (partial instance? java.io.File)))
-
-(defn process-dir
-  "Accepts a directory path as a string, finds all the YAML files in that dir or
-  in any of its child dirs (recursively) to an unlimited depth, and applies f to
-  the contents of each file, overwriting its current contents. Prints out the
-  path of each file before processing it. If an error occurs, it is thrown
-  immediately, aborting the work."
-  [dir-path f]
-  (doseq [file (yaml-files dir-path)]
-    (binding [*out* *err*]
-      (println (relativize (str file) dir-path)))
-    (->> (slurp file)
-         (f)
-         (spit file))))
-
-(s/fdef process-dir
-        :args (s/cat :dir-path ::fs/dir-path
-                     :f        (s/fspec :args (s/cat :file-contents string?)
-                                        :ret  string?))
-        :ret  nil?)
 
 (defn- read-model-elements
   "Recursively find and read all elements from all YAML files under a directory
@@ -63,8 +30,8 @@
        ((partial lookup-table-by ::m/name))))
 
 (s/fdef read-model-elements
-        :args (s/cat :root-path ::fs/dir-path)
-        :ret  (s/map-of ::m/name ::m/element))
+  :args (s/cat :root-path ::fs/dir-path)
+  :ret  (s/map-of ::m/name ::m/element))
 
 (s/def ::invalid-result any?)
 
@@ -76,7 +43,7 @@
   actually dirs. If anything is invalid, throws a FileNotFoundException or a
   RuntimeException. Otherwise returns nil."
   [root-path]
-  (let [d (partial io/file root-path)]
+  (let [d (partial file root-path)]
     (doseq [dir [(d) (d "systems") (d "users")]]
       (when-not (.exists dir)
         (throw (FileNotFoundException.
@@ -98,15 +65,15 @@
   [root-path]
   (validate-model-dirs root-path)
   (let [model {::m/systems (read-model-elements :system
-                                                (io/file root-path "systems"))
+                                                (file root-path "systems"))
                ::m/users   (read-model-elements :user
-                                                (io/file root-path "users"))}]
+                                                (file root-path "users"))}]
     (val-or-error model ::m/model)))
 
 (s/fdef read-model
-        :args (s/cat :root-path ::fs/dir-path)
-        :ret  (s/or :success ::m/model
-                    :error   ::error))
+  :args (s/cat :root-path ::fs/dir-path)
+  :ret  (s/or :success ::m/model
+              :error   ::error))
 
 (defn read-view
   [file-path]
@@ -117,9 +84,9 @@
       (val-or-error ::v/view)))
 
 (s/fdef read-view
-        :args (s/cat :file-path ::fs/file-path-str)
-        :ret  (s/or :success ::v/view
-                    :error   ::error))
+  :args (s/cat :file-path ::fs/file-path-str)
+  :ret  (s/or :success ::v/view
+              :error   ::error))
 
 (defn read-styles
   [file-path]
@@ -130,6 +97,6 @@
       (val-or-error ::st/styles)))
 
 (s/fdef read-styles
-        :args (s/cat :file-path ::fs/file-path-str)
-        :ret  (s/or :success ::st/styles
-                    :error   ::error))
+  :args (s/cat :file-path ::fs/file-path-str)
+  :ret  (s/or :success ::st/styles
+              :error   ::error))

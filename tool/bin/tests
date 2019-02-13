@@ -1,0 +1,13 @@
+#!/bin/sh
+set -ex
+
+# The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8
+# defaults to setting the max heap to ¼ of the total RAM, and CI containers frequently have
+# <= 4GB RAM.)
+#
+# We’re including the dependencies of test/coverage here, even though we’re not
+# actually measuring coverage in this script, because we want the computed set
+# of deps to be exactly the same as that computed by ./download-test-deps, which
+# includes the :test/coverage profile, so that that one script can download the
+# deps for both this script and ./tests-with-coverage
+clojure -J-Xmx2g -A:test:test/run:clj-next -R:test/coverage

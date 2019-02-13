@@ -1,103 +1,125 @@
 version: 2
 
-# In many of the jobs below, you’ll see `working_directory` specified, and that
-# the `checkout` step has a different path specified (the default path). This is
-# because it’s a little tricky to get `working_directory` and `checkout` to work
-# together when I want the working directory for all steps *except*
-# `checkout` to be a subdirectory of the project — because by default,
-# `checkout` checks out into the specified `working_directory`. I found this
-# solution here: https://stackoverflow.com/a/50570581/7012
+# All the tool_* jobs specify the checkout path, and then set a
+# `working_directory` that’s different than the default and is _underneath_ the
+# checkout path. This is because it’s a little tricky to get `working_directory`
+# and `checkout` to work together when I want the working directory for all
+# steps *except* `checkout` to be a subdirectory of the project — because by
+# default, `checkout` checks out into the specified `working_directory`. I found
+# this solution here: https://stackoverflow.com/a/50570581/7012
+tool_job_defaults: &tool_job_defaults
+  working_directory: ~/project/tool
+  docker:
+    # The source for this image is at ./images/tool/Dockerfile
+    - image: quay.io/fundingcircle/clojure-node-chromium:clojure-1.10.0.403_node-10.13_debian-stretch
 
 jobs:
-   tool_deps:
-     docker:
-       - image: clojure:tools-deps-alpine
-
-     working_directory: ~/project/tool
-
-     steps:
-       - checkout:
-           path: ~/project
-
-       - restore_cache:
-           keys:
-           - deps-{{ checksum "deps.edn" }}
-           # fallback to using the latest cache if no exact match is found
-           - deps-
-
-       - run:
-          name: Download dependencies (if necessary)
-          # Clojure automatically downloads deps if necessary
-          command: clojure -R:test:test/coverage:lint -Stree
-
-       - save_cache:
-           key: deps-{{ checksum "deps.edn" }}
-           paths:
-           - .cpcache
-           - ~/.m2
-           - ~/.gitlibs
-
    tool_test:
-     docker:
-       - image: clojure:tools-deps-alpine
-
-     working_directory: ~/project/tool
-
+     <<: *tool_job_defaults
      steps:
-       - checkout:
-           path: ~/project
-
+       - checkout: {path: ~/project}
        - restore_cache:
            keys:
-           - deps-{{ checksum "deps.edn" }}
-           # fallback to using the latest cache if no exact match is found
-           - deps-
-
-       - run:
-          name: Run tests and measure test coverage
-          # The max heap size is set to 2GB because I’ve seen OOM errors at 1GB and below. (JDK 8
-          # defaults to setting the max heap to ¼ of the total RAM, and CI containers frequently have
-          # <= 4GB RAM.)
-          command: clojure -J-Xmx2g -A:test:test/coverage
-
-       - store_test_results:
-          path: target/test-results
-
-       - store_artifacts:
-          path: target/coverage
-
+             - test-deps-{{checksum "deps.edn"}}-{{checksum "renderer/package.json"}}-{{checksum "bin/download-test-deps"}}
+       - run: bin/download-test-deps
+       - run: bin/tests-with-coverage
+       - save_cache:
+          key: test-deps-{{checksum "deps.edn"}}-{{checksum "renderer/package.json"}}-{{checksum "bin/download-test-deps"}}
+          paths: [.cpcache, ~/.m2, ~/.gitlibs, renderer/node_modules]
+       - store_test_results: {path: target/test-results}
+       - store_artifacts: {path: target/coverage}
        - run:
           name: Upload test coverage report to Codecov
           command: bash <(curl -s https://codecov.io/bash)
 
-   tool_lint:
-     docker:
-       - image: clojure:tools-deps-alpine
-
-     working_directory: ~/project/tool
-
+   tool_clj_lint:
+     <<: *tool_job_defaults
      steps:
-       - checkout:
-           path: ~/project
+       - checkout: {path: ~/project}
+       - restore_cache: {keys: ['clj-lint-deps-{{checksum "deps.edn"}}']}
+       - run: clojure -A:lint # downloads deps if needed
+       - save_cache:
+          key: clj-lint-deps-{{checksum "deps.edn"}}
+          paths: [.cpcache, ~/.m2, ~/.gitlibs]
 
+   tool_build_dist_pkg:
+     <<: *tool_job_defaults
+     steps:
+       - checkout: {path: ~/project}
        - restore_cache:
            keys:
-           - deps-{{ checksum "deps.edn" }}
-           # fallback to using the latest cache if no exact match is found
-           - deps-
-
+             - pkg-deps-{{checksum "deps.edn"}}-{{ checksum "renderer/package.json" }}-{{checksum "bin/download-pkg-deps"}}
+       - run: bin/download-pkg-deps
        - run:
-          name: lint
-          command: clojure -A:lint
+           name: Create distribution packages
+           command: |
+             export GIT_HEAD_SHA=$(git rev-parse --short HEAD)
+             bin/pkg-all
+             mkdir -p /workspace/packages
+             mv target/pkg/*.gz /workspace/packages/
+       - run:
+           # Packaging any node app with pkg can be tricky; that’s doubly true for an app that uses
+           # Puppeteer. So it’s a good idea to ensure that the packaged renderer actually works.
+           # The JVM component’s ability to invoke the packaged renderer is also susceptible to
+           # breakage, so here we try to invoke the tool to render a diagram just as a user would.
+           name: Test packaged renderer
+           command: |
+             mkdir test-renders
+             target/pkg/linux/fc4/fc4 render \
+               test/data/structurizr/express/diagram_valid_messy.yaml
+             cp test/data/structurizr/express/diagram_valid_messy.png test-renders/1.png
+       - persist_to_workspace: {root: /workspace, paths: [packages]}
+       - store_artifacts: {path: /workspace/packages}
+       - store_artifacts: {path: test-renders}
+       - save_cache:
+           key: pkg-deps-{{checksum "deps.edn"}}-{{ checksum "renderer/package.json" }}-{{checksum "bin/download-pkg-deps"}}
+           # ~/.npm is needed here because that is (or includes) npm’s cache, and that’s where pkg
+           # downloads the built node runtimes for various platforms.
+           paths: [.cpcache, ~/.m2, ~/.gitlibs, ~/.npm, ~/node_modules]
+
+   tool_publish_dist_pkg:
+     <<: *tool_job_defaults
+     steps:
+       - attach_workspace: {at: /workspace}
+       - run: |
+           [ "$GITHUB_TOKEN" ] || { echo 'GITHUB_TOKEN is not set!' && exit 1; }
+       - restore_cache: {keys: [ghr_v0.12.0_linux_amd64]}
+       - run:
+           name: Download and unpack ghr
+           command: |
+             if [ -x ~/bin/ghr ]; then exit 0; fi
+             wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_amd64.tar.gz
+             tar -xzf ghr_v0.12.0_linux_amd64.tar.gz --strip-components 1 ghr_v0.12.0_linux_amd64/ghr
+             mkdir -p ~/bin
+             mv ghr ~/bin/ghr
+       - save_cache:
+           key: ghr_v0.12.0_linux_amd64
+           paths: [~/bin]
+       - run:
+           name: Create GitHub Release and upload distribution packages to it
+           # Docs for ghr’s options: https://github.com/tcnksm/ghr/#options
+           command: |
+             if [[ $CIRCLE_BRANCH == "master" ]]; then
+               # Tag has build num suffix in case we do multiple releases on a given day.
+               TAG="release_$(date "+%Y-%m-%d")_${CIRCLE_BUILD_NUM}"
+             else
+               # We need this to be the same across all builds for a branch so we only ever keep the
+               # latest tag+release for a given branch, or we’d have way too many tags+branches.
+               TAG="prerelease_${CIRCLE_BRANCH}"
+             fi
+             ~/bin/ghr -t $GITHUB_TOKEN \
+                       -u $CIRCLE_PROJECT_USERNAME \
+                       -r $CIRCLE_PROJECT_REPONAME \
+                       -c $CIRCLE_SHA1 \
+                       $(if [[ ! $CIRCLE_BRANCH == "master" ]]; then echo -prerelease -recreate; fi) \
+                       $TAG \
+                       /workspace/packages
 
 workflows:
   version: 2
   tool:
     jobs:
-      - tool_deps
-      - tool_test:
-          requires:
-            - tool_deps
-      - tool_lint:
-          requires:
-            - tool_deps
+      - tool_test
+      - tool_clj_lint
+      - tool_build_dist_pkg: {requires: [tool_test, tool_clj_lint]}
+      - tool_publish_dist_pkg: {requires: [tool_build_dist_pkg]}

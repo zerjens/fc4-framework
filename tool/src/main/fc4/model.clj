@@ -37,19 +37,19 @@
 ;; and better generators (the generators will need to create two paths that are
 ;; usefully and realistic related).
 (s/fdef get-tags-from-path
-        :args (s/cat :file-path     ::fs/file-path
-                     :relative-root ::fs/dir-path)
-        :ret  ::tags)
+  :args (s/cat :file-path     ::fs/file-path
+               :relative-root ::fs/dir-path)
+  :ret  ::tags)
 
 (defn- to-set-of-keywords
   [xs]
   (-> (map keyword xs) set))
 
 (s/fdef to-set-of-keywords
-        :args (s/cat :xs (s/coll-of string?))
-        :ret  (s/coll-of keyword? :kind set?)
-        :fn (fn [{{:keys [xs]} :args, ret :ret}]
-              (= (count (distinct xs)) (count ret))))
+  :args (s/cat :xs (s/coll-of string?))
+  :ret  (s/coll-of keyword? :kind set?)
+  :fn (fn [{{:keys [xs]} :args, ret :ret}]
+        (= (count (distinct xs)) (count ret))))
 
 ;; An element just after it’s parsed from the YAML, before any fixup.
 ;; TODO: this file uses a mix of “element” and “entity” to refer to pretty much
@@ -91,11 +91,11 @@
       (fu/qualify-keys this-ns-name)))
 
 (s/fdef fixup-container
-        :args (s/cat :container ::proto-entity
-                     :sys-name  ::name)
-        :ret  ::container-map
-        :fn   (fn [{{in :container} :args, out :ret}]
-                (= (count (::uses in)) (count (::uses out)))))
+  :args (s/cat :container ::proto-entity
+               :sys-name  ::name)
+  :ret  ::container-map
+  :fn   (fn [{{in :container} :args, out :ret}]
+          (= (count (::uses in)) (count (::uses out)))))
 
 (defn- fixup-element
   [entity-type tags-from-path {:keys [name] :as elem}]
@@ -112,13 +112,13 @@
       (fu/qualify-keys this-ns-name)))
 
 (s/fdef fixup-element
-        :args (s/cat :entity-type    ::entity-type
-                     :tags-from-path ::tags
-                     :proto-entity   ::proto-entity)
-        :ret  ::element
-        :fn   (fn [{{elem-in :proto-entity} :args, elem-out :ret}]
-                (every? #(>= (count (get elem-out %)) (count (get elem-in %)))
-                        [::repos ::tags ::uses ::containers])))
+  :args (s/cat :entity-type    ::entity-type
+               :tags-from-path ::tags
+               :proto-entity   ::proto-entity)
+  :ret  ::element
+  :fn   (fn [{{elem-in :proto-entity} :args, elem-out :ret}]
+          (every? #(>= (count (get elem-out %)) (count (get elem-in %)))
+                  [::repos ::tags ::uses ::containers])))
 
 ;; A file might contain a single element (as a map), or an array containing
 ;; multiple elements.
@@ -136,8 +136,8 @@
          elems)))
 
 (s/fdef elements-from-file
-        :args (s/cat :file-contents ::yaml-file-contents
-                     :entity-type   ::entity-type
-                     :file-path     ::fs/file-path
-                     :root-path     ::fs/dir-path)
-        :ret  (s/coll-of ::element))
+  :args (s/cat :file-contents ::yaml-file-contents
+               :entity-type   ::entity-type
+               :file-path     ::fs/file-path
+               :root-path     ::fs/dir-path)
+  :ret  (s/coll-of ::element))

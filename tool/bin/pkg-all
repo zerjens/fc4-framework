@@ -1,0 +1,29 @@
+#!/bin/bash
+## Run this from <project-root>/tool/
+set -e
+
+[[ -z "$GIT_HEAD_SHA" ]] && echo 'GIT_HEAD_SHA is not set!' && exit 1
+
+# TODO: how risky is this, that we’ll end up packaging stale files? I think not *too* risky since
+# we *should* be running this script in a fresh CI container!
+if [ ! -f target/pkg/fc4.jar ]; then bin/pkg-uberjar; fi
+if [ ! -f target/pkg/renderer/render-macos ]; then bin/pkg-renderer; fi
+
+# Rename dir suffix from macos to mac for compatibility with loop below.
+mv target/pkg/renderer/render-macos target/pkg/renderer/render-mac
+
+for os in mac linux; do
+  echo "Compiling distribution package for $os:"
+
+  os_dir="target/pkg/$os"
+  pkg_dir="$os_dir/fc4"
+
+  echo "  Collecting files in $pkg_dir..."
+  mkdir -p $pkg_dir
+  cp target/pkg/fc4.jar dist/fc4 README.md $pkg_dir/
+  cp "target/pkg/renderer/render-$os" $pkg_dir/fc4-render
+
+  archive="fc4-tool-$os-amd64-$GIT_HEAD_SHA.tar.gz"
+  echo "  Building archive target/pkg/$archive..."
+  (cd $os_dir && tar -czf "../$archive" fc4/*)
+done

@@ -1,41 +1,76 @@
 {:paths ["src/main" "src/cli"]
  :deps
- {org.clojure/core.async      {:mvn/version "0.4.474"}
-  org.clojure/spec.alpha      {:mvn/version "0.2.168"}
-  org.clojure/tools.cli       {:mvn/version "0.3.7"}
-  circleci/clj-yaml           {:mvn/version "0.5.6"}
-  potemkin                    {:mvn/version "0.4.5"}
-  expound                     {:mvn/version "0.7.1"}
+ {org.clojure/clojure         {:mvn/version "1.10.0"}
+  org.clojure/data.json       {:mvn/version "0.2.6"}
+  org.clojure/spec.alpha      {:mvn/version "0.2.176"}
+  org.clojure/tools.cli       {:mvn/version "0.4.1"}
+  clj-commons/clj-yaml        {:mvn/version "0.6.1"}
+  expound                     {:mvn/version "0.7.2"}
   com.cognitect/anomalies     {:mvn/version "0.1.12"}
+  hawk                        {:mvn/version "0.2.11"}
+
+  ;; Our code doesn’t use joda-time directly; it’s specified here as an override to resolve a
+  ;; conflict between test.chuck which depends (indirectly) on joda-time 2.7 and cambada which
+  ;; depends (indirectly) on joda-time 2.8. The conflict was causing cambada’s uberjar process
+  ;; to fail. I’m overriding the dependency here at the root level, which takes precedence over the
+  ;; profiles, because I want to ensure that we’ll use the same version of joda-time when running
+  ;; the tests and building a distribution package (uberjar).
+  joda-time/joda-time         {:mvn/version "2.10.1"}
+
+  ;; Conflicting versions of jna are resolved via org.clojure/tools.gitlibs and hawk.
+  net.java.dev.jna/jna          {:mvn/version "5.2.0"}
+  net.java.dev.jna/jna-platform {:mvn/version "5.2.0"}
+
   ;; test.chuck is in the main dependency list, rather than in the test profile,
   ;; because we’re using one of its generators in a spec in a source file.
   ;; This means we’ll also need org.clojure/test.check at runtime. Not ideal,
   ;; but worth it.
   com.gfredericks/test.chuck  {:mvn/version "0.2.9"}}
 
- :aliases {:dev       {:extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
-                                     inspectable                {:mvn/version "0.2.2"}}}
+ :aliases {:dev           {:extra-deps  {org.clojure/tools.trace    {:mvn/version "0.7.9"}
+                                         inspectable                {:mvn/version "0.2.2"}}
+                           :jvm-opts    ["-XX:-OmitStackTraceInFastThrow"]}
 
-           :test      {:extra-paths ["test" "src/test_utils"]
-                       :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
-                                     eftest                     {:mvn/version "0.5.3"}}}
+           :test          {:extra-paths ["test" "src/test_utils"]
+                           :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
+                                         eftest                     {:mvn/version "0.5.4"}
+                                         image-resizer              {:mvn/version "0.1.10"}}
+                           ; It’s crucial to ensure that the JVM’s default character encoding is
+                           ; UTF-8 because the renderer outputs UTF-8 encoded text to its stderr,
+                           ; which the main program (the JVM program) then needs to read correctly.
+                           ; We’ve found that some Linux systems seem to default to US-ASCII which
+                           ; will generally break the ability of the main program to properly parse
+                           ; the error output of the renderer.
+                           :jvm-opts    ["-Dfile.encoding=UTF8"]}
 
-           :test/run  {:main-opts   ["-m" "fc4.test-runner.runner"]}
+           :test/run      {:main-opts   ["-m" "fc4.test-runner.runner"]}
 
-           :test/coverage
-                      {:extra-deps  {cloverage                  {:mvn/version "1.0.13"}}
-                       :main-opts   ["-m" "cloverage.coverage"
-                                     "--src-ns-path" "src/main"
-                                     "--test-ns-path" "test"
-                                     "--runner" ":fc4.test-runner"
-                                     "--fail-threshold" "65"
-                                     "--codecov"]}
+           :test/coverage {:extra-deps  {cloverage                  {:mvn/version "1.0.13"}}
+                           :main-opts   ["-m" "cloverage.coverage"
+                                         "--src-ns-path" "src/main"
+                                         "--test-ns-path" "test"
+                                         "--runner" ":fc4.test-runner"
+                                         "--fail-threshold" "65"
+                                         "--codecov"]}
 
-           :lint      {:extra-deps  {github-JamesLaverack/cljfmt-runner
-                                     {:git/url "https://github.com/JamesLaverack/cljfmt-runner"
-                                      :sha     "51f85c9d6cc67107620749ceacd46120647fe107"}}
-                       :main-opts   ["-m" "cljfmt-runner.check"]}
+           :kibit         {:extra-deps  {jonase/kibit               {:mvn/version "0.1.6"}}
+                           :main-opts   ["-e"
+                                         "(require,'[kibit.driver,:as,k]),(k/external-run,[\"src\"],nil)"]}
 
-           :lint/fix  {:main-opts   ["-m" "cljfmt-runner.fix"]}
+           :lint          {:extra-deps  {cljfmt                     {:mvn/version "0.6.3"}
+                                         github-JamesLaverack/cljfmt-runner
+                                         {:git/url "https://github.com/JamesLaverack/cljfmt-runner"
+                                          :sha     "97960e9a6464935534b5a6bab529e063d0027128"}}
+                           :main-opts   ["-m" "cljfmt-runner.check"]}
 
-           :clj-next  {:override-deps {org.clojure/clojure {:mvn/version "1.10.0-alpha6"}}}}}
+           :lint/fix      {:main-opts   ["-m" "cljfmt-runner.fix"]}
+
+           :uberjar       {:extra-deps  {luchiniatwork/cambada      {:mvn/version "1.0.0"}}
+                           :main-opts   ["-m" "cambada.uberjar"
+                                         "-m" "fc4.cli.fc4"
+                                         "--aot" "all"
+                                         "--no-copy-source"
+                                         "--out" "target"]}
+
+           :outdated      {:extra-deps  {olical/depot               {:mvn/version "1.2.0"}}
+                           :main-opts   ["-m" "depot.outdated.main"]}}}
