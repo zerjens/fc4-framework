@@ -212,14 +212,15 @@ datatypes:
     description: Updates to Customer profiles, including creation (initial state)
     tags:
       event: true
-      shape: record
     links:
       spec: https://github.com/OurOrg/ThisRepo/path/to/spec.clj
       schema: https://schema.registry/events/customer-profile-update
       docs: https://wiki.internal/path/to/docs
     datastore: customer-events
-    publishers: [web, mobile]
-    subscribers: [analytics]
+    publishers: Marketplace Allocator
+    subscribers:
+      - Analytics
+      - Customer Manager
 ```
 
 …and datastores:
@@ -249,7 +250,7 @@ datastores:
     written-by:
       Finops Controller:
         to: update customer profiles
-      Customer Portal
+      Customer Portal:
         to: log logins
 ```
 
