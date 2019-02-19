@@ -28,5 +28,9 @@ module.exports = {
 
   exportCurrentDiagramToPNG: () => {
     return structurizr.scripting.exportCurrentDiagramToPNG({ crop: false });
+  },
+
+  exportCurrentDiagramKeyToPNG: () => {
+    return structurizr.scripting.exportCurrentDiagramKeyToPNG();
   }
 }

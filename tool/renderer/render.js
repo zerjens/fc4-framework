@@ -5,6 +5,7 @@
 
 const dataUriToBuffer = require('data-uri-to-buffer');
 const {existsSync, readFileSync} = require('fs');
+const Jimp = require('jimp');
 const pageFunctions = require('./page-functions');
 const path = require('path');
 const puppeteer = require('puppeteer-core');
@@ -93,20 +94,63 @@ async function setYamlAndUpdateDiagram(page, diagramYaml) {
 }
 
 async function exportDiagram(page) {
-  log('calling export function');
+  log('calling diagram export function');
   const diagramImageBase64DataURI = await page.evaluate(pageFunctions.exportCurrentDiagramToPNG);
 
-  // TODO: add some error handling: check that it actually is a data URI,
-  // call the Structurizr Express predicate function that checks whether there
-  // were any errors, etc.
+  // TODO: add some error handling: e.g. check that it actually is a data URI, etc
   return dataUriToBuffer(diagramImageBase64DataURI);
+}
+
+async function exportKey(page) {
+  log('calling key export function');
+  const keyImageBase64DataURI = await page.evaluate(pageFunctions.exportCurrentDiagramKeyToPNG);
+
+  // TODO: add some error handling: e.g. check that it actually is a data URI, etc
+  return dataUriToBuffer(keyImageBase64DataURI);
+}
+
+async function conjoin(diagramImage, keyImage) {
+  log('conjoining diagram and key');
+
+  const diagram = await Jimp.read(diagramImage);
+  const key = await Jimp.read(keyImage);
+
+  // Constants
+  const keyScale = 0.5;
+  const separatorWidth = 1;
+  const separatorColor = 'silver';
+
+  // Key needs to be scaled down to look like a key
+  const keyHeight = key.bitmap.height * keyScale;
+  const keyWidth = key.bitmap.width * keyScale
+
+  // Computations!
+  const finalWidth = Math.max(diagram.bitmap.width, keyWidth);
+  const finalHeight = diagram.bitmap.height + separatorWidth + keyHeight;
+  const keyY = diagram.bitmap.height + separatorWidth;
+
+  // Prepare the key
+  key.scale(keyScale);
+  const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+  key.print(font, 0, 5, 'Key');
+  key.background(Jimp.cssColorToHex('white'));
+  key.contain(finalWidth, keyHeight);
+
+  // Conjoin!
+  const alignment = Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_TOP;
+  diagram.background(Jimp.cssColorToHex(separatorColor));
+  diagram.contain(finalWidth, finalHeight, alignment);
+  diagram.composite(key, 0, keyY + separatorWidth);
+
+  return await diagram.getBufferAsync(Jimp.MIME_PNG);
 }
 
 async function render(diagramYaml, browser, args) {
   const page = await loadStructurizrExpress(browser);
   await setYamlAndUpdateDiagram(page, diagramYaml);
-  const imageBuffer = await exportDiagram(page);
-  return imageBuffer;
+  const diagramImage = await exportDiagram(page);
+  const keyImage = await exportKey(page);
+  return conjoin(diagramImage, keyImage);
 }
 
 // On success: returns a Puppeteer browser object
