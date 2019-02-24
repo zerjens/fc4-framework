@@ -16,6 +16,7 @@ tool_job_defaults: &tool_job_defaults
 jobs:
    tool_test:
      <<: *tool_job_defaults
+     resource_class: xlarge # Must correspond to value of :thread-count in runner.clj; see note there.
      steps:
        - checkout: {path: ~/project}
        - restore_cache:

@@ -33,7 +33,13 @@
 
            :test          {:extra-paths ["test" "src/test_utils"]
                            :extra-deps  {org.clojure/test.check     {:mvn/version "0.10.0-alpha3"}
-                                         eftest                     {:mvn/version "0.5.4"}
+                                         ;; Using a fork of eftest so we can bring it in via git, so
+                                         ;; we can get a newer version than that currently published
+                                         ;; to Clojars. If and when this PR merges we can switch to
+                                         ;; the main eftest repo: TODO
+                                         eftest                     {:git/url "https://github.com/FundingCircle/eftest.git"
+                                                                     :sha "a19f5a01b34abdb12fd8f48996ec08bdb53c0690"
+                                                                     :deps/root "eftest"}
                                          image-resizer              {:mvn/version "0.1.10"}}
                            ; It’s crucial to ensure that the JVM’s default character encoding is
                            ; UTF-8 because the renderer outputs UTF-8 encoded text to its stderr,

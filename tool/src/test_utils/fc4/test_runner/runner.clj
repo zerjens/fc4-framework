@@ -33,11 +33,15 @@
   (let [report-to-file-fn (report-to-file ju/report output-path)
         report-fn (multi-report progress/report report-to-file-fn)]
     {:report report-fn
-     ;; :multithread? supports a few different values; I tested the other
-     ;; supported values (:namespaces and `true`) and they were both
-     ;; significantly slower. For more see
-     ;; https://github.com/weavejester/eftest/#multithreading
-     :multithread? :vars
+
+     ;; Work around a bug in CircleCI; more info here: https://github.com/weavejester/eftest/pull/63
+     ;; Note that this value should correspond to that of the resource_class property of the
+     ;; CircleCI job tool_test (defined in <repo_root>/.circleci/config.yml) as per the vCPU counts
+     ;; listed here: https://circleci.com/docs/2.0/configuration-reference/#resource_class
+     ;; NB: I’ve seen the runner get stuck when this is set to 2 or 4 threads. I haven’t tested 6,
+     ;; 8, or 10, but 12+ seems to generally work. I don’t know why it sometimes gets stuck, but
+     ;; there’s a good chance it’s due to a bug I introduced into eftest with PR 63.
+     :thread-count 12
 
      ;; Our test suite just takes too damn long.
      :fail-fast? true}))
