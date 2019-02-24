@@ -38,10 +38,12 @@
      ;; Note that this value should correspond to that of the resource_class property of the
      ;; CircleCI job tool_test (defined in <repo_root>/.circleci/config.yml) as per the vCPU counts
      ;; listed here: https://circleci.com/docs/2.0/configuration-reference/#resource_class
-     ;; NB: I’ve seen the runner get stuck when this is set to 2 or 4 threads. I haven’t tested 6,
-     ;; 8, or 10, but 12+ seems to generally work. I don’t know why it sometimes gets stuck, but
-     ;; there’s a good chance it’s due to a bug I introduced into eftest with PR 63.
-     :thread-count 12
+     ;; NB: I’ve seen the runner get stuck (or seem to be effectively stuck) when this is set to the
+     ;; number of cores of the system. I don’t know why this happens, but there’s a good chance it’s
+     ;; related to the changes I contributed to eftest with PR 63. Regardless, this is currently set
+     ;; to 10 because as per config.yml we are running the tests in CircleCI on containers with 8
+     ;; vCPUs.
+     :thread-count 10
 
      ;; Our test suite just takes too damn long.
      :fail-fast? true}))
