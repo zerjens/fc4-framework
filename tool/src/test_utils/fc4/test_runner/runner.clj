@@ -41,9 +41,9 @@
      ;; NB: I’ve seen the runner get stuck (or seem to be effectively stuck) when this is set to the
      ;; number of cores of the system. I don’t know why this happens, but there’s a good chance it’s
      ;; related to the changes I contributed to eftest with PR 63. Regardless, this is currently set
-     ;; to 10 because as per config.yml we are running the tests in CircleCI on containers with 8
-     ;; vCPUs.
-     :thread-count 16
+     ;; to 12 because as per config.yml we are running the tests in CircleCI on containers with 8
+     ;; vCPUs, and I didn’t get good results with 10 threads.
+     :thread-count 12
 
      ;; Our test suite just takes too damn long.
      :fail-fast? true}))
