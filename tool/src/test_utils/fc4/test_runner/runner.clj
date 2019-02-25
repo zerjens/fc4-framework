@@ -43,7 +43,7 @@
      ;; related to the changes I contributed to eftest with PR 63. Regardless, this is currently set
      ;; to 10 because as per config.yml we are running the tests in CircleCI on containers with 8
      ;; vCPUs.
-     :thread-count 10
+     :thread-count 16
 
      ;; Our test suite just takes too damn long.
      :fail-fast? true}))
