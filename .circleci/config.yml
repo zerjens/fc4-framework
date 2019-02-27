@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 # All the tool_* jobs specify the checkout path, and then set a
 # `working_directory` that’s different than the default and is _underneath_ the
